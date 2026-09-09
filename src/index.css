@@ -1,0 +1,85 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  html {
+    -webkit-tap-highlight-color: transparent;
+  }
+
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Custom Scrollbar */
+  ::-webkit-scrollbar {
+    width: 6px;
+    height: 6px;
+  }
+  ::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  ::-webkit-scrollbar-thumb {
+    background: rgba(156, 163, 175, 0.4);
+    border-radius: 9999px;
+  }
+  ::-webkit-scrollbar-thumb:hover {
+    background: rgba(156, 163, 175, 0.7);
+  }
+}
+
+/* Furigana Ruby Styling */
+ruby {
+  ruby-align: center;
+  ruby-position: over;
+}
+
+rt {
+  font-size: 0.6em;
+  font-weight: normal;
+  color: #64748b;
+  user-select: none;
+  line-height: 1;
+}
+
+.dark rt {
+  color: #94a3b8;
+}
+
+/* Stroke visualizer canvas animation */
+@keyframes strokeDraw {
+  to {
+    stroke-dashoffset: 0;
+  }
+}
+
+.stroke-path {
+  stroke-dasharray: 1000;
+  stroke-dashoffset: 1000;
+  animation: strokeDraw 1.2s ease-in-out forwards;
+}
+
+/* Glassmorphism helpers */
+.glass-panel {
+  background: rgba(255, 255, 255, 0.85);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+}
+
+.dark .glass-panel {
+  background: rgba(15, 23, 42, 0.85);
+}
+
+/* Sakura Theme */
+.theme-sakura {
+  --theme-primary: #f43f5e;
+  --theme-bg: #fff5f7;
+  --theme-card: #ffffff;
+}
+
+/* Bamboo Theme */
+.theme-bamboo {
+  --theme-primary: #059669;
+  --theme-bg: #f0fdf4;
+  --theme-card: #ffffff;
+}

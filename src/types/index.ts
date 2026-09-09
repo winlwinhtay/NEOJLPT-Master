@@ -1,3 +1,5 @@
+import { SupportedLanguage } from './i18n';
+
 export type JLPTLevel = 'N5' | 'N4' | 'N3' | 'N2' | 'N1';
 
 export type ViewType =
@@ -70,6 +72,18 @@ export interface VocabularyItem {
   lessonId?: string;
 }
 
+export interface KanjiSentence {
+  id?: string;
+  jp: string;
+  reading: string;
+  en: string;
+  translationsByLang?: Record<string, string>;
+  targetWord?: string;
+  targetReading?: string;
+  targetMeaning?: string;
+  usageNote?: string;
+}
+
 export interface KanjiItem {
   id: string;
   kanji: string;
@@ -89,12 +103,42 @@ export interface KanjiItem {
     reading: string;
     meaning: string;
   }[];
-  exampleSentence: {
+  exampleSentence?: {
     jp: string;
     reading: string;
     en: string;
   };
+  exampleSentences?: KanjiSentence[];
   unitId?: string;
+}
+
+export type RadicalPosition =
+  | 'hen'          // 偏 (Left)
+  | 'tsukuri'      // 旁 (Right)
+  | 'kanmuri'      // 冠 (Top)
+  | 'ashi'         // 脚 (Bottom)
+  | 'kamae'        // 構 (Enclosure)
+  | 'tare'         // 垂 (Top-Left)
+  | 'nyou'         // 繞 (Bottom-Left)
+  | 'independent'; // 独 (Standalone / Whole)
+
+export interface RadicalItem {
+  id: string;
+  radical: string;
+  kangxiNumber: number;
+  variantForms?: string[];
+  nameJp: string; // e.g. さんずい
+  nameKanji?: string; // e.g. 三水
+  nameRomaji: string; // e.g. sanzui
+  strokeCount: number;
+  meaningEn: string;
+  meaningsByLang: Record<SupportedLanguage, string>;
+  position: RadicalPosition;
+  positionNameJp: string; // e.g. 偏 (へん)
+  isCore69: boolean;
+  descriptionEn?: string;
+  descriptionsByLang?: Record<SupportedLanguage, string>;
+  exampleKanji: string[];
 }
 
 export interface GrammarItem {

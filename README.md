@@ -62,13 +62,50 @@ Zero external API dependencies. All UI navigation, grammar formulas, in-depth ex
 - **Framework**: [React 18](https://react.dev/) + [TypeScript](https://www.typescriptlang.org/)
 - **Bundler & Dev Server**: [Vite](https://vitejs.dev/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
+- **Database & Auth**: [Supabase](https://supabase.com/) (PostgreSQL with Row Level Security)
+- **Hosting**: [Vercel](https://vercel.com/)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Audio & Animations**: Web Speech API, [Canvas Confetti](https://www.npmjs.com/package/canvas-confetti)
-- **Persistence**: `localStorage` with export / import and reset capabilities
+- **Persistence**: Hybrid offline `localStorage` + real-time Supabase cloud synchronization
 
 ---
 
-## 🚀 Getting Started
+## ⚡ Deployment to Vercel
+
+[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwinlwinhtay%2FNEOJLPT-Master&env=VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY)
+
+### Option 1: Automatic via Vercel Dashboard (Recommended)
+1. Go to [vercel.com](https://vercel.com) and log in with your GitHub account.
+2. Click **"Add New Project"** and select repository **`winlwinhtay/NEOJLPT-Master`**.
+3. Under **Environment Variables**, add:
+   - `VITE_SUPABASE_URL`: `https://rhidvvfdbilagdgzzzzg.supabase.co`
+   - `VITE_SUPABASE_ANON_KEY`: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
+4. Click **Deploy**. Vercel will build and deploy your app with instant global CDN coverage.
+
+### Option 2: Via Vercel CLI
+```bash
+npm install -g vercel
+vercel
+```
+
+---
+
+## 🗄️ Supabase Database Setup
+
+1. Open your Supabase project dashboard at [supabase.com](https://supabase.com).
+2. Go to the **SQL Editor** tab.
+3. Open [`supabase/schema.sql`](./supabase/schema.sql), paste the SQL commands into the editor, and click **Run**.
+4. This will create:
+   - `profiles` (User settings, JLPT target level, themes, daily goals, XP, streaks)
+   - `srs_items` (Spaced Repetition cards, review intervals, due dates)
+   - `mock_test_attempts` (Official score records and question diagnostics)
+   - `mistake_logs` (Error review notebook entries)
+   - `completed_lessons` (Curriculum progress tracking)
+   - Row Level Security (RLS) policies protecting each user's data.
+
+---
+
+## 🚀 Local Development
 
 ### Prerequisites
 - Node.js (v18 or higher)
@@ -84,6 +121,9 @@ cd NEOJLPT-Master
 
 # Install dependencies
 npm install
+
+# Copy environment template and configure Supabase
+cp .env.example .env.local
 
 # Start the development server
 npm run dev

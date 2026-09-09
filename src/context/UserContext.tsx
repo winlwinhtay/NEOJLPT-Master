@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import { UserProfile, DailyStudyLog } from '../types';
 import { StorageService, defaultProfile } from '../services/storageService';
+import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
+import { SupabaseSyncService } from '../services/supabaseSyncService';
 import confetti from 'canvas-confetti';
 
 interface UserContextType {
@@ -27,6 +29,7 @@ interface UserContextType {
   login: (name: string, email?: string) => void;
   register: (name: string, email?: string, targetLevel?: UserProfile['targetLevel']) => void;
   logout: () => void;
+  isCloudSynced: boolean;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -36,6 +39,62 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [completedLessons, setCompletedLessons] = useState<string[]>(() =>
     StorageService.loadCompletedLessons()
   );
+  const [isCloudSynced, setIsCloudSynced] = useState(false);
+
+  // Hydrate from Supabase on mount or session change
+  useEffect(() => {
+    if (!isSupabaseConfigured()) return;
+
+    const handleAuthUser = async (user: any) => {
+      if (!user?.id) return;
+      try {
+        const cloudData = await SupabaseSyncService.fetchProfile(user.id);
+        if (cloudData) {
+          setProfile((prev) => {
+            const merged = { ...prev, ...cloudData, id: user.id, email: user.email || prev.email };
+            StorageService.saveProfile(merged);
+            return merged;
+          });
+          setIsCloudSynced(true);
+        } else {
+          // Sync local to new cloud record
+          const initial = {
+            ...profile,
+            id: user.id,
+            email: user.email || profile.email,
+            name: user.user_metadata?.name || profile.name,
+            targetLevel: user.user_metadata?.targetLevel || profile.targetLevel,
+          };
+          setProfile(initial);
+          await SupabaseSyncService.syncProfile(initial);
+          setIsCloudSynced(true);
+        }
+      } catch (err) {
+        console.warn('Error during Supabase profile hydration:', err);
+      }
+    };
+
+    // Check existing active session
+    supabase.auth.getSession().then(({ data: { session } }) => {
+      if (session?.user) {
+        handleAuthUser(session.user);
+      }
+    });
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
+      if (session?.user) {
+        await handleAuthUser(session.user);
+      } else {
+        setIsCloudSynced(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
 
   const [todayLog, setTodayLog] = useState({
     minutesSpent: 12,
@@ -183,6 +242,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const logout = () => {
+    if (isSupabaseConfigured()) {
+      supabase.auth.signOut().catch(() => {});
+    }
     const guest: UserProfile = {
       ...defaultProfile,
       name: 'Guest Learner',
@@ -193,6 +255,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     };
     setProfile(guest);
     StorageService.saveProfile(guest);
+    setIsCloudSynced(false);
   };
 
   // Calculate overall goal completion %
@@ -221,6 +284,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         login,
         register,
         logout,
+        isCloudSynced,
       }}
     >
       {children}

@@ -1,41 +1,102 @@
 import React, { useState } from 'react';
-import { X, LogIn, UserPlus, Sparkles, Check, AlertCircle } from 'lucide-react';
+import { X, LogIn, UserPlus, Sparkles, Check, AlertCircle, Cloud, Loader2 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
 import { JLPTLevel } from '../../types';
+import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
 
 export const AuthModal: React.FC = () => {
   const { authModalOpen, setAuthModalOpen } = useApp();
-  const { profile, login, register, logout } = useUser();
+  const { profile, login, register, logout, isCloudSynced } = useUser();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [targetLevel, setTargetLevel] = useState<JLPTLevel>('N5');
+  const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
 
   if (!authModalOpen) return null;
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
 
-    if (mode === 'login') {
-      if (!name.trim()) {
-        setError('Please enter your name or email.');
+    // If Supabase is configured and password is provided, use Supabase Auth
+    if (isSupabaseConfigured() && password.trim()) {
+      setLoading(true);
+      try {
+        if (mode === 'login') {
+          const loginEmail = email.trim() || (name.includes('@') ? name.trim() : `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`);
+          const { data, error: authErr } = await supabase.auth.signInWithPassword({
+            email: loginEmail,
+            password: password.trim(),
+          });
+
+          if (authErr) {
+            setError(authErr.message);
+            setLoading(false);
+            return;
+          }
+
+          setSuccess(`Welcome back! Cloud sync active.`);
+        } else {
+          if (!name.trim()) {
+            setError('Please enter your name.');
+            setLoading(false);
+            return;
+          }
+          if (password.length < 6) {
+            setError('Password must be at least 6 characters.');
+            setLoading(false);
+            return;
+          }
+
+          const registerEmail = email.trim() || `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`;
+          const { data, error: authErr } = await supabase.auth.signUp({
+            email: registerEmail,
+            password: password.trim(),
+            options: {
+              data: {
+                name: name.trim(),
+                targetLevel,
+              },
+            },
+          });
+
+          if (authErr) {
+            setError(authErr.message);
+            setLoading(false);
+            return;
+          }
+
+          setSuccess(`Account registered! Your progress is now synced with Supabase.`);
+        }
+      } catch (err: any) {
+        setError(err.message || 'Authentication error');
+        setLoading(false);
         return;
       }
-      login(name, email);
-      setSuccess(`Welcome back, ${name}!`);
+      setLoading(false);
     } else {
-      if (!name.trim()) {
-        setError('Please enter a username.');
-        return;
+      // Local fallback
+      if (mode === 'login') {
+        if (!name.trim()) {
+          setError('Please enter your name or email.');
+          return;
+        }
+        login(name, email);
+        setSuccess(`Welcome back, ${name}!`);
+      } else {
+        if (!name.trim()) {
+          setError('Please enter a username.');
+          return;
+        }
+        register(name, email, targetLevel);
+        setSuccess(`Account created for ${name}!`);
       }
-      register(name, email, targetLevel);
-      setSuccess(`Account created for ${name}!`);
     }
 
     setTimeout(() => {
@@ -77,9 +138,16 @@ export const AuthModal: React.FC = () => {
               {mode === 'login' ? <LogIn size={20} /> : <UserPlus size={20} />}
             </div>
             <div>
-              <h3 className="text-base font-bold text-slate-900 dark:text-white">
-                {mode === 'login' ? 'Sign In to JLPTMaster' : 'Create Free Account'}
-              </h3>
+              <div className="flex items-center gap-2">
+                <h3 className="text-base font-bold text-slate-900 dark:text-white">
+                  {mode === 'login' ? 'Sign In to JLPTMaster' : 'Create Free Account'}
+                </h3>
+                {isSupabaseConfigured() && (
+                  <span className="flex items-center gap-1 text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300">
+                    <Cloud size={11} /> Supabase
+                  </span>
+                )}
+              </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 {mode === 'login'
                   ? 'Access your saved progress & SRS reviews'
@@ -89,7 +157,7 @@ export const AuthModal: React.FC = () => {
           </div>
           <button
             onClick={() => setAuthModalOpen(false)}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
+            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
           >
             <X size={18} />
           </button>
@@ -122,7 +190,7 @@ export const AuthModal: React.FC = () => {
               <button
                 type="button"
                 onClick={handleLogout}
-                className="text-rose-600 dark:text-rose-400 font-bold hover:underline"
+                className="text-rose-600 dark:text-rose-400 font-bold hover:underline cursor-pointer"
               >
                 Log out
               </button>
@@ -132,7 +200,7 @@ export const AuthModal: React.FC = () => {
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {mode === 'login' ? 'Name or Email' : 'Your Name / Username'}
+                {mode === 'login' ? 'Email or Username' : 'Your Name / Username'}
               </label>
               <input
                 type="text"
@@ -168,7 +236,7 @@ export const AuthModal: React.FC = () => {
                         key={lvl}
                         type="button"
                         onClick={() => setTargetLevel(lvl)}
-                        className={`py-2 rounded-xl text-xs font-bold transition-all ${
+                        className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
                           targetLevel === lvl
                             ? 'bg-brand-500 text-white shadow-md'
                             : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
@@ -197,9 +265,15 @@ export const AuthModal: React.FC = () => {
 
             <button
               type="submit"
-              className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 to-rose-500 text-white font-bold text-sm shadow-md shadow-brand-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 mt-2"
+              disabled={loading}
+              className="w-full py-3 rounded-xl bg-gradient-to-r from-brand-500 to-rose-500 text-white font-bold text-sm shadow-md shadow-brand-500/20 hover:opacity-95 transition-all flex items-center justify-center gap-2 mt-2 disabled:opacity-50 cursor-pointer"
             >
-              {mode === 'login' ? (
+              {loading ? (
+                <>
+                  <Loader2 size={16} className="animate-spin" />
+                  <span>Connecting to Supabase...</span>
+                </>
+              ) : mode === 'login' ? (
                 <>
                   <LogIn size={16} /> Sign In
                 </>

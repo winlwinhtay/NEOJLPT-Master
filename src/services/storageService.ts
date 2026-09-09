@@ -1,5 +1,6 @@
 import { UserProfile, UserSRSProgress } from '../types';
 import { MockTestAttempt } from '../types/practice';
+import { SupabaseSyncService } from './supabaseSyncService';
 
 const KEYS = {
   PROFILE: 'jlpt_user_profile',
@@ -57,6 +58,8 @@ export class StorageService {
   public static saveProfile(profile: UserProfile): void {
     try {
       localStorage.setItem(KEYS.PROFILE, JSON.stringify(profile));
+      // Asynchronously sync to Supabase in background
+      SupabaseSyncService.syncProfile(profile).catch(() => {});
     } catch (e) {
       console.error('Error saving profile', e);
     }
@@ -77,6 +80,10 @@ export class StorageService {
   public static saveSRSProgress(progress: UserSRSProgress[]): void {
     try {
       localStorage.setItem(KEYS.SRS_PROGRESS, JSON.stringify(progress));
+      const profile = this.loadProfile();
+      if (profile?.id) {
+        SupabaseSyncService.syncSRSProgress(profile.id, progress).catch(() => {});
+      }
     } catch (e) {
       console.error('Error saving SRS progress', e);
     }
@@ -119,6 +126,10 @@ export class StorageService {
       const existing = this.loadMockAttempts();
       const updated = [attempt, ...existing];
       localStorage.setItem(KEYS.MOCK_ATTEMPTS, JSON.stringify(updated));
+      const profile = this.loadProfile();
+      if (profile?.id) {
+        SupabaseSyncService.recordMockAttempt(profile.id, attempt).catch(() => {});
+      }
     } catch (e) {
       console.error('Error saving mock attempt', e);
     }
@@ -157,6 +168,10 @@ export class StorageService {
       const filtered = existing.filter((m) => m.id !== mistake.id);
       const updated = [{ ...mistake, date: new Date().toISOString() }, ...filtered].slice(0, 50);
       localStorage.setItem(KEYS.RECENT_MISTAKES, JSON.stringify(updated));
+      const profile = this.loadProfile();
+      if (profile?.id) {
+        SupabaseSyncService.recordMistake(profile.id, mistake).catch(() => {});
+      }
     } catch (e) {
       console.error('Error saving mistake', e);
     }

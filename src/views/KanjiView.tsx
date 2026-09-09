@@ -23,6 +23,7 @@ import { KANJI_DATA } from '../data/kanjiData';
 import { RADICALS_DATA, CORE_69_RADICALS, ALL_240_RADICALS } from '../data/radicalsData';
 import { KanjiCanvas } from '../components/kanji/KanjiCanvas';
 import { AudioButton } from '../components/common/AudioButton';
+import { generate5ExampleSentences } from '../data/generators/kanjiGenerator';
 import { KanjiItem, RadicalItem, RadicalPosition } from '../types';
 
 export const KanjiView: React.FC = () => {
@@ -63,6 +64,22 @@ export const KanjiView: React.FC = () => {
       return next;
     });
   };
+
+  // Guaranteed 5 sample sentences with full 19-language offline translations
+  const displaySentences = useMemo(() => {
+    if (!activeKanji) return [];
+    if (activeKanji.exampleSentences && activeKanji.exampleSentences.length >= 5) {
+      return activeKanji.exampleSentences.slice(0, 5);
+    }
+    return generate5ExampleSentences(
+      activeKanji.kanji,
+      activeKanji.meaning,
+      activeKanji.onyomi || [],
+      activeKanji.kunyomi || [],
+      activeKanji.exampleVocab || [],
+      activeKanji.exampleSentence
+    );
+  }, [activeKanji]);
 
   // Radicals Studio state
   const [radicalMode, setRadicalMode] = useState<'core69' | 'all240'>('core69');
@@ -403,9 +420,12 @@ export const KanjiView: React.FC = () => {
 
                   {/* 5 Sentences Cards List */}
                   <div className="space-y-3">
-                    {(activeKanji.exampleSentences || []).slice(0, 5).map((sentence, idx) => {
+                    {displaySentences.map((sentence, idx) => {
                       const isCardHidden = !showAllTranslations || hiddenSentenceIndices.has(idx);
-                      const translatedText = sentence.translationsByLang?.[language] || sentence.en;
+                      const translatedText =
+                        sentence.translationsByLang?.[language] ||
+                        sentence.translationsByLang?.['en'] ||
+                        sentence.en;
 
                       return (
                         <div

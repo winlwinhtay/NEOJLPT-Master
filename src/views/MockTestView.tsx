@@ -12,19 +12,23 @@ import {
   ChevronLeft,
   BookOpen,
   Volume2,
+  Layers,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
+import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
 import { MOCK_TESTS } from '../data/mockTestData';
 import { AudioButton } from '../components/common/AudioButton';
+import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { StorageService } from '../services/storageService';
-import { MockTestAttempt } from '../types/practice';
+import { MockTestAttempt, PracticeQuestion } from '../types/practice';
 import confetti from 'canvas-confetti';
 
 export const MockTestView: React.FC = () => {
   const { activeLevel } = useApp();
   const { addXP } = useUser();
+  const { rateItem } = useSRS();
   const { t, language } = useI18n();
 
   const testKey = `mock-${activeLevel.toLowerCase()}-01`;
@@ -38,6 +42,8 @@ export const MockTestView: React.FC = () => {
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [flagged, setFlagged] = useState<Record<string, boolean>>({});
   const [timeLeftSeconds, setTimeLeftSeconds] = useState(mockTest.totalTimeMinutes * 60);
+  const [srsQueued, setSrsQueued] = useState(false);
+  const [reportingQuestion, setReportingQuestion] = useState<PracticeQuestion | null>(null);
 
   // Timer countdown
   useEffect(() => {
@@ -63,6 +69,7 @@ export const MockTestView: React.FC = () => {
     setIsFinished(false);
     setAnswers({});
     setFlagged({});
+    setSrsQueued(false);
     setTimeLeftSeconds(mockTest.totalTimeMinutes * 60);
     setActiveSectionIndex(0);
     setActiveQuestionIndex(0);
@@ -81,7 +88,9 @@ export const MockTestView: React.FC = () => {
   const handleSubmitTest = () => {
     setIsFinished(true);
 
-    // Calculate score
+    // Calculate score with official JLPT sectional hurdle (min 19/60 per section)
+    const SECTIONAL_HURDLE = 19;
+    let anySectionFailedHurdle = false;
     let totalCorrect = 0;
     let totalQuestions = 0;
     const sectionScores = mockTest.sections.map((sec) => {
@@ -93,10 +102,14 @@ export const MockTestView: React.FC = () => {
           totalCorrect += 1;
         }
       });
+      const score = Math.round((secCorrect / Math.max(1, sec.questions.length)) * 60);
+      if (score < SECTIONAL_HURDLE) {
+        anySectionFailedHurdle = true;
+      }
       return {
         sectionId: sec.id,
         sectionTitle: sec.title,
-        score: Math.round((secCorrect / Math.max(1, sec.questions.length)) * 60),
+        score,
         maxScore: 60,
         correctCount: secCorrect,
         totalCount: sec.questions.length,
@@ -104,7 +117,7 @@ export const MockTestView: React.FC = () => {
     });
 
     const scaledScore = Math.round((totalCorrect / Math.max(1, totalQuestions)) * 180);
-    const passed = scaledScore >= mockTest.passingScore;
+    const passed = scaledScore >= mockTest.passingScore && !anySectionFailedHurdle;
 
     if (passed) {
       try {
@@ -135,6 +148,28 @@ export const MockTestView: React.FC = () => {
     };
 
     StorageService.saveMockAttempt(attempt);
+  };
+
+  const handleQueueMistakesToSRS = () => {
+    let count = 0;
+    mockTest.sections.forEach((sec) => {
+      sec.questions.forEach((q) => {
+        if (answers[q.id] !== q.correctAnswer) {
+          const itemType = q.category === 'kanji' ? 'kanji' : q.category === 'grammar' ? 'grammar' : 'vocab';
+          rateItem(q.id, itemType, q.level, 'again');
+          StorageService.addMistake({
+            id: 'mstk-' + q.id,
+            question: q.promptJp,
+            yourAnswer: String(answers[q.id] !== undefined ? q.options[answers[q.id]] : 'No answer'),
+            correctAnswer: String(q.options[q.correctAnswer as number] || q.correctAnswer),
+            explanation: q.explanation || 'Reviewed from mock exam.',
+            category: itemType,
+          });
+          count++;
+        }
+      });
+    });
+    setSrsQueued(true);
   };
 
   const minutes = Math.floor(timeLeftSeconds / 60);
@@ -207,17 +242,30 @@ export const MockTestView: React.FC = () => {
 
   // Render Result Screen
   if (isFinished) {
+    const SECTIONAL_HURDLE = 19;
+    let anySectionFailedHurdle = false;
+    let failedSectionTitles: string[] = [];
     let totalCorrect = 0;
     let totalQuestions = 0;
+
     mockTest.sections.forEach((s) => {
+      let secCorrect = 0;
       s.questions.forEach((q) => {
         totalQuestions += 1;
-        if (answers[q.id] === q.correctAnswer) totalCorrect += 1;
+        if (answers[q.id] === q.correctAnswer) secCorrect += 1;
       });
+      totalCorrect += secCorrect;
+      const secScaled = Math.round((secCorrect / Math.max(1, s.questions.length)) * 60);
+      if (secScaled < SECTIONAL_HURDLE) {
+        anySectionFailedHurdle = true;
+        failedSectionTitles.push(s.title);
+      }
     });
 
     const scaledScore = Math.round((totalCorrect / Math.max(1, totalQuestions)) * 180);
-    const passed = scaledScore >= mockTest.passingScore;
+    const passedTotal = scaledScore >= mockTest.passingScore;
+    const passed = passedTotal && !anySectionFailedHurdle;
+    const missedCount = totalQuestions - totalCorrect;
 
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-8 animate-fade-in">
@@ -237,17 +285,29 @@ export const MockTestView: React.FC = () => {
               className={`px-3 py-1 rounded-full text-xs font-black uppercase tracking-wider ${
                 passed
                   ? 'bg-emerald-100 text-emerald-700 dark:bg-emerald-950 dark:text-emerald-300'
+                  : passedTotal && anySectionFailedHurdle
+                  ? 'bg-amber-100 text-amber-700 dark:bg-amber-950 dark:text-amber-300'
                   : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
               }`}
             >
-              {passed ? 'PROBABLE PASS (合格見込み)' : 'NOT YET PASSED (要復習)'}
+              {passed
+                ? 'PROBABLE PASS (合格見込み)'
+                : passedTotal && anySectionFailedHurdle
+                ? 'SECTIONAL HURDLE FAILED (基準点未達)'
+                : 'NOT YET PASSED (要復習)'}
             </span>
             <h2 className="text-3xl sm:text-5xl font-black text-slate-900 dark:text-white mt-2">
               {scaledScore} <span className="text-xl font-normal text-slate-400">/ 180</span>
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400">
-              Estimated JLPT Scaled Score • Passing Threshold: {mockTest.passingScore} pts
+              Estimated JLPT Scaled Score • Passing Threshold: {mockTest.passingScore} pts • Sectional Hurdle: ≥19/60 pts
             </p>
+
+            {passedTotal && anySectionFailedHurdle && (
+              <div className="p-3 mt-3 max-w-lg mx-auto rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 text-xs text-amber-800 dark:text-amber-300 text-left">
+                ⚠️ <strong>Official JLPT Requirement:</strong> While your total scaled score ({scaledScore}/180) exceeds the passing mark ({mockTest.passingScore}), the official JLPT requires a minimum of 19 points in every section. You fell below the hurdle in: <em>{failedSectionTitles.join(', ')}</em>.
+              </div>
+            )}
           </div>
 
           {/* Section Score Breakdown */}
@@ -258,15 +318,25 @@ export const MockTestView: React.FC = () => {
                 if (answers[q.id] === q.correctAnswer) secCorrect += 1;
               });
               const secScaled = Math.round((secCorrect / Math.max(1, sec.questions.length)) * 60);
+              const hurdleMet = secScaled >= SECTIONAL_HURDLE;
 
               return (
                 <div
                   key={sec.id}
-                  className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 space-y-1"
+                  className={`p-4 rounded-2xl border space-y-1 ${
+                    hurdleMet
+                      ? 'bg-slate-50 dark:bg-slate-800/60 border-slate-200 dark:border-slate-700'
+                      : 'bg-rose-50/50 dark:bg-rose-950/30 border-rose-200 dark:border-rose-900/60'
+                  }`}
                 >
-                  <span className="text-[10px] font-bold text-slate-400 uppercase truncate block">
-                    {sec.title}
-                  </span>
+                  <div className="flex items-center justify-between">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase truncate">
+                      {sec.title}
+                    </span>
+                    <span className={`text-[10px] font-bold ${hurdleMet ? 'text-emerald-500' : 'text-rose-500'}`}>
+                      {hurdleMet ? '≥19 Met' : '<19 Failed'}
+                    </span>
+                  </div>
                   <div className="text-xl font-black text-slate-900 dark:text-white">
                     {secScaled} / 60
                   </div>
@@ -278,13 +348,26 @@ export const MockTestView: React.FC = () => {
             })}
           </div>
 
-          <div className="flex items-center justify-center gap-4 pt-6">
+          {/* Actions: Retake and SRS Tie-in */}
+          <div className="flex flex-wrap items-center justify-center gap-3 pt-6">
             <button
               onClick={handleStartTest}
-              className="px-6 py-3 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2"
+              className="px-6 py-3 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-md transition-all flex items-center gap-2 cursor-pointer"
             >
               <RotateCcw size={16} /> Retake Exam
             </button>
+
+            {missedCount > 0 && (
+              <button
+                type="button"
+                disabled={srsQueued}
+                onClick={handleQueueMistakesToSRS}
+                className="px-6 py-3 rounded-2xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 font-bold text-xs shadow-sm transition-all flex items-center gap-2 cursor-pointer disabled:opacity-60"
+              >
+                <Layers size={16} />
+                {srsQueued ? '✅ Added to Daily SRS Review Queue!' : `Add ${missedCount} Missed Questions to SRS`}
+              </button>
+            )}
           </div>
         </div>
       </div>
@@ -332,18 +415,29 @@ export const MockTestView: React.FC = () => {
               <span className="text-xs font-bold text-slate-400 uppercase">
                 {activeQuestion.category}
               </span>
-              <button
-                type="button"
-                onClick={handleToggleFlag}
-                className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-colors ${
-                  flagged[activeQuestion.id]
-                    ? 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'
-                    : 'text-slate-400 hover:text-slate-600'
-                }`}
-              >
-                <Flag size={14} className={flagged[activeQuestion.id] ? 'fill-amber-500' : ''} />
-                {flagged[activeQuestion.id] ? 'Flagged for Review' : 'Flag Question'}
-              </button>
+              <div className="flex items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => setReportingQuestion(activeQuestion)}
+                  className="flex items-center gap-1 px-2.5 py-1 rounded-xl text-xs font-semibold text-slate-400 hover:text-amber-600 dark:hover:text-amber-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                  title="Report mistake or suggestion"
+                >
+                  <Flag size={13} />
+                  <span>Report</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={handleToggleFlag}
+                  className={`flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold transition-colors ${
+                    flagged[activeQuestion.id]
+                      ? 'bg-amber-50 text-amber-600 dark:bg-amber-950 dark:text-amber-400'
+                      : 'text-slate-400 hover:text-slate-600'
+                  }`}
+                >
+                  <Flag size={14} className={flagged[activeQuestion.id] ? 'fill-amber-500' : ''} />
+                  {flagged[activeQuestion.id] ? 'Flagged for Review' : 'Flag Question'}
+                </button>
+              </div>
             </div>
 
             {/* Prompt */}
@@ -475,6 +569,17 @@ export const MockTestView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {reportingQuestion && (
+        <ReportIssueModal
+          isOpen={Boolean(reportingQuestion)}
+          onClose={() => setReportingQuestion(null)}
+          contentId={reportingQuestion.id}
+          module="questions"
+          level={reportingQuestion.level}
+          currentText={reportingQuestion.promptJp}
+        />
+      )}
     </div>
   );
 };

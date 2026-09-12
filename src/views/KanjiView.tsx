@@ -14,6 +14,7 @@ import {
   Info,
   X,
   ArrowRight,
+  Flag,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -23,6 +24,7 @@ import { KANJI_DATA } from '../data/kanjiData';
 import { RADICALS_DATA, CORE_69_RADICALS, ALL_240_RADICALS } from '../data/radicalsData';
 import { KanjiCanvas } from '../components/kanji/KanjiCanvas';
 import { AudioButton } from '../components/common/AudioButton';
+import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { generate5ExampleSentences } from '../data/generators/kanjiGenerator';
 import { KanjiItem, RadicalItem, RadicalPosition } from '../types';
 
@@ -38,6 +40,8 @@ export const KanjiView: React.FC = () => {
   // Search & Filter for Kanji
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedStrokeFilter, setSelectedStrokeFilter] = useState<number | null>(null);
+  const [selectedRadicalFilter, setSelectedRadicalFilter] = useState<string | null>(null);
+  const [reportingKanji, setReportingKanji] = useState<KanjiItem | null>(null);
 
   // Active Kanji for interactive practice
   const [activeKanji, setActiveKanji] = useState<KanjiItem | null>(() => {
@@ -95,6 +99,13 @@ export const KanjiView: React.FC = () => {
     return KANJI_DATA.filter((k) => {
       if (k.level !== activeLevel) return false;
       if (selectedStrokeFilter && k.strokeCount !== selectedStrokeFilter) return false;
+      if (
+        selectedRadicalFilter &&
+        !k.radicals?.includes(selectedRadicalFilter) &&
+        !k.kanji.includes(selectedRadicalFilter)
+      ) {
+        return false;
+      }
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
         const match =
@@ -106,7 +117,7 @@ export const KanjiView: React.FC = () => {
       }
       return true;
     });
-  }, [activeLevel, selectedStrokeFilter, searchQuery]);
+  }, [activeLevel, selectedStrokeFilter, selectedRadicalFilter, searchQuery]);
 
   const [kanjiPage, setKanjiPage] = useState(1);
   const KANJI_PAGE_SIZE = 48;
@@ -238,18 +249,33 @@ export const KanjiView: React.FC = () => {
       {/* ========================================================================= */}
       {activeTab === 'kanji' && (
         <div className="space-y-8 animate-fade-in">
-          {/* Top Search Bar */}
-          <div className="flex items-center justify-between gap-4">
-            <div className="relative w-full sm:w-80">
-              <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
-                onChange={(e) => setSearchQuery(e.target.value)}
-                placeholder={t('kanji.searchPlaceholder')}
-                className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 shadow-sm"
-              />
+          {/* Top Search Bar & Active Filters */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-80">
+                <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('kanji.searchPlaceholder')}
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 shadow-sm"
+                />
+              </div>
+
+              {selectedRadicalFilter && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold">
+                  <span>Radical: 「{selectedRadicalFilter}」</span>
+                  <button
+                    onClick={() => setSelectedRadicalFilter(null)}
+                    className="hover:text-rose-500 p-0.5 rounded transition-colors"
+                  >
+                    <X size={14} />
+                  </button>
+                </div>
+              )}
             </div>
+
             {selectedStrokeFilter && (
               <button
                 onClick={() => setSelectedStrokeFilter(null)}
@@ -290,6 +316,14 @@ export const KanjiView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => setReportingKanji(activeKanji)}
+                      className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                      title="Report mistake or suggestion"
+                    >
+                      <Flag size={16} />
+                    </button>
                     <AudioButton text={activeKanji.kanji} size="md" />
                   </div>
                 </div>
@@ -908,6 +942,20 @@ export const KanjiView: React.FC = () => {
               </div>
             </div>
 
+            {/* Filter Studio Button */}
+            <button
+              type="button"
+              onClick={() => {
+                setSelectedRadicalFilter(selectedRadicalModal.radical);
+                setSelectedRadicalModal(null);
+                setActiveTab('kanji');
+                window.scrollTo({ top: 0, behavior: 'smooth' });
+              }}
+              className="w-full py-3 px-4 rounded-2xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Filter size={15} /> Filter Kanji Studio by Radical 「{selectedRadicalModal.radical}」
+            </button>
+
             {/* Example Kanji Characters with direct Study Button */}
             <div className="space-y-3">
               <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
@@ -933,6 +981,17 @@ export const KanjiView: React.FC = () => {
             </div>
           </div>
         </div>
+      )}
+
+      {reportingKanji && (
+        <ReportIssueModal
+          isOpen={Boolean(reportingKanji)}
+          onClose={() => setReportingKanji(null)}
+          contentId={reportingKanji.id}
+          module="kanji"
+          level={reportingKanji.level}
+          currentText={`Kanji: ${reportingKanji.kanji} - Meaning: ${reportingKanji.meaning} - Onyomi: ${reportingKanji.onyomi.join(', ')}`}
+        />
       )}
     </div>
   );

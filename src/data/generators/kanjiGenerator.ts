@@ -1034,32 +1034,22 @@ export function generateFullKanji(): KanjiItem[] {
     };
   });
 
-  const targetCounts: Record<JLPTLevel, number> = {
-    N5: 100,
-    N4: 300,
-    N3: 650,
-    N2: 1000,
-    N1: 2000,
-  };
-
+  const existingKanjiChars = new Set(result.map((k) => k.kanji));
   const levels: JLPTLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1'];
 
   levels.forEach((lvl) => {
-    const currentCount = result.filter((k) => k.level === lvl).length;
-    const target = targetCounts[lvl];
-    const needed = target - currentCount;
-    if (needed <= 0) return;
-
-    const pool = kanjiPool[lvl];
+    const pool = kanjiPool[lvl] || [];
     let genIndex = 1;
 
-    for (let i = 0; i < needed; i++) {
-      const item = pool[i % pool.length];
+    for (const item of pool) {
+      if (existingKanjiChars.has(item.char)) continue;
+      existingKanjiChars.add(item.char);
+
       const id = `k-${lvl.toLowerCase()}-gen-${String(genIndex).padStart(5, '0')}`;
       genIndex++;
 
-      const unitNum = (i % 10) + 1;
-      const meaningEn = `${item.meaning} (${item.char})`;
+      const unitNum = (genIndex % 10) + 1;
+      const meaningEn = item.meaning;
       const localizedMeanings = getLocalizedKanjiMeaning(item.char, meaningEn);
 
       const sentences = generate5ExampleSentences(

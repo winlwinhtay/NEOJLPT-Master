@@ -15,7 +15,7 @@ export interface PracticeQuestion {
   id: string;
   type: QuestionType;
   level: JLPTLevel;
-  category: 'vocabulary' | 'kanji' | 'grammar' | 'reading' | 'listening';
+  category: 'vocabulary' | 'kanji' | 'grammar' | 'reading' | 'listening' | 'particle_drill' | 'keigo_simulator';
   promptJp: string;
   promptEn?: string;
   readingPrompt?: string;
@@ -26,6 +26,8 @@ export interface PracticeQuestion {
   explanation: string;
   wrongExplanations?: Record<string, string>; // reason why specific option is wrong
   relatedLessonId?: string;
+  relatedGrammarId?: string;
+  relatedVocabId?: string;
   tags: string[];
 }
 

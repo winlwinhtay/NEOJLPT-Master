@@ -70,6 +70,16 @@ export interface VocabularyItem {
   tags: string[];
   unitId?: string;
   lessonId?: string;
+  pitchAccent?: {
+    pattern: string;
+    pitchType: 'heiban' | 'atamadaka' | 'nakadaka' | 'odaka';
+    downstep?: number;
+  };
+  collocations?: {
+    phrase: string;
+    reading: string;
+    meaning: string;
+  }[];
 }
 
 export interface KanjiSentence {

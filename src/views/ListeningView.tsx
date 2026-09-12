@@ -30,9 +30,33 @@ export const ListeningView: React.FC = () => {
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
+  const [isLooping, setIsLooping] = useState(false);
+  const isLoopingRef = React.useRef(false);
+  isLoopingRef.current = isLooping;
   const [selectedOption, setSelectedOption] = useState<number | null>(null);
   const [isAnswered, setIsAnswered] = useState(false);
   const [showTranscript, setShowTranscript] = useState(false);
+
+  const playAudioSequence = async () => {
+    setIsPlaying(true);
+    const fullAudioText = selectedLesson.dialogue
+      .map((d) => `${d.speaker}：${d.text}`)
+      .join('。 ');
+
+    await speechService.speakJapanese(fullAudioText, {
+      rate: playbackSpeed,
+      onEnd: () => {
+        if (isLoopingRef.current) {
+          setTimeout(() => {
+            if (isLoopingRef.current) playAudioSequence();
+          }, 800);
+        } else {
+          setIsPlaying(false);
+        }
+      },
+      onError: () => setIsPlaying(false),
+    });
+  };
 
   // Play full dialogue sequentially
   const handlePlayDialogue = async () => {
@@ -41,17 +65,7 @@ export const ListeningView: React.FC = () => {
       setIsPlaying(false);
       return;
     }
-
-    setIsPlaying(true);
-    const fullAudioText = selectedLesson.dialogue
-      .map((d) => `${d.speaker}：${d.text}`)
-      .join('。 ');
-
-    await speechService.speakJapanese(fullAudioText, {
-      rate: playbackSpeed,
-      onEnd: () => setIsPlaying(false),
-      onError: () => setIsPlaying(false),
-    });
+    await playAudioSequence();
   };
 
   const handleSelectOption = (idx: number) => {
@@ -173,6 +187,21 @@ export const ListeningView: React.FC = () => {
                 </button>
               ))}
             </div>
+
+            {/* Repeat Loop Toggle */}
+            <button
+              type="button"
+              onClick={() => setIsLooping(!isLooping)}
+              className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all flex items-center gap-1.5 ${
+                isLooping
+                  ? 'bg-purple-400 text-slate-950 font-black shadow-md'
+                  : 'bg-white/10 text-white/80 hover:bg-white/20 hover:text-white'
+              }`}
+              title={isLooping ? 'Repeat Dialogue: ON' : 'Repeat Dialogue: OFF'}
+            >
+              <RotateCcw size={14} className={isLooping ? 'animate-spin-slow' : ''} />
+              <span>{isLooping ? 'Loop ON' : 'Loop'}</span>
+            </button>
           </div>
         </div>
 

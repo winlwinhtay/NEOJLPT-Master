@@ -14,6 +14,7 @@ const KEYS = {
   DAILY_LOGS: 'jlpt_daily_logs',
   STUDY_PLAN: 'jlpt_study_plan',
   CURRICULUM_CONFIG: 'jlpt_curriculum_config',
+  REVIEW_QUEUE: 'jlpt_review_queue',
 };
 
 export const defaultProfile: UserProfile = {
@@ -226,6 +227,36 @@ export class StorageService {
       localStorage.setItem(KEYS.CURRICULUM_CONFIG, JSON.stringify(config));
     } catch (e) {
       console.error('Error saving curriculum config', e);
+    }
+  }
+
+  public static loadReviewItems<T = any>(): T[] {
+    try {
+      const data = localStorage.getItem(KEYS.REVIEW_QUEUE);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (e) {
+      console.error('Error loading review items', e);
+    }
+    return [];
+  }
+
+  public static saveReviewItems<T = any>(items: T[]): void {
+    try {
+      localStorage.setItem(KEYS.REVIEW_QUEUE, JSON.stringify(items));
+    } catch (e) {
+      console.error('Error saving review items', e);
+    }
+  }
+
+  public static addReviewItem<T extends { id: string }>(item: T): void {
+    try {
+      const existing = this.loadReviewItems<T>();
+      const filtered = existing.filter((i) => i.id !== item.id);
+      this.saveReviewItems([item, ...filtered]);
+    } catch (e) {
+      console.error('Error adding review item', e);
     }
   }
 }

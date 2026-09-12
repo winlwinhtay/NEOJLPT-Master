@@ -11,6 +11,7 @@ import {
   Filter,
   ArrowRight,
   ArrowLeft,
+  Flag,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useSRS } from '../context/SRSContext';
@@ -19,8 +20,9 @@ import { useI18n } from '../i18n/I18nContext';
 import { VOCABULARY_DATA } from '../data/vocabularyData';
 import { AudioButton } from '../components/common/AudioButton';
 import { RubyText } from '../components/common/RubyText';
+import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { SRSRating } from '../services/srsService';
-import { MasteryStatus } from '../types';
+import { MasteryStatus, VocabularyItem } from '../types';
 
 export const VocabularyView: React.FC = () => {
   const { activeLevel } = useApp();
@@ -35,6 +37,7 @@ export const VocabularyView: React.FC = () => {
   // Flashcard mode state
   const [currentCardIndex, setCurrentCardIndex] = useState(0);
   const [isFlipped, setIsFlipped] = useState(false);
+  const [reportingVocab, setReportingVocab] = useState<VocabularyItem | null>(null);
 
   // List mode pagination
   const [currentPage, setCurrentPage] = useState(1);
@@ -270,6 +273,14 @@ export const VocabularyView: React.FC = () => {
 
                     <div className="flex items-center gap-2" onClick={(e) => e.stopPropagation()}>
                       <button
+                        type="button"
+                        onClick={() => setReportingVocab(currentWord)}
+                        className="p-2 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-400 hover:text-amber-500 hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
+                        title="Report mistake or suggestion"
+                      >
+                        <Flag size={16} />
+                      </button>
+                      <button
                         onClick={() => toggleFavorite(currentWord.id, 'vocab', currentWord.level)}
                         className={`p-2 rounded-xl border transition-colors ${
                           isFav
@@ -295,6 +306,12 @@ export const VocabularyView: React.FC = () => {
                         <div className="text-lg font-japanese text-slate-400 font-medium">
                           {currentWord.hiragana}
                         </div>
+                        {currentWord.pitchAccent && (
+                          <div className="mt-2 inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs font-mono font-bold text-slate-600 dark:text-slate-300">
+                            <span>Pitch:</span>
+                            <span className="text-indigo-600 dark:text-indigo-400">{currentWord.pitchAccent.pattern}</span>
+                          </div>
+                        )}
                         <p className="text-xs text-slate-400 mt-4 flex items-center justify-center gap-1">
                           <RotateCw size={12} /> {t('vocab.flipCard')}
                         </p>
@@ -306,10 +323,39 @@ export const VocabularyView: React.FC = () => {
                           <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
                             {currentWord.meaningsByLang?.[language] || currentWord.meaning}
                           </div>
-                          <div className="text-xs font-mono text-slate-400 mt-1">
-                            [{currentWord.romaji}] • {currentWord.partOfSpeech}
+                          <div className="text-xs font-mono text-slate-400 mt-1 flex items-center justify-center gap-2">
+                            <span>[{currentWord.romaji}]</span>
+                            <span>•</span>
+                            <span>{currentWord.partOfSpeech}</span>
+                            {currentWord.pitchAccent && (
+                              <>
+                                <span>•</span>
+                                <span className="text-indigo-500 font-bold">{currentWord.pitchAccent.pattern}</span>
+                              </>
+                            )}
                           </div>
                         </div>
+
+                        {/* Collocations */}
+                        {currentWord.collocations && currentWord.collocations.length > 0 && (
+                          <div className="p-3 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 text-left space-y-1">
+                            <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-500 block">
+                              Collocations & Usage:
+                            </span>
+                            <div className="flex flex-wrap gap-1.5">
+                              {currentWord.collocations.map((c, i) => (
+                                <span
+                                  key={i}
+                                  className="px-2.5 py-1 rounded-xl bg-white dark:bg-slate-900 border border-indigo-200 dark:border-indigo-800 text-xs text-slate-800 dark:text-slate-200 flex items-center gap-1 font-japanese"
+                                >
+                                  <strong>{c.phrase}</strong>
+                                  <span className="text-[10px] text-slate-400">({c.reading})</span>
+                                  <span className="text-[10px] text-slate-500">— {c.meaning}</span>
+                                </span>
+                              ))}
+                            </div>
+                          </div>
+                        )}
 
                         {/* Example Sentence Box */}
                         <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 text-left space-y-1">
@@ -430,6 +476,11 @@ export const VocabularyView: React.FC = () => {
                         </span>
                         <span className="text-xs text-slate-400 font-japanese">{v.hiragana}</span>
                         <span className="text-[11px] font-mono text-slate-400">[{v.romaji}]</span>
+                        {v.pitchAccent && (
+                          <span className="text-[10px] font-mono px-1.5 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                            {v.pitchAccent.pattern}
+                          </span>
+                        )}
                       </div>
                       <div className="text-xs font-semibold text-brand-600 dark:text-brand-400 mt-0.5">
                         {v.meaningsByLang?.[language] || v.meaning}
@@ -441,6 +492,14 @@ export const VocabularyView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2 shrink-0">
+                    <button
+                      type="button"
+                      onClick={() => setReportingVocab(v)}
+                      className="p-1.5 rounded-lg text-slate-300 hover:text-amber-500 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+                      title="Report mistake or suggestion"
+                    >
+                      <Flag size={14} />
+                    </button>
                     <button
                       onClick={() => toggleFavorite(v.id, 'vocab', v.level)}
                       className={`p-2 rounded-xl transition-colors ${
@@ -487,6 +546,17 @@ export const VocabularyView: React.FC = () => {
             </div>
           )}
         </div>
+      )}
+
+      {reportingVocab && (
+        <ReportIssueModal
+          isOpen={Boolean(reportingVocab)}
+          onClose={() => setReportingVocab(null)}
+          contentId={reportingVocab.id}
+          module="vocabulary"
+          level={reportingVocab.level}
+          currentText={`${reportingVocab.word} (${reportingVocab.hiragana}) - ${reportingVocab.meaning}`}
+        />
       )}
     </div>
   );

@@ -16,9 +16,11 @@ import {
   RotateCcw,
   Target,
   Calendar,
-  Clock,
   Sparkles,
   TrendingUp,
+  Download,
+  Upload,
+  Clock,
 } from 'lucide-react';
 import { VOCABULARY_DATA } from '../data/vocabularyData';
 import { KANJI_DATA } from '../data/kanjiData';
@@ -151,7 +153,12 @@ export const AdminView: React.FC = () => {
   const [editItem, setEditItem] = useState<Partial<VocabularyItem> | null>(null);
   const [toastMsg, setToastMsg] = useState('');
   // Human Review Queue State
-  const [reviewQueue, setReviewQueue] = useState<JapaneseReviewItem[]>(INITIAL_REVIEW_QUEUE);
+  const [reviewQueue, setReviewQueue] = useState<JapaneseReviewItem[]>(() => {
+    const stored = StorageService.loadReviewItems<JapaneseReviewItem>();
+    const ids = new Set(stored.map((s) => s.id));
+    const merged = [...stored, ...INITIAL_REVIEW_QUEUE.filter((i) => !ids.has(i.id))];
+    return merged;
+  });
   const [reviewFilterCategory, setReviewFilterCategory] = useState<string>('ALL');
   const [reviewFilterStatus, setReviewFilterStatus] = useState<string>('ALL');
 
@@ -165,16 +172,80 @@ export const AdminView: React.FC = () => {
   }, [reviewQueue, reviewFilterCategory, reviewFilterStatus, selectedLevel]);
 
   const handleUpdateReviewStatus = (id: string, newStatus: JapaneseReviewItem['status']) => {
-    setReviewQueue((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
-    );
+    setReviewQueue((prev) => {
+      const updated = prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item));
+      StorageService.saveReviewItems(updated);
+      return updated;
+    });
     showToast(`Review item ${id} marked as ${newStatus.toUpperCase()}.`);
   };
 
   const handleUpdateReviewNotes = (id: string, notes: string) => {
-    setReviewQueue((prev) =>
-      prev.map((item) => (item.id === id ? { ...item, reviewerNotes: notes } : item))
-    );
+    setReviewQueue((prev) => {
+      const updated = prev.map((item) => (item.id === id ? { ...item, reviewerNotes: notes } : item));
+      StorageService.saveReviewItems(updated);
+      return updated;
+    });
+  };
+
+  const handleExportJSON = () => {
+    const dataStr = JSON.stringify(reviewQueue, null, 2);
+    const blob = new Blob([dataStr], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `jlpt-review-queue-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported review queue as JSON.');
+  };
+
+  const handleExportCSV = () => {
+    const headers = ['id', 'level', 'module', 'category', 'severity', 'title', 'status', 'reviewerNotes'];
+    const rows = reviewQueue.map((item) => [
+      item.id,
+      item.level,
+      item.module,
+      item.category,
+      item.severity,
+      `"${(item.title || '').replace(/"/g, '""')}"`,
+      item.status,
+      `"${(item.reviewerNotes || '').replace(/"/g, '""')}"`,
+    ]);
+    const csvContent = [headers.join(','), ...rows.map((r) => r.join(','))].join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `jlpt-review-queue-${new Date().toISOString().split('T')[0]}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    showToast('Exported review queue as CSV.');
+  };
+
+  const handleImportJSON = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = (event) => {
+      try {
+        const imported = JSON.parse(event.target?.result as string);
+        if (Array.isArray(imported)) {
+          const map = new Map<string, JapaneseReviewItem>();
+          reviewQueue.forEach((item) => map.set(item.id, item));
+          imported.forEach((item) => {
+            if (item.id) map.set(item.id, item);
+          });
+          const merged = Array.from(map.values());
+          setReviewQueue(merged);
+          StorageService.saveReviewItems(merged);
+          showToast(`Imported and merged ${imported.length} review items.`);
+        }
+      } catch (err) {
+        alert('Invalid JSON file format.');
+      }
+    };
+    reader.readAsText(file);
   };
 
 
@@ -1128,21 +1199,56 @@ export const AdminView: React.FC = () => {
               ))}
             </div>
 
-            {/* Status Filter */}
-            <div className="flex items-center gap-1.5">
-              {['ALL', 'pending', 'approved', 'verified', 'rejected'].map((st) => (
+            {/* Status Filter & Export/Import Controls */}
+            <div className="flex flex-wrap items-center gap-2">
+              <div className="flex items-center gap-1">
+                {['ALL', 'pending', 'approved', 'verified', 'rejected'].map((st) => (
+                  <button
+                    key={st}
+                    onClick={() => setReviewFilterStatus(st)}
+                    className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${
+                      reviewFilterStatus === st
+                        ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                        : 'bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100'
+                    }`}
+                  >
+                    {st}
+                  </button>
+                ))}
+              </div>
+
+              <div className="h-4 w-px bg-slate-200 dark:bg-slate-700 hidden sm:block mx-1" />
+
+              <div className="flex items-center gap-1.5">
                 <button
-                  key={st}
-                  onClick={() => setReviewFilterStatus(st)}
-                  className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${
-                    reviewFilterStatus === st
-                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
-                      : 'bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100'
-                  }`}
+                  type="button"
+                  onClick={handleExportJSON}
+                  title="Export Queue as JSON"
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors flex items-center gap-1"
                 >
-                  {st}
+                  <Download size={14} /> JSON
                 </button>
-              ))}
+                <button
+                  type="button"
+                  onClick={handleExportCSV}
+                  title="Export Queue as CSV"
+                  className="px-2.5 py-1.5 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 text-xs font-bold transition-colors flex items-center gap-1"
+                >
+                  <Download size={14} /> CSV
+                </button>
+                <label
+                  title="Import Decisions from JSON"
+                  className="px-2.5 py-1.5 rounded-xl bg-indigo-50 hover:bg-indigo-100 dark:bg-indigo-950/60 dark:hover:bg-indigo-900/80 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold transition-colors flex items-center gap-1 cursor-pointer"
+                >
+                  <Upload size={14} /> Import
+                  <input
+                    type="file"
+                    accept=".json"
+                    onChange={handleImportJSON}
+                    className="hidden"
+                  />
+                </label>
+              </div>
             </div>
           </div>
 

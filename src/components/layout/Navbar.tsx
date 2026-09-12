@@ -223,6 +223,21 @@ export const Navbar: React.FC = () => {
             )}
           </div>
 
+          {/* Global Furigana Quick Toggle */}
+          <button
+            type="button"
+            onClick={() => updateProfile({ showFurigana: !profile.showFurigana })}
+            className={`hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+              profile.showFurigana
+                ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-transparent hover:text-slate-600 dark:hover:text-slate-300'
+            }`}
+            title={`Furigana: ${profile.showFurigana ? 'ON' : 'OFF'} (Click to toggle)`}
+          >
+            <span className="font-japanese text-[11px] font-bold">振</span>
+            <span className="text-[10px] tracking-wider uppercase">{profile.showFurigana ? 'Furi ON' : 'Furi OFF'}</span>
+          </button>
+
           {/* Notifications Trigger */}
           <button
             type="button"

@@ -234,4 +234,150 @@ While AI may surpass humans in comprehensively encompassing vast historical data
       },
     ],
   },
+
+  // ==========================================
+  // --- ADDITIONAL ADVANCED READING (Action 8) ---
+  // ==========================================
+  {
+    id: 'r-n3-02',
+    title: '日本の食品ロス削減への取り組み',
+    titleEn: "Japan's Initiatives in Food Loss Reduction",
+    level: 'N3',
+    topic: 'environment',
+    length: 'medium',
+    passage: `[日本]{にほん}では、まだ[食]{た}べられるのに[廃棄]{はいき}される「[食品]{しょくひん}ロス」が[年間]{ねんかん}５００[万]{まん}トン[以上]{いじょう}も[発生]{はっせい}しています。
+この[問題]{もんだい}を[解決]{かいけつ}するため、スーパーやコンビニでは[賞味期限]{しょうみきげん}が[近]{ちか}い[商品]{しょうひん}を[手前]{てまえ}から[選]{えら}ぶ「てまえどり」という[運動]{うんどう}が[広]{ひろ}がっています。
+また、レストランで[食]{た}べ[残]{のこ}した[料理]{りょうり}を[持]{も}ち[帰]{かえ}る「ドギーバッグ」の[普及]{ふきゅう}も[進]{すす}んでいます。
+[一人一人]{ひとりひとり}が[買]{か}い[過]{す}ぎないよう[意識]{いしき}を[変]{か}えることが、[環境]{かんきょう}を[守]{まも}る[第一歩]{だいいっぽ}となります。`,
+    passagePlain: `日本では、まだ食べられるのに廃棄される「食品ロス」が年間５００万トン以上も発生しています。
+この問題を解決するため、スーパーやコンビニでは賞味期限が近い商品を手前から選ぶ「てまえどり」という運動が広がっています。
+また、レストランで食べ残した料理を持ち帰る「ドギーバッグ」の普及も進んでいます。
+一人一人が買い過ぎないよう意識を変えることが、環境を守る第一歩となります。`,
+    translationEn: `In Japan, more than 5 million tons of "food loss"—edible food discarded as waste—is generated annually.
+To solve this issue, a movement called "Temaedori" (picking items closest to the front whose expiration dates are near) is expanding across supermarkets and convenience stores.
+Additionally, the practice of using "doggy bags" to take home leftovers from restaurants is also gaining ground.
+Changing our personal awareness so that each individual avoids overbuying is the vital first step in protecting the environment.`,
+    vocabularyList: [
+      { word: '廃棄', reading: 'はいき', meaning: 'disposal, discarding' },
+      { word: '食品ロス', reading: 'しょくひんロス', meaning: 'food waste / loss' },
+      { word: '賞味期限', reading: 'しょうみきげん', meaning: 'best-before date' },
+      { word: '普及', reading: 'ふきゅう', meaning: 'widespread adoption' },
+      { word: '第一歩', reading: 'だいいっぽ', meaning: 'first step' },
+    ],
+    audioScript: '日本ではまだ食べられる食品が大量に廃棄されています。賞味期限の近い商品から選ぶ運動や、食べ残しを持ち帰る習慣が広がっています。意識を変えることが環境保護につながります。',
+    questions: [
+      {
+        id: 'rq-n3-02-1',
+        questionJp: '「てまえどり」とは具体的にどのような行動ですか？',
+        questionEn: 'What action specifically does "Temaedori" refer to?',
+        options: [
+          '棚の手前にある賞味期限の近い商品から選んで買うこと',
+          '一番奥にある新しい賞味期限の商品を探すこと',
+          '買い物をするときにレジ袋を断ること',
+          '安売りされている食品を大量にまとめ買いすること',
+        ],
+        correctIndex: 0,
+        explanation: '「賞味期限が近い商品を手前から選ぶ『てまえどり』という運動」 directly defines the term.',
+      },
+      {
+        id: 'rq-n3-02-2',
+        questionJp: '筆者が最も重要だと述べていることは何ですか？',
+        questionEn: 'What does the author state is most important?',
+        options: [
+          '一人一人が買い過ぎないよう意識を変えること',
+          'すべての外食産業を厳しく規制すること',
+          '賞味期限を法律で延長すること',
+          'ドギーバッグを有料化すること',
+        ],
+        correctIndex: 0,
+        explanation: '「一人一人が買い過ぎないよう意識を変えることが、環境を守る第一歩となります」 corresponds to option 1.',
+      },
+    ],
+  },
+  {
+    id: 'r-n2-02',
+    title: '伝統工芸の継承と現代的イノベーション',
+    titleEn: 'Transmission of Traditional Craft and Contemporary Innovation',
+    level: 'N2',
+    topic: 'culture',
+    length: 'long',
+    passage: `[後継者]{こうけいしゃ}[不足]{ぶそく}やライフスタイルの[変化]{へんか}に[伴]{ともな}い、[各地]{かくち}の[伝統工芸]{でんとうこうげい}は[衰退]{すいたい}の[危機]{きき}に[瀕]{ひん}している。
+しかし、[単]{たん}に「[古]{ふる}き[良]{よ}き[伝統]{でんとう}の[墨守]{ぼくしゅ}」に[固執]{こしつ}するのではなく、[現代]{げんだい}の[生活様式]{せいかつようしき}やグローバルなデザインと[融合]{ゆうごう}させることで、[新]{あら}たな[活路]{かつろ}を[見出]{みいだ}す[試]{こころ}みが[注目]{ちゅうもく}されている。
+[例]{たと}えば、[有田焼]{ありたやき}の[技術]{ぎじゅつ}を[応用]{おうよう}したスマートフォンの[筐体]{きょうたい}や、[西陣織]{にしじんおり}の[織布]{しょくふ}を[活用]{かつよう}したスニーカーなど、[異業種]{いぎょうしゅ}とのコラボレーションによって[伝統]{でんとう}の[価値]{かち}が[再定義]{さいていぎ}されつつある。
+[本質]{ほんしつ}を[守]{まも}りつつ[形]{かたち}を[変]{か}えていく[柔軟性]{じゅうなんせい}こそが、[真]{しん}の[継承]{けいしょう}に[不可欠]{ふかけつ}なのである。`,
+    passagePlain: `後継者不足やライフスタイルの変化に伴い、各地の伝統工芸は衰退の危機に瀕している。
+しかし、単に「古き良き伝統の墨守」に固執するのではなく、現代の生活様式やグローバルなデザインと融合させることで、新たな活路を見出す試みが注目されている。
+例えば、有田焼の技術を応用したスマートフォンの筐体や、西陣織の織布を活用したスニーカーなど、異業種とのコラボレーションによって伝統の価値が再定義されつつある。
+本質を守りつつ形を変えていく柔軟性こそが、真の継承に不可欠なのである。`,
+    translationEn: `Accompanying a shortage of successors and changes in lifestyles, traditional crafts across various regions face a crisis of decline.
+However, rather than clinging obstinately to "adherence to old traditions," initiatives that find new avenues by merging traditional craft with modern lifestyles and global design are drawing keen attention.
+For instance, smartphone cases applying Arita ware porcelain technology and sneakers utilizing Nishijin silk textiles demonstrate how cross-industry collaborations are redefining the value of tradition.
+It is precisely the flexibility to transform outward forms while safeguarding core essence that is indispensable for genuine cultural transmission.`,
+    vocabularyList: [
+      { word: '後継者', reading: 'こうけいしゃ', meaning: 'successor, heir' },
+      { word: '衰退', reading: 'すいたい', meaning: 'decline, decay' },
+      { word: '墨守', reading: 'ぼくしゅ', meaning: 'rigid adherence' },
+      { word: '活路', reading: 'かつろ', meaning: 'way out, breakthrough' },
+      { word: '柔軟性', reading: 'じゅうなんせい', meaning: 'flexibility' },
+    ],
+    audioScript: '伝統工芸は衰退の危機にありますが、現代のデザインや技術と融合することで新たな価値を生み出しています。本質を守りつつ形を変える柔軟性が大切です。',
+    questions: [
+      {
+        id: 'rq-n2-02-1',
+        questionJp: '筆者が述べる「真の伝統の継承」とはどのようなものですか？',
+        questionEn: 'What does the author describe as "genuine cultural transmission"?',
+        options: [
+          '本質を守りながらも、時代に合わせて柔軟に形を変えていくこと',
+          '昔ながらの製法やデザインを一切変えずにそのまま維持すること',
+          '伝統工芸品をすべて工業製品に置き換えること',
+          '国内市場だけを重視して海外進出を控えること',
+        ],
+        correctIndex: 0,
+        explanation: '「本質を守りつつ形を変えていく柔軟性こそが、真の継承に不可欠なのである」 directly matches option 1.',
+      },
+    ],
+  },
+  {
+    id: 'r-n1-02',
+    title: '言葉の変遷と社会的アイデンティティ',
+    titleEn: 'The Mutation of Language and Societal Identity',
+    level: 'N1',
+    topic: 'academic',
+    length: 'long',
+    passage: `[言語]{げんご}の「[乱]{みだ}れ」と[称]{しょう}される[現象]{げんしょう}は、[往々]{おうおう}にして[純粋主義的]{じゅんすいしゅぎてき}な[懐古趣味]{かいこしゅみ}から[糾弾]{きゅうだん}の[対象]{たいしょう}となりがちである。
+しかし、[言語学]{げんごがく}の[知見]{ちけん}に[徴]{ちょう}すれば、[言葉]{ことば}とは[静態的]{せいたいてき}な[規範]{きはん}の[体系]{たいけい}ではなく、[話者]{わしゃ}の[生]{なま}の[営]{いとな}みとともに[不断]{ふだん}に[更新]{こうしん}される[動態]{どうたい}である。
+[若者言葉]{わかものことば}や[新語]{しんご}の[台頭]{たいとう}は、[既存]{きぞん}の[規範]{きはん}の[破壊]{はかい}ではなく、[変容]{へんよう}する[社会]{しゃかい}[構造]{こうぞう}や[微細]{びさい}な[心象]{しんしょう}を[的確]{てきかく}に[表象]{ひょうしょう}しようとする[創造的]{そうぞうてき}な[模索]{もさく}にほかならない。
+[言葉]{ことば}の[揺]{ゆ}らぎを[単]{たん}なる[頽廃]{たいはい}として[排斥]{はいせき}するのではなく、そこに[投影]{とうえい}された[時代]{じだい}の[息吹]{いぶき}を[汲]{く}み[取]{と}る[寛容]{かんよう}さと[洞察]{どうさつ}が[求]{ ocean}められている。`,
+    passagePlain: `言語の「乱れ」と称される現象は、往々にして純粋主義的な懐古趣味から糾弾の対象となりがちである。
+しかし、言語学の知見に徴すれば、言葉とは静態的な規範の体系ではなく、話者の生の営みとともに不断に更新される動態である。
+若者言葉や新語の台頭は、既存の規範の破壊ではなく、変容する社会構造や微細な心象を的確に表象しようとする創造的な模索にほかならない。
+言葉の揺らぎを単なる頽廃として排斥するのではなく、そこに投影された時代の息吹を汲み取る寛容さと洞察が求められている。`,
+    translationEn: `Phenomena categorized as the "corruption" of language frequently become targets of condemnation driven by purist nostalgia.
+However, in light of linguistic insights, language is not a static codified system of norms, but a dynamic entity continuously renewed alongside the living experiences of its speakers.
+The emergence of youth vernacular and neologisms is by no means the destruction of existing standards, but rather a creative quest to accurately signify nuanced sentiments and evolving societal structures.
+Rather than rejecting linguistic fluctuations as mere decadence, what is demanded of us is the tolerance and discernment to appreciate the vital spirit of the era projected therein.`,
+    vocabularyList: [
+      { word: '純粋主義', reading: 'じゅんすいしゅぎ', meaning: 'purism' },
+      { word: '糾弾', reading: 'きゅうだん', meaning: 'denunciation, censure' },
+      { word: '動態', reading: 'どうたい', meaning: 'dynamic state / movement' },
+      { word: '表象', reading: 'ひょうしょう', meaning: 'representation, symbolization' },
+      { word: '排斥', reading: 'はいせき', meaning: 'rejection, exclusion' },
+    ],
+    audioScript: '言語の乱れと批判される現象も、社会の変化や感情を表現するための創造的な変化です。言葉の揺らぎを否定するのではなく、時代の息吹として受け止める視点が重要です。',
+    questions: [
+      {
+        id: 'rq-n1-02-1',
+        questionJp: '筆者の主張に最も合致するものはどれか？',
+        questionEn: 'Which statement most accurately aligns with the author’s thesis?',
+        options: [
+          '言葉の変化は社会や心象を捉える創造的な営みであり、寛容に理解すべきである',
+          '伝統的な文法規範を厳格に守り、若者言葉の使用を制限すべきである',
+          '言語学的な研究よりも、昔の古典文学の表現を優先すべきである',
+          '新語や俗語は文化の頽廃であり、学校教育で排斥しなければならない',
+        ],
+        correctIndex: 0,
+        explanation: '「変容する社会構造や微細な心象を的確に表象しようとする創造的な模索にほかならない...寛容さと洞察が求められている」 aligns with option 1.',
+      },
+    ],
+  },
 ];

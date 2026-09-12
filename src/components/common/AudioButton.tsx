@@ -8,6 +8,7 @@ interface AudioButtonProps {
   className?: string;
   size?: 'sm' | 'md' | 'lg';
   showLabel?: boolean;
+  speed?: number;
 }
 
 export const AudioButton: React.FC<AudioButtonProps> = ({
@@ -15,6 +16,7 @@ export const AudioButton: React.FC<AudioButtonProps> = ({
   className = '',
   size = 'md',
   showLabel = false,
+  speed,
 }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const { profile } = useUser();
@@ -29,7 +31,7 @@ export const AudioButton: React.FC<AudioButtonProps> = ({
 
     setIsPlaying(true);
     speechService.speakJapanese(text, {
-      rate: profile.speechSpeed || 1.0,
+      rate: speed || profile.speechSpeed || 1.0,
       onEnd: () => setIsPlaying(false),
       onError: () => setIsPlaying(false),
     });

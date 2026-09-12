@@ -9,18 +9,23 @@ import {
   ArrowRight,
   Bookmark,
   Volume2,
+  Flag,
+  Layers,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
+import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
 import { PRACTICE_QUESTIONS } from '../data/practiceData';
 import { AudioButton } from '../components/common/AudioButton';
+import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { StorageService } from '../services/storageService';
 import { PracticeQuestion } from '../types/practice';
 
 export const PracticeView: React.FC = () => {
   const { activeLevel } = useApp();
   const { logActivity, addXP } = useUser();
+  const { rateItem } = useSRS();
   const { t, language } = useI18n();
 
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -31,6 +36,8 @@ export const PracticeView: React.FC = () => {
   const [orderedTokens, setOrderedTokens] = useState<number[]>([]);
   const [isAnswered, setIsAnswered] = useState(false);
   const [scoreStats, setScoreStats] = useState({ correct: 0, total: 0 });
+  const [srsAdded, setSrsAdded] = useState(false);
+  const [isReporting, setIsReporting] = useState(false);
 
   const questions = useMemo(() => {
     return PRACTICE_QUESTIONS.filter((q) => {
@@ -48,6 +55,14 @@ export const PracticeView: React.FC = () => {
     setIsAnswered(false);
     setSelectedOption(null);
     setOrderedTokens([]);
+    setSrsAdded(false);
+  };
+
+  const handleAddToSRS = () => {
+    if (!currentQ) return;
+    const itemType = currentQ.category === 'kanji' ? 'kanji' : currentQ.category === 'grammar' ? 'grammar' : 'vocab';
+    rateItem(currentQ.id, itemType, currentQ.level, 'again');
+    setSrsAdded(true);
   };
 
   const handleSelectOption = (idx: number) => {
@@ -111,6 +126,7 @@ export const PracticeView: React.FC = () => {
     setSelectedOption(null);
     setOrderedTokens([]);
     setIsAnswered(false);
+    setSrsAdded(false);
     if (currentIndex < questions.length - 1) {
       setCurrentIndex((prev) => prev + 1);
     } else {
@@ -152,7 +168,7 @@ export const PracticeView: React.FC = () => {
 
         {/* Category Pills */}
         <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
-          {(['all', 'vocabulary', 'kanji', 'grammar', 'reading', 'sentence_order'] as const).map(
+          {(['all', 'vocabulary', 'kanji', 'grammar', 'particle_drill', 'keigo_simulator', 'reading', 'sentence_order'] as const).map(
             (cat) => (
               <button
                 key={cat}
@@ -163,7 +179,13 @@ export const PracticeView: React.FC = () => {
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
                 }`}
               >
-                {cat === 'all' ? t('common.all') : cat.replace('_', ' ')}
+                {cat === 'all'
+                  ? t('common.all')
+                  : cat === 'particle_drill'
+                  ? '⚡ Particle Drill'
+                  : cat === 'keigo_simulator'
+                  ? '⛩️ Keigo Simulator'
+                  : cat.replace('_', ' ')}
               </button>
             )
           )}
@@ -174,12 +196,30 @@ export const PracticeView: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
         {/* Question Header & Category */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
-          <span className="px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 text-xs font-black uppercase">
-            {currentQ.category}
-          </span>
-          <span className="text-xs text-slate-400 font-medium">
-            Question {currentIndex + 1} / {questions.length}
-          </span>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 text-xs font-black uppercase">
+              {currentQ.category.replace('_', ' ')}
+            </span>
+            {currentQ.relatedGrammarId && (
+              <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold flex items-center gap-1">
+                <Sparkles size={10} /> {currentQ.relatedGrammarId}
+              </span>
+            )}
+          </div>
+          <div className="flex items-center gap-3">
+            <button
+              type="button"
+              onClick={() => setIsReporting(true)}
+              className="text-xs font-semibold text-slate-400 hover:text-amber-500 flex items-center gap-1 transition-colors cursor-pointer"
+              title="Report question mistake or suggestion"
+            >
+              <Flag size={13} />
+              <span>Report</span>
+            </button>
+            <span className="text-xs text-slate-400 font-medium">
+              Question {currentIndex + 1} / {questions.length}
+            </span>
+          </div>
         </div>
 
         {/* Prompt */}
@@ -299,6 +339,20 @@ export const PracticeView: React.FC = () => {
             <p className="leading-relaxed text-slate-700 dark:text-slate-300">
               <strong>{t('common.explanation')}:</strong> {currentQ.explanation}
             </p>
+
+            {!isCorrect && (
+              <div className="pt-2">
+                <button
+                  type="button"
+                  disabled={srsAdded}
+                  onClick={handleAddToSRS}
+                  className="px-3.5 py-2 rounded-xl bg-indigo-100 hover:bg-indigo-200 dark:bg-indigo-900/60 dark:hover:bg-indigo-900 text-indigo-800 dark:text-indigo-200 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer disabled:opacity-60"
+                >
+                  <Layers size={14} />
+                  {srsAdded ? '✅ Added to Daily SRS Review!' : 'Add Question to Daily SRS Practice'}
+                </button>
+              </div>
+            )}
           </div>
         )}
 
@@ -326,6 +380,17 @@ export const PracticeView: React.FC = () => {
           </button>
         )}
       </div>
+
+      {isReporting && currentQ && (
+        <ReportIssueModal
+          isOpen={isReporting}
+          onClose={() => setIsReporting(false)}
+          contentId={currentQ.id}
+          module="questions"
+          level={currentQ.level}
+          currentText={currentQ.promptJp}
+        />
+      )}
     </div>
   );
 };

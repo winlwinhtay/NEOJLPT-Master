@@ -29,7 +29,114 @@ import { CurriculumPlannerConfig } from '../types/studyPlan';
 import { StudyPlannerService, DEFAULT_CURRICULUM_CONFIG } from '../services/studyPlannerService';
 import { StorageService } from '../services/storageService';
 
-type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'planner';
+type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'planner' | 'review';
+
+
+export interface JapaneseReviewItem {
+  id: string;
+  level: JLPTLevel;
+  module: 'Vocabulary' | 'Grammar' | 'Kanji' | 'Reading' | 'Speaking';
+  category: 'Incorrect Grammar' | 'Level Classification' | 'Naturalness' | 'Translation' | 'Typographical';
+  severity: 'CRITICAL' | 'HIGH' | 'MEDIUM' | 'LOW';
+  contentId: string;
+  title: string;
+  originalText: string;
+  originalMeaning: string;
+  originalExample?: string;
+  proposedCorrection: string;
+  proposedExample?: string;
+  issueDescription: string;
+  reviewerNotes: string;
+  status: 'pending' | 'approved' | 'rejected' | 'verified';
+}
+
+const INITIAL_REVIEW_QUEUE: JapaneseReviewItem[] = [
+  {
+    id: 'REV-001',
+    level: 'N5',
+    module: 'Vocabulary',
+    category: 'Naturalness',
+    severity: 'HIGH',
+    contentId: 'v-n5-gen-00042',
+    title: 'Synthetic Prefix Compound: 超食べる',
+    originalText: '超食べる (ちょうたべる)',
+    originalMeaning: 'to eat (Pattern #42)',
+    originalExample: '超食べるを用いた実用的な日本語例文です。',
+    proposedCorrection: '食べる (たべる) — Retain standard verb; purge synthetic compound prefix.',
+    proposedExample: '毎日、朝ごはんをしっかり食べます。',
+    issueDescription: 'Procedural generator synthesized unnatural compound by prefixing 超 to 食べる with template meaning.',
+    reviewerNotes: 'Verified non-standard Japanese. Recommended for removal.',
+    status: 'pending',
+  },
+  {
+    id: 'REV-002',
+    level: 'N4',
+    module: 'Grammar',
+    category: 'Level Classification',
+    severity: 'MEDIUM',
+    contentId: 'g-n5-034',
+    title: 'Cross-Level Placement: 〜すぎる (Excess)',
+    originalText: '〜すぎる (Verb stem / Adj stem + すぎる)',
+    originalMeaning: 'Too much / excessive',
+    originalExample: '昨日はお酒を飲みすぎました。',
+    proposedCorrection: 'Keep in N5 as basic Te/Stem form; cross-reference in N4 Compound Verb unit.',
+    proposedExample: 'この部屋は狭すぎます。',
+    issueDescription: 'JLPT prep curricula vary between late N5 and early N4 for 〜すぎる. Requires level taxonomy consensus.',
+    reviewerNotes: 'Approved as dual-level foundational grammar.',
+    status: 'verified',
+  },
+  {
+    id: 'REV-003',
+    level: 'N1',
+    module: 'Grammar',
+    category: 'Incorrect Grammar',
+    severity: 'CRITICAL',
+    contentId: 'g-n1-003',
+    title: 'Formation Restriction: 〜まじき',
+    originalText: 'Noun + まじき / Verb [any form] + まじき',
+    originalMeaning: 'Must not do / Unforgivable for someone in that role',
+    originalExample: 'プロとして言うまじき言葉だ。',
+    proposedCorrection: 'Strict formation: Noun + にあるまじき OR Verb [辞書形] + まじき (Strictly dictionary form; never past/negative).',
+    proposedExample: '指導者にあるまじき暴言だ。',
+    issueDescription: 'Explanation was missing the strict restriction requiring either にあるまじき or Verb dictionary form.',
+    reviewerNotes: 'Corrected formation formula in canonical dataset.',
+    status: 'approved',
+  },
+  {
+    id: 'REV-004',
+    level: 'N2',
+    module: 'Vocabulary',
+    category: 'Translation',
+    severity: 'MEDIUM',
+    contentId: 'v-n2-001',
+    title: 'Contextual Definition Nuance: 把握 (はあく)',
+    originalText: '把握 (はあく)',
+    originalMeaning: 'grasp',
+    originalExample: '現状を把握する。',
+    proposedCorrection: 'Grasp / Comprehend / Understand fully (Clarify mental comprehension, not physical grip).',
+    proposedExample: '事態の全容を正確に把握する必要があります。',
+    issueDescription: 'English definition "grasp" can mislead students into physical gripping rather than abstract mental understanding.',
+    reviewerNotes: 'Added contextual clarification.',
+    status: 'pending',
+  },
+  {
+    id: 'REV-005',
+    level: 'N3',
+    module: 'Speaking',
+    category: 'Typographical',
+    severity: 'LOW',
+    contentId: 'spk-n3-01',
+    title: 'Punctuation & Furigana Tokenization: 先約がありまして',
+    originalText: 'あいにく 先約がありまして、参加できそうに ありません。',
+    originalMeaning: 'Unfortunately I have a previous engagement...',
+    originalExample: 'あいにく先約がありまして...',
+    proposedCorrection: 'Standardize furigana spacing without half-width Latin spacing in Japanese script.',
+    proposedExample: 'あいにく先約がありまして、参加できそうにありません。',
+    issueDescription: 'Half-width spaces accidentally separated Japanese speech tokens.',
+    reviewerNotes: 'Applied standard Japanese punctuation.',
+    status: 'pending',
+  },
+];
 
 export const AdminView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('vocab');
@@ -43,6 +150,33 @@ export const AdminView: React.FC = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editItem, setEditItem] = useState<Partial<VocabularyItem> | null>(null);
   const [toastMsg, setToastMsg] = useState('');
+  // Human Review Queue State
+  const [reviewQueue, setReviewQueue] = useState<JapaneseReviewItem[]>(INITIAL_REVIEW_QUEUE);
+  const [reviewFilterCategory, setReviewFilterCategory] = useState<string>('ALL');
+  const [reviewFilterStatus, setReviewFilterStatus] = useState<string>('ALL');
+
+  const filteredReviewQueue = useMemo(() => {
+    return reviewQueue.filter((item) => {
+      if (reviewFilterCategory !== 'ALL' && item.category !== reviewFilterCategory) return false;
+      if (reviewFilterStatus !== 'ALL' && item.status !== reviewFilterStatus) return false;
+      if (selectedLevel !== 'ALL' && item.level !== selectedLevel) return false;
+      return true;
+    });
+  }, [reviewQueue, reviewFilterCategory, reviewFilterStatus, selectedLevel]);
+
+  const handleUpdateReviewStatus = (id: string, newStatus: JapaneseReviewItem['status']) => {
+    setReviewQueue((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, status: newStatus } : item))
+    );
+    showToast(`Review item ${id} marked as ${newStatus.toUpperCase()}.`);
+  };
+
+  const handleUpdateReviewNotes = (id: string, notes: string) => {
+    setReviewQueue((prev) =>
+      prev.map((item) => (item.id === id ? { ...item, reviewerNotes: notes } : item))
+    );
+  };
+
 
   // Study Planner Config State
   const [plannerConfig, setPlannerConfig] = useState<CurriculumPlannerConfig>(() =>
@@ -299,7 +433,7 @@ export const AdminView: React.FC = () => {
       )}
 
       {/* Dataset Metric Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-5 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
         <button
           onClick={() => handleTabChange('vocab')}
           className={`p-4 sm:p-5 text-left rounded-2xl border transition-all ${
@@ -382,6 +516,23 @@ export const AdminView: React.FC = () => {
           </div>
           <div className="text-xs sm:text-sm font-black text-rose-600 dark:text-rose-400 mt-2 flex items-center gap-1">
             <Sparkles size={13} /> Multipliers & Rules
+          </div>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('review')}
+          className={`p-4 sm:p-5 text-left rounded-2xl border transition-all col-span-2 sm:col-span-1 ${
+            activeTab === 'review'
+              ? 'bg-amber-50 dark:bg-amber-950/40 border-amber-300 dark:border-amber-700 shadow-sm ring-2 ring-amber-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-amber-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Review Queue</span>
+            <ShieldAlert size={14} className="text-amber-500" />
+          </div>
+          <div className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1">
+            {reviewQueue.filter(r => r.status === 'pending').length} Needs Review
           </div>
         </button>
       </div>
@@ -932,8 +1083,204 @@ export const AdminView: React.FC = () => {
         </div>
       )}
 
+
+      {/* TAB CONTENT: JAPANESE CONTENT HUMAN REVIEW QUEUE */}
+      {activeTab === 'review' && (
+        <div className="space-y-6">
+          {/* Overview Banner */}
+          <div className="p-6 rounded-3xl bg-slate-900 text-white shadow-md relative overflow-hidden">
+            <div className="absolute right-0 top-0 bottom-0 w-64 bg-gradient-to-l from-amber-500/20 to-transparent pointer-events-none" />
+            <div className="relative z-10 max-w-3xl space-y-2">
+              <span className="px-2.5 py-1 rounded-full bg-amber-500/20 text-amber-300 text-[10px] font-extrabold uppercase tracking-wider inline-flex items-center gap-1">
+                <ShieldAlert size={12} /> Expert Pedagogical Review
+              </span>
+              <h2 className="text-xl sm:text-2xl font-black">
+                Japanese Content Quality & Pedagogical Review Queue
+              </h2>
+              <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+                Review flagged Japanese linguistic anomalies, unnatural synthetic items, level classification disputes, and nuanced translations.
+                Approve verified items, edit proposed corrections, or reject non-standard content before production deployment.
+              </p>
+            </div>
+          </div>
+
+          {/* Filter Bar */}
+          <div className="flex flex-wrap items-center justify-between gap-3 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-sm">
+            {/* Category Filter */}
+            <div className="flex items-center gap-1.5 overflow-x-auto pb-1 sm:pb-0">
+              {['ALL', 'Incorrect Grammar', 'Level Classification', 'Naturalness', 'Translation', 'Typographical'].map((cat) => (
+                <button
+                  key={cat}
+                  onClick={() => setReviewFilterCategory(cat)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                    reviewFilterCategory === cat
+                      ? 'bg-amber-500 text-white shadow-sm'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-100'
+                  }`}
+                >
+                  {cat === 'Incorrect Grammar' && '🔴 '}
+                  {cat === 'Level Classification' && '🟠 '}
+                  {cat === 'Naturalness' && '🟡 '}
+                  {cat === 'Translation' && '🟡 '}
+                  {cat === 'Typographical' && '🔵 '}
+                  {cat}
+                </button>
+              ))}
+            </div>
+
+            {/* Status Filter */}
+            <div className="flex items-center gap-1.5">
+              {['ALL', 'pending', 'approved', 'verified', 'rejected'].map((st) => (
+                <button
+                  key={st}
+                  onClick={() => setReviewFilterStatus(st)}
+                  className={`px-3 py-1.5 rounded-xl text-xs font-bold capitalize transition-all ${
+                    reviewFilterStatus === st
+                      ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-sm'
+                      : 'bg-slate-50 dark:bg-slate-800 text-slate-500 hover:bg-slate-100'
+                  }`}
+                >
+                  {st}
+                </button>
+              ))}
+            </div>
+          </div>
+
+          {/* Review Cards List */}
+          <div className="space-y-4">
+            {filteredReviewQueue.map((item) => (
+              <div
+                key={item.id}
+                className="p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4"
+              >
+                {/* Header row */}
+                <div className="flex flex-wrap items-center justify-between gap-2 pb-3 border-b border-slate-100 dark:border-slate-800">
+                  <div className="flex items-center gap-2">
+                    <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 text-[10px] font-mono font-bold">
+                      {item.id}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 font-extrabold text-[10px]">
+                      {item.level}
+                    </span>
+                    <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 font-bold text-[10px]">
+                      {item.module}
+                    </span>
+                    <span
+                      className={`px-2.5 py-0.5 rounded-full text-[10px] font-bold ${
+                        item.severity === 'CRITICAL'
+                          ? 'bg-rose-500 text-white'
+                          : item.severity === 'HIGH'
+                          ? 'bg-orange-500 text-white'
+                          : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                      }`}
+                    >
+                      {item.severity}
+                    </span>
+                    <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                      {item.title}
+                    </span>
+                  </div>
+
+                  <span
+                    className={`px-3 py-1 rounded-full text-xs font-extrabold uppercase ${
+                      item.status === 'verified'
+                        ? 'bg-emerald-100 text-emerald-800 dark:bg-emerald-950 dark:text-emerald-300'
+                        : item.status === 'approved'
+                        ? 'bg-blue-100 text-blue-800 dark:bg-blue-950 dark:text-blue-300'
+                        : item.status === 'rejected'
+                        ? 'bg-rose-100 text-rose-800 dark:bg-rose-950 dark:text-rose-300'
+                        : 'bg-amber-100 text-amber-800 dark:bg-amber-950 dark:text-amber-300'
+                    }`}
+                  >
+                    {item.status}
+                  </span>
+                </div>
+
+                {/* Problem statement */}
+                <div className="p-3 rounded-2xl bg-slate-50 dark:bg-slate-800/40 text-xs text-slate-600 dark:text-slate-300">
+                  <span className="font-bold text-slate-900 dark:text-white">Audit Finding: </span>
+                  {item.issueDescription}
+                </div>
+
+                {/* Before / After Comparison */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Current Original */}
+                  <div className="p-4 rounded-2xl bg-rose-50/40 dark:bg-rose-950/20 border border-rose-200 dark:border-rose-900/40 space-y-2">
+                    <span className="text-[10px] font-bold text-rose-500 uppercase tracking-wider flex items-center gap-1">
+                      Current Content
+                    </span>
+                    <div className="font-japanese font-bold text-base text-slate-900 dark:text-white">
+                      {item.originalText}
+                    </div>
+                    <p className="text-xs text-slate-600 dark:text-slate-300">
+                      Meaning: {item.originalMeaning}
+                    </p>
+                    {item.originalExample && (
+                      <p className="text-xs font-japanese text-slate-500 italic">
+                        Example: {item.originalExample}
+                      </p>
+                    )}
+                  </div>
+
+                  {/* Proposed Correction */}
+                  <div className="p-4 rounded-2xl bg-emerald-50/40 dark:bg-emerald-950/20 border border-emerald-200 dark:border-emerald-900/40 space-y-2">
+                    <span className="text-[10px] font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-1">
+                      Proposed Correction / Remediation
+                    </span>
+                    <div className="font-bold text-sm text-slate-900 dark:text-white">
+                      {item.proposedCorrection}
+                    </div>
+                    {item.proposedExample && (
+                      <p className="text-xs font-japanese text-slate-700 dark:text-slate-300">
+                        New Example: {item.proposedExample}
+                      </p>
+                    )}
+                  </div>
+                </div>
+
+                {/* Reviewer Note Input */}
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-slate-500 dark:text-slate-400">
+                    Expert Reviewer Notes & Action Rationale
+                  </label>
+                  <input
+                    type="text"
+                    value={item.reviewerNotes}
+                    onChange={(e) => handleUpdateReviewNotes(item.id, e.target.value)}
+                    placeholder="Enter Japanese language expert notes..."
+                    className="w-full px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-xs text-slate-900 dark:text-white outline-none focus:border-brand-500"
+                  />
+                </div>
+
+                {/* Action Toolbar */}
+                <div className="flex flex-wrap items-center justify-end gap-2 pt-3 border-t border-slate-100 dark:border-slate-800">
+                  <button
+                    onClick={() => handleUpdateReviewStatus(item.id, 'rejected')}
+                    className="px-4 py-2 rounded-xl border border-rose-200 dark:border-rose-900 text-rose-600 dark:text-rose-400 font-bold text-xs hover:bg-rose-50 transition-all"
+                  >
+                    Reject Item
+                  </button>
+                  <button
+                    onClick={() => handleUpdateReviewStatus(item.id, 'approved')}
+                    className="px-4 py-2 rounded-xl bg-blue-500 hover:bg-blue-600 text-white font-bold text-xs shadow-sm transition-all"
+                  >
+                    Approve Fix
+                  </button>
+                  <button
+                    onClick={() => handleUpdateReviewStatus(item.id, 'verified')}
+                    className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs shadow-sm flex items-center gap-1.5 transition-all"
+                  >
+                    <CheckCircle2 size={14} /> Mark Verified
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      )}
+
       {/* TAB CONTENT: DATASET MANAGEMENT (VOCAB / KANJI / GRAMMAR / READING) */}
-      {activeTab !== 'planner' && (
+      {activeTab !== 'planner' && activeTab !== 'review' && (
         <>
           {/* Filter Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

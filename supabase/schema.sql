@@ -200,3 +200,51 @@ CREATE TRIGGER on_srs_updated
   FOR EACH ROW
   EXECUTE PROCEDURE public.handle_updated_at();
 
+-- ----------------------------------------------------------
+-- 6. Personalized Study Plans Table
+-- ----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.study_plans (
+  id TEXT PRIMARY KEY,
+  user_id TEXT NOT NULL UNIQUE,
+  target_level TEXT NOT NULL DEFAULT 'N5',
+  current_level TEXT NOT NULL DEFAULT 'beginner',
+  days_per_week INTEGER DEFAULT 5,
+  daily_minutes INTEGER DEFAULT 30,
+  intensity TEXT DEFAULT 'balanced', -- 'relaxed' | 'balanced' | 'intensive'
+  target_exam_date DATE,
+  plan_data JSONB NOT NULL DEFAULT '{}'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_study_plans_user ON public.study_plans(user_id);
+ALTER TABLE public.study_plans ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Users can manage own study plan" ON public.study_plans;
+CREATE POLICY "Users can manage own study plan"
+  ON public.study_plans FOR ALL
+  USING (auth.uid()::text = user_id OR auth.role() = 'anon');
+
+-- ----------------------------------------------------------
+-- 7. Curriculum Planner Configuration Table (Admin)
+-- ----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.curriculum_config (
+  id TEXT PRIMARY KEY DEFAULT 'global_default',
+  config JSONB NOT NULL DEFAULT '{}'::jsonb,
+  updated_by TEXT,
+  updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+ALTER TABLE public.curriculum_config ENABLE ROW LEVEL SECURITY;
+
+DROP POLICY IF EXISTS "Anyone can read curriculum config" ON public.curriculum_config;
+CREATE POLICY "Anyone can read curriculum config"
+  ON public.curriculum_config FOR SELECT
+  USING (true);
+
+DROP POLICY IF EXISTS "Admins can update curriculum config" ON public.curriculum_config;
+CREATE POLICY "Admins can update curriculum config"
+  ON public.curriculum_config FOR ALL
+  USING (auth.role() = 'authenticated' OR auth.role() = 'anon');
+
+

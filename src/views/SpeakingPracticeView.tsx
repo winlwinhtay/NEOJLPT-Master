@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo } from 'react';
 import {
   Mic,
   MicOff,
@@ -14,65 +14,27 @@ import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { speechService } from '../services/speechService';
 import { AudioButton } from '../components/common/AudioButton';
-import { SpeakingExercise, SpeakingAttemptResult } from '../types/ai';
+import { SpeakingAttemptResult } from '../types/ai';
+import { JLPTLevel } from '../types';
+import { SPEAKING_EXERCISES } from '../data/speakingData';
 
 export const SpeakingPracticeView: React.FC = () => {
   const { activeLevel } = useApp();
   const { logActivity, addXP } = useUser();
 
-  const speakingExercises: SpeakingExercise[] = [
-    {
-      id: 'spk-1',
-      level: 'N5',
-      japaneseText: '初めまして、よろしくお願いします。',
-      readingText: 'はじめまして、よろしく おねがいします。',
-      englishMeaning: 'Nice to meet you, please treat me favorably.',
-      difficulty: 'easy',
-      topic: 'Self Introduction',
-      breakdown: [
-        { token: '初めまして', reading: 'はじめまして', role: 'Greeting' },
-        { token: 'よろしく', reading: 'よろしく', role: 'Polite Adverb' },
-        { token: 'お願いします', reading: 'おねがいします', role: 'Honorific Request' },
-      ],
-    },
-    {
-      id: 'spk-2',
-      level: 'N5',
-      japaneseText: 'これをお願いします。',
-      readingText: 'これを おねがいします。',
-      englishMeaning: 'This one please.',
-      difficulty: 'easy',
-      topic: 'Restaurant & Shopping',
-      breakdown: [
-        { token: 'これ', reading: 'これ', role: 'Pronoun' },
-        { token: 'を', reading: 'を', role: 'Object particle' },
-        { token: 'お願いします', reading: 'おねがいします', role: 'Request' },
-      ],
-    },
-    {
-      id: 'spk-3',
-      level: 'N5',
-      japaneseText: '駅はどこにありますか？',
-      readingText: 'えきは どこに ありますか？',
-      englishMeaning: 'Where is the train station?',
-      difficulty: 'medium',
-      topic: 'Directions',
-      breakdown: [
-        { token: '駅', reading: 'えき', role: 'Station' },
-        { token: 'は', reading: 'は', role: 'Topic' },
-        { token: 'どこ', reading: 'どこ', role: 'Where' },
-        { token: 'に', reading: 'に', role: 'Location' },
-        { token: 'ありますか', reading: 'ありますか', role: 'Exist question' },
-      ],
-    },
-  ];
+  const [selectedSpeakingLevel, setSelectedSpeakingLevel] = useState<JLPTLevel>(activeLevel || 'N5');
+
+  const exercises = useMemo(() => {
+    const list = SPEAKING_EXERCISES.filter((e) => e.level === selectedSpeakingLevel);
+    return list.length > 0 ? list : SPEAKING_EXERCISES;
+  }, [selectedSpeakingLevel]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [result, setResult] = useState<SpeakingAttemptResult | null>(null);
 
-  const currentEx = speakingExercises[currentIndex];
+  const currentEx = exercises[currentIndex] || exercises[0];
 
   const handleStartRecording = () => {
     setResult(null);
@@ -127,7 +89,7 @@ export const SpeakingPracticeView: React.FC = () => {
   const handleNext = () => {
     setResult(null);
     setTranscript('');
-    setCurrentIndex((prev) => (prev < speakingExercises.length - 1 ? prev + 1 : 0));
+    setCurrentIndex((prev) => (prev < exercises.length - 1 ? prev + 1 : 0));
   };
 
   return (
@@ -136,19 +98,50 @@ export const SpeakingPracticeView: React.FC = () => {
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
           <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-            Voice & Syllable Pronunciation
+            Oral Pronunciation & Fluency
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {activeLevel} Speaking Practice
+            Japanese Speaking & Communication Practice
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Listen to native Japanese audio and repeat into the microphone to verify speech clarity.
+            Listen to native Japanese audio and repeat into the microphone to verify speech clarity and pitch.
           </p>
         </div>
 
         <span className="text-xs font-bold text-slate-400">
-          Drill {currentIndex + 1} of {speakingExercises.length}
+          Drill {currentIndex + 1} of {exercises.length}
         </span>
+      </div>
+
+      {/* Non-JLPT Disclaimer Banner */}
+      <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-3 shadow-sm">
+        <ShieldCheck size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+        <div className="leading-relaxed">
+          <span className="font-extrabold">Curriculum Note: </span>
+          The official JLPT (Japanese-Language Proficiency Test) is a written and listening examination without an oral speaking section.
+          These drills are provided as communicative Japanese reinforcement to develop active recall, correct pitch accent, and workplace fluency.
+        </div>
+      </div>
+
+      {/* Level Selection Chips */}
+      <div className="flex items-center gap-2 overflow-x-auto pb-1">
+        {(['N5', 'N4', 'N3', 'N2', 'N1'] as const).map((lvl) => (
+          <button
+            key={lvl}
+            onClick={() => {
+              setSelectedSpeakingLevel(lvl);
+              setCurrentIndex(0);
+              setResult(null);
+            }}
+            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+              selectedSpeakingLevel === lvl
+                ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/20'
+                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50'
+            }`}
+          >
+            {lvl} Speaking Drills
+          </button>
+        ))}
       </div>
 
       {/* Main Speaking Studio Card */}

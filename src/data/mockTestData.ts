@@ -6,13 +6,13 @@ export const MOCK_TESTS: Record<string, MockTest> = {
   // ==========================================
   'mock-n5-01': {
     id: 'mock-n5-01',
-    title: 'JLPT N5 Official Format Simulation Exam #1',
+    title: 'JLPT N5 JLPT-aligned Practice Exam #1',
     level: 'N5',
     totalTimeMinutes: 50,
     totalMaxScore: 180,
     passingScore: 80,
     description:
-      'Full-length JLPT N5 simulated mock test covering Language Knowledge (Vocabulary & Kanji), Grammar & Reading, and Listening with official-style question distribution and timed countdown.',
+      'Full-length JLPT N5 simulated mock test covering Language Knowledge (Vocabulary & Kanji), Grammar & Reading, and Listening with standard JLPT-aligned question distribution and timed countdown.',
     sections: [
       {
         id: 'vocab_kanji',
@@ -153,7 +153,7 @@ export const MOCK_TESTS: Record<string, MockTest> = {
   // ==========================================
   'mock-n4-01': {
     id: 'mock-n4-01',
-    title: 'JLPT N4 Official Format Simulation Exam #1',
+    title: 'JLPT N4 JLPT-aligned Practice Exam #1',
     level: 'N4',
     totalTimeMinutes: 55,
     totalMaxScore: 180,

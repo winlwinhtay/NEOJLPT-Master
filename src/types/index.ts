@@ -12,6 +12,7 @@ export type ViewType =
   | 'listening'
   | 'practice'
   | 'mock-test'
+  | 'business'
   | 'ai-conversation'
   | 'speaking'
   | 'progress'
@@ -301,4 +302,5 @@ export interface AchievementBadge {
 }
 
 export * from './studyPlan';
-
+export * from './kanjiStroke';
+export * from './business';

@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import { Search, X, Layers, PenTool, BookOpen, ChevronRight } from 'lucide-react';
+import { Search, X, Layers, PenTool, BookOpen, ChevronRight, Briefcase } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { VOCABULARY_DATA } from '../../data/vocabularyData';
 import { KANJI_DATA } from '../../data/kanjiData';
 import { GRAMMAR_DATA } from '../../data/grammarData';
+import { BUSINESS_VOCABULARY } from '../../data/business/businessVocabularyData';
 import { AudioButton } from '../common/AudioButton';
 
 export const GlobalSearch: React.FC = () => {
@@ -27,7 +28,7 @@ export const GlobalSearch: React.FC = () => {
   }, [setSearchModalOpen]);
 
   const searchResults = useMemo(() => {
-    if (!query.trim()) return { vocab: [], kanji: [], grammar: [] };
+    if (!query.trim()) return { vocab: [], kanji: [], grammar: [], business: [] };
     const q = query.toLowerCase().trim();
 
     const vocab = VOCABULARY_DATA.filter(
@@ -53,7 +54,15 @@ export const GlobalSearch: React.FC = () => {
         g.structure.toLowerCase().includes(q)
     ).slice(0, 5);
 
-    return { vocab, kanji, grammar };
+    const business = BUSINESS_VOCABULARY.filter(
+      (b) =>
+        b.word.toLowerCase().includes(q) ||
+        b.reading.toLowerCase().includes(q) ||
+        b.meaningEn.toLowerCase().includes(q) ||
+        b.businessDomain.toLowerCase().includes(q)
+    ).slice(0, 5);
+
+    return { vocab, kanji, grammar, business };
   }, [query]);
 
   if (!searchModalOpen) return null;
@@ -61,7 +70,8 @@ export const GlobalSearch: React.FC = () => {
   const hasResults =
     searchResults.vocab.length > 0 ||
     searchResults.kanji.length > 0 ||
-    searchResults.grammar.length > 0;
+    searchResults.grammar.length > 0 ||
+    searchResults.business.length > 0;
 
   return (
     <div className="fixed inset-0 z-50 flex items-start justify-center pt-16 sm:pt-24 px-4">
@@ -224,6 +234,47 @@ export const GlobalSearch: React.FC = () => {
                           <p className="text-[11px] text-slate-400 mt-0.5">{g.structure}</p>
                         </div>
                         <ChevronRight size={16} className="text-slate-400" />
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Business Japanese Results */}
+              {searchResults.business.length > 0 && (
+                <div>
+                  <div className="flex items-center gap-2 text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
+                    <Briefcase size={14} /> Business Japanese ({searchResults.business.length})
+                  </div>
+                  <div className="space-y-1.5">
+                    {searchResults.business.map((b) => (
+                      <div
+                        key={b.id}
+                        onClick={() => {
+                          setActiveView('business');
+                          setSearchModalOpen(false);
+                        }}
+                        className="flex items-center justify-between p-2.5 rounded-xl hover:bg-slate-50 dark:hover:bg-slate-800/60 cursor-pointer border border-transparent hover:border-slate-200 dark:hover:border-slate-700 transition-all"
+                      >
+                        <div className="flex items-center gap-3">
+                          <div className="w-9 h-9 rounded-lg bg-teal-50 dark:bg-teal-950/40 text-teal-600 dark:text-teal-400 font-bold flex items-center justify-center text-sm">
+                            {b.word.slice(0, 2)}
+                          </div>
+                          <div>
+                            <div className="flex items-center gap-2">
+                              <span className="font-bold text-slate-900 dark:text-white">{b.word}</span>
+                              <span className="text-xs text-slate-400">{b.reading}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 rounded bg-teal-100 dark:bg-teal-950 text-teal-700 dark:text-teal-300 font-semibold uppercase">
+                                {b.businessDomain}
+                              </span>
+                            </div>
+                            <p className="text-xs text-slate-500 dark:text-slate-400">{b.meaningEn}</p>
+                          </div>
+                        </div>
+                        <div className="flex items-center gap-2">
+                          <AudioButton text={b.word} size="sm" />
+                          <ChevronRight size={16} className="text-slate-400" />
+                        </div>
                       </div>
                     ))}
                   </div>

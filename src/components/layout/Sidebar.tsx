@@ -16,6 +16,7 @@ import {
   User,
   Settings,
   ShieldAlert,
+  Briefcase,
   Sparkles,
   X,
 } from 'lucide-react';
@@ -49,6 +50,12 @@ export const Sidebar: React.FC = () => {
     { id: 'listening', label: t('nav.listening', 'Listening'), icon: <Headphones size={20} /> },
     { id: 'practice', label: t('nav.practice', 'Practice'), icon: <CheckSquare size={20} /> },
     { id: 'mock-test', label: t('nav.mockTest', 'Mock Test'), icon: <Award size={20} /> },
+    {
+      id: 'business',
+      label: t('nav.business', 'Business Japanese'),
+      icon: <Briefcase size={20} />,
+      badge: 'Pro',
+    },
     { id: 'ai-conversation', label: t('nav.aiConversation', 'AI Conversation'), icon: <Bot size={20} /> },
     { id: 'speaking', label: t('nav.speaking', 'Speaking Practice'), icon: <Mic size={20} /> },
     { id: 'progress', label: t('nav.progress', 'Progress Analytics'), icon: <BarChart3 size={20} /> },

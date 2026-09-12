@@ -1,5 +1,6 @@
 import { UserProfile, UserSRSProgress, StudyPlan, CurriculumPlannerConfig } from '../types';
 import { MockTestAttempt } from '../types/practice';
+import { BusinessUserProgress, BusinessCertificateRecord } from '../types/business';
 import { SupabaseSyncService } from './supabaseSyncService';
 
 const KEYS = {
@@ -15,6 +16,8 @@ const KEYS = {
   STUDY_PLAN: 'jlpt_study_plan',
   CURRICULUM_CONFIG: 'jlpt_curriculum_config',
   REVIEW_QUEUE: 'jlpt_review_queue',
+  BUSINESS_PROGRESS: 'jlpt_business_progress',
+  BUSINESS_CERTIFICATES: 'jlpt_business_certificates',
 };
 
 export const defaultProfile: UserProfile = {
@@ -257,6 +260,46 @@ export class StorageService {
       this.saveReviewItems([item, ...filtered]);
     } catch (e) {
       console.error('Error adding review item', e);
+    }
+  }
+
+  public static loadBusinessProgress(): BusinessUserProgress | null {
+    try {
+      const data = localStorage.getItem(KEYS.BUSINESS_PROGRESS);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (e) {
+      console.error('Error loading business progress', e);
+    }
+    return null;
+  }
+
+  public static saveBusinessProgress(progress: BusinessUserProgress): void {
+    try {
+      localStorage.setItem(KEYS.BUSINESS_PROGRESS, JSON.stringify(progress));
+    } catch (e) {
+      console.error('Error saving business progress', e);
+    }
+  }
+
+  public static loadBusinessCertificates(): BusinessCertificateRecord[] {
+    try {
+      const data = localStorage.getItem(KEYS.BUSINESS_CERTIFICATES);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (e) {
+      console.error('Error loading business certificates', e);
+    }
+    return [];
+  }
+
+  public static saveBusinessCertificates(certs: BusinessCertificateRecord[]): void {
+    try {
+      localStorage.setItem(KEYS.BUSINESS_CERTIFICATES, JSON.stringify(certs));
+    } catch (e) {
+      console.error('Error saving business certificates', e);
     }
   }
 }

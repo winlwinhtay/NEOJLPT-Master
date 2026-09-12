@@ -16,6 +16,7 @@ import {
   TrendingUp,
   Award,
   ChevronRight,
+  Briefcase,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -427,6 +428,58 @@ export const DashboardView: React.FC = () => {
           >
             Start Weak Area Practice <ArrowRight size={14} />
           </button>
+        </div>
+      </div>
+
+      {/* 5. Business Japanese & Career Readiness Hub Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-teal-950 via-slate-900 to-indigo-950 border border-teal-500/30 p-6 sm:p-8 text-white shadow-xl">
+        <div className="absolute -top-10 -right-10 w-48 h-48 bg-teal-500/10 rounded-full blur-3xl pointer-events-none" />
+        <div className="flex flex-col lg:flex-row items-start lg:items-center justify-between gap-6 relative z-10">
+          <div className="space-y-3 max-w-2xl">
+            <div className="flex items-center gap-2">
+              <span className="px-2.5 py-1 rounded-full bg-teal-500/20 text-teal-300 text-xs font-black uppercase tracking-wider flex items-center gap-1.5">
+                <Briefcase size={13} />
+                Career &amp; Corporate Japanese
+              </span>
+              <span className="px-2 py-0.5 rounded-full bg-indigo-500/20 text-indigo-300 text-[11px] font-bold">
+                Foundation to Professional
+              </span>
+            </div>
+            <h3 className="text-xl sm:text-2xl font-black tracking-tight">
+              Business Japanese Studio (ビジネス日本語)
+            </h3>
+            <p className="text-xs sm:text-sm text-slate-300 leading-relaxed">
+              Step beyond the JLPT into practical workplace Japanese: master Sonkeigo &amp; Kenjougo (敬語), corporate email formulas, phone simulators, office etiquette (報連相・席次・名刺交換), job interview prep, and earn your JLPTMaster Business Certificate.
+            </p>
+            <div className="flex flex-wrap gap-2 pt-1">
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-white/10 text-slate-200">
+                🏢 16 Units &amp; 29 Lessons
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-white/10 text-slate-200">
+                ✉️ Email Studio
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-white/10 text-slate-200">
+                📞 Telephone Simulator
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-white/10 text-slate-200">
+                👔 Interview &amp; ES Prep
+              </span>
+              <span className="text-xs px-2.5 py-1 rounded-lg bg-white/10 text-teal-300 font-bold">
+                🎓 Certificate of Completion
+              </span>
+            </div>
+          </div>
+
+          <div className="shrink-0 w-full lg:w-auto">
+            <button
+              onClick={() => setActiveView('business')}
+              className="w-full lg:w-auto inline-flex items-center justify-center gap-2.5 px-6 py-3.5 rounded-2xl bg-gradient-to-r from-teal-500 to-emerald-600 hover:from-teal-600 hover:to-emerald-700 text-white font-extrabold text-sm shadow-lg shadow-teal-500/20 hover:scale-105 transition-all"
+            >
+              <Briefcase size={18} />
+              Open Business Studio
+              <ChevronRight size={16} />
+            </button>
+          </div>
         </div>
       </div>
     </div>

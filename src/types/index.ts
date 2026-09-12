@@ -282,3 +282,6 @@ export interface AchievementBadge {
   targetCount: number;
   currentCount: number;
 }
+
+export * from './studyPlan';
+

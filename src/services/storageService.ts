@@ -1,4 +1,4 @@
-import { UserProfile, UserSRSProgress } from '../types';
+import { UserProfile, UserSRSProgress, StudyPlan, CurriculumPlannerConfig } from '../types';
 import { MockTestAttempt } from '../types/practice';
 import { SupabaseSyncService } from './supabaseSyncService';
 
@@ -12,6 +12,8 @@ const KEYS = {
   CUSTOM_KANJI: 'jlpt_custom_kanji',
   CUSTOM_GRAMMAR: 'jlpt_custom_grammar',
   DAILY_LOGS: 'jlpt_daily_logs',
+  STUDY_PLAN: 'jlpt_study_plan',
+  CURRICULUM_CONFIG: 'jlpt_curriculum_config',
 };
 
 export const defaultProfile: UserProfile = {
@@ -186,4 +188,45 @@ export class StorageService {
       console.error('Error clearing mistake', e);
     }
   }
+
+  public static loadStudyPlan(): StudyPlan | null {
+    try {
+      const data = localStorage.getItem(KEYS.STUDY_PLAN);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (e) {
+      console.error('Error loading study plan', e);
+    }
+    return null;
+  }
+
+  public static saveStudyPlan(plan: StudyPlan): void {
+    try {
+      localStorage.setItem(KEYS.STUDY_PLAN, JSON.stringify(plan));
+    } catch (e) {
+      console.error('Error saving study plan', e);
+    }
+  }
+
+  public static loadCurriculumConfig(): CurriculumPlannerConfig | null {
+    try {
+      const data = localStorage.getItem(KEYS.CURRICULUM_CONFIG);
+      if (data) {
+        return JSON.parse(data);
+      }
+    } catch (e) {
+      console.error('Error loading curriculum config', e);
+    }
+    return null;
+  }
+
+  public static saveCurriculumConfig(config: CurriculumPlannerConfig): void {
+    try {
+      localStorage.setItem(KEYS.CURRICULUM_CONFIG, JSON.stringify(config));
+    } catch (e) {
+      console.error('Error saving curriculum config', e);
+    }
+  }
 }
+

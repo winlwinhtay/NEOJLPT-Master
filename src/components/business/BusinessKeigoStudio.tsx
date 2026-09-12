@@ -19,8 +19,11 @@ import {
 } from 'lucide-react';
 import { BUSINESS_KEIGO_VERBS, CUSHION_PHRASES, KEIGO_CONFUSION_EXERCISES } from '../../data/business/businessKeigoData';
 import { AudioButton } from '../common/AudioButton';
+import { useI18n } from '../../i18n/I18nContext';
+import { getKeigoVerbTranslation, getCushionWordTranslation } from '../../data/translations/businessTranslations';
 
 export const BusinessKeigoStudio: React.FC = () => {
+  const { language } = useI18n();
   const [activeTab, setActiveTab] = useState<'matrix' | 'confusion' | 'cushion'>('matrix');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVerbId, setSelectedVerbId] = useState<string>(BUSINESS_KEIGO_VERBS[0].id);
@@ -177,17 +180,24 @@ export const BusinessKeigoStudio: React.FC = () => {
                 <span className="text-[10px] uppercase font-bold text-indigo-600 dark:text-indigo-400 tracking-wider">
                   Verb Transformation Deep Dive
                 </span>
-                <div className="flex items-baseline gap-3 mt-1">
-                  <h3 className="text-3xl font-black font-japanese text-slate-900 dark:text-white">
-                    {selectedVerb.plain}
-                  </h3>
-                  <span className="text-sm font-japanese text-slate-400">
-                    （{selectedVerb.reading}）
-                  </span>
-                  <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                    {selectedVerb.meaning}
-                  </span>
-                </div>
+                {(() => {
+                  const verbI18n = getKeigoVerbTranslation(selectedVerb.id, language);
+                  return (
+                    <>
+                      <div className="flex items-baseline gap-3 mt-1">
+                        <h3 className="text-3xl font-black font-japanese text-slate-900 dark:text-white">
+                          {selectedVerb.plain}
+                        </h3>
+                        <span className="text-sm font-japanese text-slate-400">
+                          （{selectedVerb.reading}）
+                        </span>
+                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                          {verbI18n?.meaning || selectedVerb.meaning}
+                        </span>
+                      </div>
+                    </>
+                  );
+                })()}
               </div>
               <AudioButton text={selectedVerb.plain} size="md" />
             </div>
@@ -237,7 +247,7 @@ export const BusinessKeigoStudio: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-6">
-                {selectedVerb.actorRule}
+                {getKeigoVerbTranslation(selectedVerb.id, language)?.actorRule || selectedVerb.actorRule}
               </p>
             </div>
 
@@ -435,13 +445,20 @@ export const BusinessKeigoStudio: React.FC = () => {
                   <AudioButton text={item.phrase} size="sm" />
                 </div>
 
-                <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                  {item.meaning}
-                </div>
+                {(() => {
+                  const cushionI18n = getCushionWordTranslation(item.phrase, language);
+                  return (
+                    <>
+                      <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                        {cushionI18n?.meaning || item.meaning}
+                      </div>
 
-                <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                  <strong>When to use:</strong> {item.situation}
-                </p>
+                      <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                        <strong>When to use:</strong> {cushionI18n?.usage || item.situation}
+                      </p>
+                    </>
+                  );
+                })()}
 
                 <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
                   <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">

@@ -23,6 +23,7 @@ import { RubyText } from '../components/common/RubyText';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { SRSRating } from '../services/srsService';
 import { MasteryStatus, VocabularyItem } from '../types';
+import { getVocabularyStudyTip } from '../data/translations/vocabTipsTranslations';
 
 export const VocabularyView: React.FC = () => {
   const { activeLevel } = useApp();
@@ -369,6 +370,37 @@ export const VocabularyView: React.FC = () => {
                             {currentWord.exampleByLang?.[language] || currentWord.exampleEn}
                           </div>
                         </div>
+
+                        {/* Localized Pedagogical Study Tip, Mnemonic & Pitfall Alert across all 19 languages */}
+                        {(() => {
+                          const tipData = getVocabularyStudyTip(
+                            currentWord.word,
+                            currentWord.meaningsByLang?.[language] || currentWord.meaning,
+                            currentWord.partOfSpeech,
+                            language
+                          );
+                          return (
+                            <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 text-left space-y-1.5">
+                              <div className="flex items-center gap-1.5 text-[10px] font-bold uppercase tracking-wider text-amber-700 dark:text-amber-400">
+                                <Sparkles size={12} />
+                                <span>{t('vocab.tips') || 'Study Tip & Mnemonic'}</span>
+                              </div>
+                              <p className="text-xs text-slate-800 dark:text-slate-200 font-medium leading-relaxed">
+                                {tipData.tip}
+                              </p>
+                              {tipData.mnemonic && (
+                                <p className="text-[11px] text-amber-800 dark:text-amber-300/90 italic">
+                                  💡 {tipData.mnemonic}
+                                </p>
+                              )}
+                              {tipData.pitfallWarning && (
+                                <p className="text-[11px] text-rose-600 dark:text-rose-400 font-medium">
+                                  ⚠️ {tipData.pitfallWarning}
+                                </p>
+                              )}
+                            </div>
+                          );
+                        })()}
                       </div>
                     )}
                   </div>
@@ -486,8 +518,22 @@ export const VocabularyView: React.FC = () => {
                         {v.meaningsByLang?.[language] || v.meaning}
                       </div>
                       <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                        {v.exampleJp} — {v.exampleEn}
+                        {v.exampleJp} — {v.exampleByLang?.[language] || v.exampleEn}
                       </div>
+                      {(() => {
+                        const tipData = getVocabularyStudyTip(
+                          v.word,
+                          v.meaningsByLang?.[language] || v.meaning,
+                          v.partOfSpeech,
+                          language
+                        );
+                        return (
+                          <div className="text-[11px] text-amber-700 dark:text-amber-400/90 mt-1 flex items-center gap-1.5">
+                            <span className="font-bold">💡 Tip:</span>
+                            <span>{tipData.tip}</span>
+                          </div>
+                        );
+                      })()}
                     </div>
                   </div>
 

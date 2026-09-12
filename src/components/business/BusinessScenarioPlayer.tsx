@@ -17,8 +17,11 @@ import {
 } from 'lucide-react';
 import { BUSINESS_SCENARIOS } from '../../data/business/businessScenarioData';
 import { AudioButton } from '../common/AudioButton';
+import { useI18n } from '../../i18n/I18nContext';
+import { getLocalizedScenarioLine } from '../../data/translations/businessContentI18n';
 
 export const BusinessScenarioPlayer: React.FC = () => {
+  const { language } = useI18n();
   const [selectedScenarioId, setSelectedScenarioId] = useState<string>(
     BUSINESS_SCENARIOS[0].id
   );
@@ -153,7 +156,9 @@ export const BusinessScenarioPlayer: React.FC = () => {
                 <div className="text-sm sm:text-base font-bold font-japanese text-slate-900 dark:text-white leading-relaxed">
                   {line.japanese}
                 </div>
-                <div className="text-xs text-slate-500 italic">{line.english}</div>
+                <div className="text-xs text-slate-500 italic">
+                  {getLocalizedScenarioLine(line.id, language, line.english)}
+                </div>
 
                 {/* Nuance Note */}
                 {line.nuanceExplanation && (

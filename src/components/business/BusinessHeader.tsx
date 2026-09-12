@@ -16,6 +16,8 @@ import {
 } from 'lucide-react';
 import { BusinessCourseLevel, BusinessGoal } from '../../types/business';
 import { BUSINESS_COURSES } from '../../data/business/businessCurriculumData';
+import { useI18n } from '../../i18n/I18nContext';
+import { getBusinessCourseText } from '../../data/translations/businessTranslations';
 
 interface BusinessHeaderProps {
   activeLevel: BusinessCourseLevel;
@@ -38,7 +40,9 @@ export const BusinessHeader: React.FC<BusinessHeaderProps> = ({
   hasCertificate,
   onOpenCertificate,
 }) => {
+  const { language } = useI18n();
   const currentCourse = BUSINESS_COURSES[activeLevel];
+  const courseI18n = getBusinessCourseText(activeLevel, language);
 
   const levels: { id: BusinessCourseLevel; label: string; sub: string; jlpt: string }[] = [
     { id: 'foundation', label: '基礎 Foundation', sub: 'Workplace Basics', jlpt: 'N4–N3' },
@@ -88,11 +92,11 @@ export const BusinessHeader: React.FC<BusinessHeaderProps> = ({
             </div>
 
             <h1 className="text-2xl sm:text-3xl font-black text-white tracking-tight flex items-center gap-3">
-              <span>{currentCourse.nameJp}</span>
+              <span>{courseI18n.title || currentCourse.nameJp}</span>
             </h1>
 
             <p className="text-xs sm:text-sm text-slate-300 max-w-2xl leading-relaxed">
-              {currentCourse.description}
+              {courseI18n.desc || currentCourse.description}
             </p>
           </div>
 

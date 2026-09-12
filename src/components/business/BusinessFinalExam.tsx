@@ -18,6 +18,8 @@ import {
 import confetti from 'canvas-confetti';
 import { BUSINESS_FINAL_EXAM_QUESTIONS } from '../../data/business/businessAssessmentData';
 import { BusinessCertificateRecord, BusinessCourseLevel } from '../../types/business';
+import { useI18n } from '../../i18n/I18nContext';
+import { getLocalizedExamQuestion } from '../../data/translations/businessContentI18n';
 
 interface BusinessFinalExamProps {
   level: BusinessCourseLevel;
@@ -32,6 +34,7 @@ export const BusinessFinalExam: React.FC<BusinessFinalExamProps> = ({
   onExamPassed,
   onOpenCertificate,
 }) => {
+  const { language } = useI18n();
   const [currentIdx, setCurrentIdx] = useState(0);
   const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
   const [isFinished, setIsFinished] = useState(false);
@@ -133,7 +136,9 @@ export const BusinessFinalExam: React.FC<BusinessFinalExamProps> = ({
             <h4 className="text-base font-bold font-japanese text-slate-900 dark:text-white leading-relaxed">
               {currentQ.questionJp}
             </h4>
-            <div className="text-xs text-slate-500 italic">{currentQ.questionEn}</div>
+            <div className="text-xs text-slate-500 italic">
+              {getLocalizedExamQuestion(currentQ, language).questionText}
+            </div>
           </div>
 
           <div className="space-y-2.5">
@@ -189,7 +194,7 @@ export const BusinessFinalExam: React.FC<BusinessFinalExamProps> = ({
                 {currentQ.explanationJp}
               </p>
               <p className="text-[11px] text-slate-500 italic leading-relaxed">
-                {currentQ.explanationEn}
+                {getLocalizedExamQuestion(currentQ, language).explanationText}
               </p>
             </div>
           )}

@@ -15,8 +15,11 @@ import {
   Lightbulb,
 } from 'lucide-react';
 import { BUSINESS_CULTURE_GUIDES } from '../../data/business/businessCultureData';
+import { useI18n } from '../../i18n/I18nContext';
+import { getCultureGuideTranslation } from '../../data/translations/businessTranslations';
 
 export const BusinessCultureGuide: React.FC = () => {
+  const { language } = useI18n();
   const [selectedTopicId, setSelectedTopicId] = useState<string>(
     BUSINESS_CULTURE_GUIDES[0].id
   );
@@ -68,12 +71,19 @@ export const BusinessCultureGuide: React.FC = () => {
           <h3 className="text-2xl font-black text-slate-900 dark:text-white">
             {topic.titleJp}
           </h3>
-          <div className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-            {topic.titleEn}
-          </div>
-          <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
-            {topic.summary}
-          </p>
+          {(() => {
+            const guideI18n = getCultureGuideTranslation(topic.id, language);
+            return (
+              <>
+                <div className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                  {guideI18n?.title || topic.titleEn}
+                </div>
+                <p className="text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed pt-1">
+                  {guideI18n?.summary || topic.summary}
+                </p>
+              </>
+            );
+          })()}
         </div>
 
         {/* Core Rule Banner */}
@@ -85,7 +95,7 @@ export const BusinessCultureGuide: React.FC = () => {
             </span>
           </div>
           <p className="text-xs text-slate-800 dark:text-slate-200 leading-relaxed font-semibold pl-6">
-            {topic.coreRule}
+            {getCultureGuideTranslation(topic.id, language)?.coreRule || topic.coreRule}
           </p>
         </div>
 

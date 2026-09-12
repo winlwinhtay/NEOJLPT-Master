@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useEffect } from 'react';
 import {
   PenTool,
   Search,
@@ -15,6 +15,12 @@ import {
   X,
   ArrowRight,
   Flag,
+  HelpCircle,
+  Lightbulb,
+  AlertCircle,
+  GraduationCap,
+  Play,
+  RotateCcw,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -23,9 +29,14 @@ import { useI18n } from '../i18n/I18nContext';
 import { KANJI_DATA } from '../data/kanjiData';
 import { RADICALS_DATA, CORE_69_RADICALS, ALL_240_RADICALS } from '../data/radicalsData';
 import { KanjiCanvas } from '../components/kanji/KanjiCanvas';
+import { StrokeOrderPlayer } from '../components/kanji/StrokeOrderPlayer';
+import { KanjiQuickQuiz } from '../components/kanji/KanjiQuickQuiz';
+import { KanjiSchoolPrinciplesModal } from '../components/kanji/KanjiSchoolPrinciplesModal';
 import { AudioButton } from '../components/common/AudioButton';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { generate5ExampleSentences } from '../data/generators/kanjiGenerator';
+import { getKanjiStrokeData } from '../data/kanjiStrokeData';
+import { getKanjiEducationalDetail } from '../data/kanjiEducationalData';
 import { KanjiItem, RadicalItem, RadicalPosition } from '../types';
 
 export const KanjiView: React.FC = () => {
@@ -43,6 +54,15 @@ export const KanjiView: React.FC = () => {
   const [selectedRadicalFilter, setSelectedRadicalFilter] = useState<string | null>(null);
   const [reportingKanji, setReportingKanji] = useState<KanjiItem | null>(null);
 
+  // Japanese School Practice Tool: 'strokeOrder' | 'canvas'
+  const [practiceTool, setPracticeTool] = useState<'strokeOrder' | 'canvas'>('strokeOrder');
+
+  // Japanese School Principles & 6 Rules Modal
+  const [principlesModalOpen, setPrinciplesModalOpen] = useState(false);
+
+  // Quick Mastery Quiz State
+  const [quizOpen, setQuizOpen] = useState(false);
+
   // Active Kanji for interactive practice
   const [activeKanji, setActiveKanji] = useState<KanjiItem | null>(() => {
     if (selectedKanjiId) {
@@ -51,6 +71,41 @@ export const KanjiView: React.FC = () => {
     }
     return KANJI_DATA.find((k) => k.level === activeLevel) || KANJI_DATA[0];
   });
+
+  // Keep active Kanji synchronized with level changes or selectedKanjiId
+  useEffect(() => {
+    if (selectedKanjiId) {
+      const match = KANJI_DATA.find((k) => k.id === selectedKanjiId);
+      if (match) {
+        setActiveKanji(match);
+        setQuizOpen(false);
+        return;
+      }
+    }
+    if (activeKanji && activeKanji.level !== activeLevel) {
+      const firstInLevel = KANJI_DATA.find((k) => k.level === activeLevel);
+      if (firstInLevel) {
+        setActiveKanji(firstInLevel);
+        setQuizOpen(false);
+      }
+    }
+  }, [selectedKanjiId, activeLevel]);
+
+  // Stroke order data for active kanji
+  const activeStrokeData = useMemo(() => {
+    if (!activeKanji) return undefined;
+    return getKanjiStrokeData(activeKanji.kanji);
+  }, [activeKanji]);
+
+  // Educational metadata (grade, frequency rank, mnemonics, components, similar kanji)
+  const activeEduDetail = useMemo(() => {
+    if (!activeKanji) return undefined;
+    return getKanjiEducationalDetail(
+      activeKanji.kanji,
+      activeKanji.meaningsByLang?.[language] || activeKanji.meaning,
+      activeKanji.radicals?.[0] || activeKanji.kanji
+    );
+  }, [activeKanji, language]);
 
   // 5 Sentences Studio UI state
   const [showAllTranslations, setShowAllTranslations] = useState(true);
@@ -298,24 +353,43 @@ export const KanjiView: React.FC = () => {
                       {activeKanji.kanji}
                     </div>
                     <div>
-                      <div className="flex items-center gap-2">
+                      <div className="flex items-center gap-2 flex-wrap">
                         <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
                           {activeKanji.level}
                         </span>
                         <span className="text-xs text-slate-400 font-semibold">
                           {activeKanji.strokeCount} {t('kanji.strokes')}
                         </span>
+                        {activeEduDetail?.grade && (
+                          <span className="px-2.5 py-0.5 rounded-full bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 text-xs font-bold">
+                            {activeEduDetail.grade}
+                          </span>
+                        )}
+                        {activeEduDetail?.frequency && (
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-[11px] font-mono font-bold">
+                            #{activeEduDetail.frequency} Joyo
+                          </span>
+                        )}
                       </div>
                       <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
                         {activeKanji.meaningsByLang?.[language] || activeKanji.meaning}
                       </h2>
                       <p className="text-xs text-slate-400 mt-0.5">
-                        {t('kanji.radicals')}: {activeKanji.radicals.join(', ') || '—'}
+                        {t('kanji.radicals')}: {activeKanji.radicals?.join(', ') || '—'}
                       </p>
                     </div>
                   </div>
 
-                  <div className="flex items-center gap-2">
+                  <div className="flex items-center gap-2 flex-wrap">
+                    <button
+                      type="button"
+                      onClick={() => setPrinciplesModalOpen(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 hover:bg-indigo-100 dark:hover:bg-indigo-900/60 text-xs font-bold transition-colors"
+                      title="Learn 6 Japanese School Stroke Rules & Writing Method"
+                    >
+                      <GraduationCap size={15} />
+                      <span className="hidden sm:inline">6 Writing Rules</span>
+                    </button>
                     <button
                       type="button"
                       onClick={() => setReportingKanji(activeKanji)}
@@ -335,7 +409,7 @@ export const KanjiView: React.FC = () => {
                       {t('kanji.onyomi')}
                     </span>
                     <div className="text-sm font-bold font-japanese text-indigo-600 dark:text-indigo-400">
-                      {activeKanji.onyomi.join('、 ') || '—'}
+                      {activeKanji.onyomi?.join('、 ') || '—'}
                     </div>
                     <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                       {activeKanji.romajiOnyomi?.join(', ')}
@@ -347,7 +421,7 @@ export const KanjiView: React.FC = () => {
                       {t('kanji.kunyomi')}
                     </span>
                     <div className="text-sm font-bold font-japanese text-emerald-600 dark:text-emerald-400">
-                      {activeKanji.kunyomi.join('、 ') || '—'}
+                      {activeKanji.kunyomi?.join('、 ') || '—'}
                     </div>
                     <div className="text-[11px] font-mono text-slate-400 mt-0.5">
                       {activeKanji.romajiKunyomi?.join(', ')}
@@ -355,22 +429,176 @@ export const KanjiView: React.FC = () => {
                   </div>
                 </div>
 
-                {/* Interactive Canvas */}
-                <div className="pt-2">
-                  <div className="text-center mb-3">
-                    <span className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider">
-                      {t('kanji.canvasTitle')}
-                    </span>
-                    <p className="text-[11px] text-slate-400">
-                      {t('kanji.subtitle')}
+                {/* ========================================================== */}
+                {/* JAPANESE SCHOOL STROKE ORDER & WRITING PRACTICE STUDIO */}
+                {/* ========================================================== */}
+                <div className="pt-2 space-y-4">
+                  {/* Tool Selector Bar */}
+                  <div className="flex items-center justify-between gap-2 border-b border-slate-100 dark:border-slate-800 pb-3 flex-wrap">
+                    <div className="flex items-center gap-2">
+                      <button
+                        type="button"
+                        onClick={() => setPracticeTool('strokeOrder')}
+                        className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                          practiceTool === 'strokeOrder'
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <Play size={14} />
+                        <span>筆順 Stroke Order Player</span>
+                      </button>
+
+                      <button
+                        type="button"
+                        onClick={() => setPracticeTool('canvas')}
+                        className={`flex items-center gap-2 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                          practiceTool === 'canvas'
+                            ? 'bg-indigo-600 text-white shadow-sm'
+                            : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                        }`}
+                      >
+                        <PenTool size={14} />
+                        <span>書く Writing Canvas</span>
+                      </button>
+                    </div>
+
+                    <button
+                      type="button"
+                      onClick={() => setPrinciplesModalOpen(true)}
+                      className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1"
+                    >
+                      <Info size={13} />
+                      <span>Writing Rules & Principles</span>
+                    </button>
+                  </div>
+
+                  {/* Active Tool View */}
+                  {practiceTool === 'strokeOrder' ? (
+                    <StrokeOrderPlayer
+                      key={`player-${activeKanji.id}`}
+                      strokeData={activeStrokeData}
+                      kanjiChar={activeKanji.kanji}
+                      size={280}
+                      onAllStrokesComplete={() => logActivity('kanji', 1)}
+                    />
+                  ) : (
+                    <KanjiCanvas
+                      key={`canvas-${activeKanji.id}`}
+                      kanji={activeKanji}
+                      strokeData={activeStrokeData}
+                      onPracticeComplete={() => logActivity('kanji', 1)}
+                    />
+                  )}
+                </div>
+
+                {/* Components & Radical Breakdown */}
+                {activeEduDetail?.components && activeEduDetail.components.length > 0 && (
+                  <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200/80 dark:border-slate-800 space-y-2">
+                    <div className="flex items-center justify-between">
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider flex items-center gap-1.5">
+                        <Layers size={13} className="text-indigo-500" />
+                        <span>構成と部首 (Components & Radical Breakdown)</span>
+                      </span>
+                      <span className="text-[10px] text-slate-400 font-mono">
+                        {activeEduDetail.components.length} parts
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                      {activeEduDetail.components.map((comp, cIdx) => (
+                        <div
+                          key={cIdx}
+                          className="flex items-center gap-3 p-2.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200/60 dark:border-slate-700/60"
+                        >
+                          <div className="w-9 h-9 rounded-lg bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-kanji text-xl font-bold flex items-center justify-center shrink-0 border border-indigo-100 dark:border-indigo-900/50">
+                            {comp.component}
+                          </div>
+                          <div className="min-w-0">
+                            <div className="flex items-center gap-1.5">
+                              <span className="text-xs font-bold font-japanese text-slate-900 dark:text-white truncate">
+                                {comp.name}
+                              </span>
+                              {comp.isRadical && (
+                                <span className="px-1.5 py-0.2 rounded text-[9px] font-bold bg-amber-100 dark:bg-amber-950 text-amber-700 dark:text-amber-300 shrink-0">
+                                  部首 (Radical)
+                                </span>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate">
+                              {comp.meaning}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mnemonic / Memory Story */}
+                {activeEduDetail?.mnemonic && (
+                  <div className="p-4 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 space-y-1.5">
+                    <div className="flex items-center gap-2 text-amber-700 dark:text-amber-300">
+                      <Lightbulb size={16} />
+                      <h4 className="text-xs font-bold uppercase tracking-wider">
+                        覚えるヒント (Memory Aid & Mnemonic)
+                      </h4>
+                    </div>
+                    <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-6">
+                      {activeEduDetail.mnemonic}
                     </p>
                   </div>
-                  <KanjiCanvas
-                    key={activeKanji.id}
-                    kanji={activeKanji}
-                    onPracticeComplete={() => logActivity('kanji', 1)}
-                  />
-                </div>
+                )}
+
+                {/* Don't Confuse / Visual Traps */}
+                {activeEduDetail?.similarKanji && activeEduDetail.similarKanji.length > 0 && (
+                  <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40 space-y-2.5">
+                    <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+                      <AlertCircle size={16} />
+                      <h4 className="text-xs font-bold uppercase tracking-wider">
+                        似ている漢字に注意 (Don't Confuse / Visual Traps)
+                      </h4>
+                    </div>
+                    <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                      {activeEduDetail.similarKanji.map((sim, sIdx) => {
+                        const matchingKanjiInApp = KANJI_DATA.find((k) => k.kanji === sim.character);
+                        return (
+                          <div
+                            key={sIdx}
+                            className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-rose-200/60 dark:border-rose-900/40 space-y-1.5"
+                          >
+                            <div className="flex items-center justify-between">
+                              <div className="flex items-center gap-2">
+                                <span className="text-xl font-kanji font-black text-rose-600 dark:text-rose-400">
+                                  {sim.character}
+                                </span>
+                                <span className="text-xs font-bold text-slate-800 dark:text-slate-200">
+                                  ({sim.meaning})
+                                </span>
+                              </div>
+                              {matchingKanjiInApp && (
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setActiveKanji(matchingKanjiInApp);
+                                    setSelectedKanjiId(matchingKanjiInApp.id);
+                                    setQuizOpen(false);
+                                    window.scrollTo({ top: 0, behavior: 'smooth' });
+                                  }}
+                                  className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline"
+                                >
+                                  Study {sim.character} ➔
+                                </button>
+                              )}
+                            </div>
+                            <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                              {sim.distinctionNote}
+                            </p>
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
 
                 {/* Example Vocabulary Compounds */}
                 {activeKanji.exampleVocab && activeKanji.exampleVocab.length > 0 && (
@@ -535,6 +763,62 @@ export const KanjiView: React.FC = () => {
                       );
                     })}
                   </div>
+                </div>
+
+                {/* ========================================================== */}
+                {/* QUICK MASTERY QUIZ (5 QUESTIONS - SRS INTEGRATED) */}
+                {/* ========================================================== */}
+                <div className="pt-6 border-t border-slate-200 dark:border-slate-800 space-y-4">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-gradient-to-r from-emerald-500/10 via-teal-500/10 to-indigo-500/10 border border-emerald-500/20">
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center shrink-0 shadow-sm shadow-emerald-200 dark:shadow-none">
+                        <CheckCircle2 size={20} />
+                      </div>
+                      <div>
+                        <h3 className="text-sm sm:text-base font-black text-slate-900 dark:text-white flex items-center gap-2">
+                          <span>確認テスト (Quick Mastery Quiz)</span>
+                          <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 font-bold">
+                            5 Questions
+                          </span>
+                        </h3>
+                        <p className="text-xs text-slate-500 dark:text-slate-400">
+                          Verify meaning, reading, recognition, stroke count, and vocabulary usage for 「{activeKanji.kanji}」.
+                        </p>
+                      </div>
+                    </div>
+
+                    {!quizOpen ? (
+                      <button
+                        type="button"
+                        onClick={() => setQuizOpen(true)}
+                        className="px-4 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold transition-all shadow-md flex items-center justify-center gap-1.5 shrink-0 cursor-pointer"
+                      >
+                        <Sparkles size={14} />
+                        <span>Start Mastery Quiz</span>
+                      </button>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => setQuizOpen(false)}
+                        className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-400 text-xs font-semibold hover:bg-slate-100 dark:hover:bg-slate-800 shrink-0"
+                      >
+                        Close Quiz
+                      </button>
+                    )}
+                  </div>
+
+                  {quizOpen && (
+                    <div className="animate-fade-in">
+                      <KanjiQuickQuiz
+                        key={`quiz-${activeKanji.id}`}
+                        kanji={activeKanji}
+                        onQuizComplete={(score) => {
+                          logActivity('kanji', score >= 80 ? 2 : 1);
+                        }}
+                        onClose={() => setQuizOpen(false)}
+                      />
+                    </div>
+                  )}
                 </div>
               </div>
             )}
@@ -993,6 +1277,12 @@ export const KanjiView: React.FC = () => {
           currentText={`Kanji: ${reportingKanji.kanji} - Meaning: ${reportingKanji.meaning} - Onyomi: ${reportingKanji.onyomi.join(', ')}`}
         />
       )}
+
+      {/* Japanese School Writing Principles & 6 Rules Modal */}
+      <KanjiSchoolPrinciplesModal
+        isOpen={principlesModalOpen}
+        onClose={() => setPrinciplesModalOpen(false)}
+      />
     </div>
   );
 };

@@ -108,6 +108,11 @@ export interface KanjiItem {
   strokeCoordinates?: number[][][]; // array of strokes, each stroke is [[x1, y1], [x2, y2], ...]
   level: JLPTLevel;
   radicals: string[];
+  grade?: number | string; // Elementary School 1-6 or Junior High (7-9)
+  commonnessRank?: number;
+  mnemonic?: string; // Memory aid tip (clearly distinguished from etymology)
+  componentsBreakdown?: import('./kanjiStroke').KanjiComponentInfo[];
+  similarKanji?: import('./kanjiStroke').KanjiSimilarComparison[];
   exampleVocab: {
     word: string;
     reading: string;
@@ -121,6 +126,8 @@ export interface KanjiItem {
   exampleSentences?: KanjiSentence[];
   unitId?: string;
 }
+
+export * from './kanjiStroke';
 
 export type RadicalPosition =
   | 'hen'          // 偏 (Left)

@@ -26,6 +26,7 @@ import { JLPT_LEVELS, LESSON_ROADMAP } from '../data/jlptLevels';
 import { ProgressRing, ProgressBar } from '../components/common/ProgressBar';
 import { RecommendationService } from '../services/recommendationService';
 import { StorageService } from '../services/storageService';
+import { ActiveLearningCard } from '../components/activeLearning/ActiveLearningCard';
 
 export const DashboardView: React.FC = () => {
   const { activeLevel, setActiveView, setLevelSelectorOpen, navigateToLesson } = useApp();
@@ -120,6 +121,9 @@ export const DashboardView: React.FC = () => {
           )}
         </div>
       </div>
+
+      {/* AI Active Learning Dynamic Card */}
+      <ActiveLearningCard />
 
       {/* 2. Today's Goal Ring & Real-Time Stats Overview */}
       <div className="grid grid-cols-1 md:grid-cols-3 lg:grid-cols-4 gap-4 sm:gap-6">

@@ -7,6 +7,7 @@ import { AppProvider } from './context/AppContext';
 import { UserProvider } from './context/UserContext';
 import { SRSProvider } from './context/SRSContext';
 import { I18nProvider } from './i18n/I18nContext';
+import { ActiveLearningProvider } from './context/ActiveLearningContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -14,7 +15,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
       <UserProvider>
         <SRSProvider>
           <AppProvider>
-            <App />
+            <ActiveLearningProvider>
+              <App />
+            </ActiveLearningProvider>
           </AppProvider>
         </SRSProvider>
       </UserProvider>

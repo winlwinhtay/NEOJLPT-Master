@@ -21,6 +21,7 @@ import { ListeningView } from './views/ListeningView';
 import { PracticeView } from './views/PracticeView';
 import { MockTestView } from './views/MockTestView';
 import { BusinessJapaneseView } from './views/BusinessJapaneseView';
+import { ActiveLearningView } from './views/ActiveLearningView';
 import { AIConversationView } from './views/AIConversationView';
 import { SpeakingPracticeView } from './views/SpeakingPracticeView';
 import { ProgressAnalyticsView } from './views/ProgressAnalyticsView';
@@ -28,6 +29,7 @@ import { DictionaryView } from './views/DictionaryView';
 import { ProfileView } from './views/ProfileView';
 import { SettingsView } from './views/SettingsView';
 import { AdminView } from './views/AdminView';
+import { ActiveLearningSessionModal } from './components/activeLearning/ActiveLearningSessionModal';
 
 export const App: React.FC = () => {
   const { activeView } = useApp();
@@ -54,6 +56,8 @@ export const App: React.FC = () => {
         return <MockTestView />;
       case 'business':
         return <BusinessJapaneseView />;
+      case 'active-learning':
+        return <ActiveLearningView />;
       case 'ai-conversation':
         return <AIConversationView />;
       case 'speaking':
@@ -94,6 +98,7 @@ export const App: React.FC = () => {
       <AuthModal />
       <UpgradeModal />
       <AITutorModal />
+      <ActiveLearningSessionModal />
     </div>
   );
 };

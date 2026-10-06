@@ -37,6 +37,12 @@ export const Sidebar: React.FC = () => {
 
   const mainNavItems: { id: ViewType; label: string; icon: React.ReactNode; badge?: string | number }[] = [
     { id: 'dashboard', label: t('nav.dashboard', 'Dashboard'), icon: <LayoutDashboard size={20} /> },
+    {
+      id: 'active-learning',
+      label: 'AI Active Learning',
+      icon: <Sparkles size={20} />,
+      badge: 'AI',
+    },
     { id: 'learn', label: t('nav.learn', 'Learn Roadmap'), icon: <Compass size={20} /> },
     {
       id: 'vocabulary',

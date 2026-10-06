@@ -30,8 +30,9 @@ import { JLPTLevel, VocabularyItem, KanjiItem, GrammarItem, ReadingLesson } from
 import { CurriculumPlannerConfig } from '../types/studyPlan';
 import { StudyPlannerService, DEFAULT_CURRICULUM_CONFIG } from '../services/studyPlannerService';
 import { StorageService } from '../services/storageService';
+import { AdminActiveLearningPanel } from '../components/admin/AdminActiveLearningPanel';
 
-type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'planner' | 'review';
+type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'planner' | 'review' | 'ai-active';
 
 
 export interface JapaneseReviewItem {
@@ -504,7 +505,7 @@ export const AdminView: React.FC = () => {
       )}
 
       {/* Dataset Metric Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
         <button
           onClick={() => handleTabChange('vocab')}
           className={`p-4 sm:p-5 text-left rounded-2xl border transition-all ${
@@ -604,6 +605,23 @@ export const AdminView: React.FC = () => {
           </div>
           <div className="text-xs sm:text-sm font-black text-amber-600 dark:text-amber-400 mt-2 flex items-center gap-1">
             {reviewQueue.filter(r => r.status === 'pending').length} Needs Review
+          </div>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('ai-active')}
+          className={`p-4 sm:p-5 text-left rounded-2xl border transition-all col-span-2 sm:col-span-1 ${
+            activeTab === 'ai-active'
+              ? 'bg-purple-50 dark:bg-purple-950/40 border-purple-300 dark:border-purple-700 shadow-sm ring-2 ring-purple-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-purple-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">AI Learning</span>
+            <Sparkles size={14} className="text-purple-500" />
+          </div>
+          <div className="text-xs sm:text-sm font-black text-purple-600 dark:text-purple-400 mt-2 flex items-center gap-1">
+            Gemini & Audit
           </div>
         </button>
       </div>
@@ -1385,8 +1403,11 @@ export const AdminView: React.FC = () => {
         </div>
       )}
 
+      {/* TAB CONTENT: AI ACTIVE LEARNING & GEMINI AUDIT */}
+      {activeTab === 'ai-active' && <AdminActiveLearningPanel />}
+
       {/* TAB CONTENT: DATASET MANAGEMENT (VOCAB / KANJI / GRAMMAR / READING) */}
-      {activeTab !== 'planner' && activeTab !== 'review' && (
+      {activeTab !== 'planner' && activeTab !== 'review' && activeTab !== 'ai-active' && (
         <>
           {/* Filter Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

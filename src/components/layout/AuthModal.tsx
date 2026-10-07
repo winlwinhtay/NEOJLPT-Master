@@ -139,13 +139,39 @@ export const AuthModal: React.FC = () => {
 
     try {
       setLoading(true);
-      const { error: authErr } = await supabase.auth.signInWithOAuth({
+      setError(null);
+      const { data, error: authErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
+          skipBrowserRedirect: true,
         },
       });
-      if (authErr) setError(authErr.message);
+
+      if (authErr) {
+        setError(authErr.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data?.url) {
+        // Safe probe: Check if Google provider is enabled in Supabase without kicking the user to raw JSON
+        try {
+          const probe = await fetch(data.url, { method: 'GET', mode: 'cors' });
+          if (!probe.ok) {
+            const errJson = await probe.json().catch(() => ({}));
+            if (probe.status === 400 || errJson?.error_code === 'validation_failed') {
+              setError(
+                'Google OAuth is not enabled in your Supabase dashboard yet. Please enter your email below to sign in via Magic Link or password!'
+              );
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (_) {}
+
+        window.location.href = data.url;
+      }
     } catch (err: any) {
       setError(err.message || 'Google sign-in error');
     } finally {

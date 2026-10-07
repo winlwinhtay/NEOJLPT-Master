@@ -22,6 +22,8 @@ import {
   UserCheck,
   Compass,
   LogOut,
+  ExternalLink,
+  HelpCircle,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -70,6 +72,7 @@ export const LoginView: React.FC = () => {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  const [googleGuideOpen, setGoogleGuideOpen] = useState(false);
 
   // Subscription plan states
   const [billingCycle, setBillingCycle] = useState<BillingCycle>('yearly');
@@ -81,8 +84,9 @@ export const LoginView: React.FC = () => {
     setActiveView('dashboard');
   };
 
-  const handleMagicLink = async () => {
-    const targetEmail = (email.trim() || name.trim()).toLowerCase();
+  const handleMagicLink = async (targetEmailParam?: string | React.MouseEvent) => {
+    const emailCandidate = typeof targetEmailParam === 'string' ? targetEmailParam : email;
+    const targetEmail = (emailCandidate.trim() || name.trim()).toLowerCase();
     if (!targetEmail || !targetEmail.includes('@')) {
       setError('Please enter a valid email address to receive a magic sign-in link.');
       return;
@@ -183,13 +187,43 @@ export const LoginView: React.FC = () => {
 
     try {
       setLoading(true);
-      const { error: authErr } = await supabase.auth.signInWithOAuth({
+      setError(null);
+
+      const { data, error: authErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
           redirectTo: window.location.origin,
+          skipBrowserRedirect: true,
         },
       });
-      if (authErr) setError(authErr.message);
+
+      if (authErr) {
+        setError(authErr.message);
+        setLoading(false);
+        return;
+      }
+
+      if (data?.url) {
+        // Safe Probe: Check if Google provider is actually enabled in Supabase without redirecting the browser to raw JSON
+        try {
+          const probe = await fetch(data.url, { method: 'GET', mode: 'cors' });
+          if (!probe.ok) {
+            const errJson = await probe.json().catch(() => ({}));
+            if (probe.status === 400 || errJson?.error_code === 'validation_failed') {
+              setGoogleGuideOpen(true);
+              setError(
+                'Google OAuth provider is not enabled in your Supabase project yet. You can sign in immediately using your Gmail address below via Magic Link or password!'
+              );
+              setLoading(false);
+              return;
+            }
+          }
+        } catch (_) {
+          // If probe fails due to network/CORS, proceed to redirect
+        }
+
+        window.location.href = data.url;
+      }
     } catch (err: any) {
       setError(err.message || 'Google sign-in error');
     } finally {
@@ -435,6 +469,88 @@ export const LoginView: React.FC = () => {
               </svg>
               <span>Continue with Google</span>
             </button>
+
+            {/* Quick Gmail 1-Click Magic Link Option */}
+            <div className="flex items-center justify-between text-[11px] px-1">
+              <span className="text-slate-400">Using a Google / Gmail account?</span>
+              <button
+                type="button"
+                onClick={() => setGoogleGuideOpen(!googleGuideOpen)}
+                className="text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 font-semibold cursor-pointer"
+              >
+                <HelpCircle size={12} />
+                <span>Google Setup Guide</span>
+              </button>
+            </div>
+
+            {/* Google OAuth Setup Guide Drawer */}
+            {googleGuideOpen && (
+              <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-900/50 text-xs space-y-2.5 animate-fade-in">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 font-bold text-amber-800 dark:text-amber-300">
+                    <AlertCircle size={16} />
+                    <span>Why does Google login say "provider is not enabled"?</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => setGoogleGuideOpen(false)}
+                    className="p-1 text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+                  >
+                    ✕
+                  </button>
+                </div>
+
+                <p className="text-slate-600 dark:text-slate-300 text-[11px] leading-relaxed">
+                  Supabase disables third-party Google OAuth by default until you enable it in the Supabase Dashboard with Google Cloud credentials.
+                </p>
+
+                <div className="p-3 bg-white dark:bg-slate-900 rounded-xl border border-amber-200/80 dark:border-amber-800/50 space-y-1.5">
+                  <p className="font-bold text-slate-900 dark:text-white text-[11px] flex items-center gap-1.5">
+                    <Sparkles size={13} className="text-amber-500" />
+                    <span>Instant Alternative (0 Setup Needed):</span>
+                  </p>
+                  <p className="text-[11px] text-slate-600 dark:text-slate-400 leading-relaxed">
+                    You can type your Gmail address (e.g. <strong className="text-slate-800 dark:text-slate-200">neowin001@gmail.com</strong>) in the email box below and click <strong>"Send Magic Link"</strong>. Supabase will send a secure 1-click login link directly to your Gmail inbox!
+                  </p>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEmail('neowin001@gmail.com');
+                      handleMagicLink('neowin001@gmail.com');
+                    }}
+                    className="mt-1 w-full py-2 px-3 rounded-lg bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] flex items-center justify-center gap-1.5 shadow-2xs transition-all cursor-pointer"
+                  >
+                    <Mail size={13} />
+                    <span>Send 1-Click Magic Link to neowin001@gmail.com</span>
+                  </button>
+                </div>
+
+                <div className="space-y-1 pt-1 text-[11px] text-slate-600 dark:text-slate-400">
+                  <p className="font-bold text-slate-800 dark:text-slate-200">To enable native Google 1-Click Popup in Supabase:</p>
+                  <ol className="list-decimal list-inside space-y-1 pl-1">
+                    <li>
+                      Open Supabase Providers:{' '}
+                      <a
+                        href="https://supabase.com/dashboard/project/rhidvvfdbilagdgzzzzg/auth/providers"
+                        target="_blank"
+                        rel="noreferrer"
+                        className="text-indigo-600 dark:text-indigo-400 underline font-mono inline-flex items-center gap-0.5"
+                      >
+                        Dashboard Providers <ExternalLink size={10} />
+                      </a>
+                    </li>
+                    <li>Toggle <strong>Google</strong> to Enabled</li>
+                    <li>Paste your Google Cloud OAuth <strong>Client ID</strong> & <strong>Client Secret</strong></li>
+                    <li>
+                      Set Google Authorized redirect URI to:{' '}
+                      <code className="px-1 py-0.5 rounded bg-slate-100 dark:bg-slate-800 font-mono text-[10px]">
+                        https://rhidvvfdbilagdgzzzzg.supabase.co/auth/v1/callback
+                      </code>
+                    </li>
+                  </ol>
+                </div>
+              </div>
+            )}
 
             <div className="flex items-center gap-3">
               <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1" />

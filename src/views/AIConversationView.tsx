@@ -18,6 +18,7 @@ import { useUser } from '../context/UserContext';
 import { AIService } from '../services/aiService';
 import { speechService } from '../services/speechService';
 import { AudioButton } from '../components/common/AudioButton';
+import { JapaneseInput } from '../components/keyboard/JapaneseInput';
 import { AIConversationTopic, AIMessage } from '../types/ai';
 
 export const AIConversationView: React.FC = () => {
@@ -301,13 +302,17 @@ export const AIConversationView: React.FC = () => {
             }}
             className="flex items-center gap-2"
           >
-            <input
-              type="text"
-              value={inputVal}
-              onChange={(e) => setInputVal(e.target.value)}
-              placeholder="Reply in Japanese (e.g. ラーメンを一つお願いします)..."
-              className="flex-1 px-4 py-2.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-transparent focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-900 dark:text-white"
-            />
+            <div className="flex-1">
+              <JapaneseInput
+                value={inputVal}
+                onChange={setInputVal}
+                onSubmit={handleSendMessage}
+                placeholder="Reply in Japanese (e.g. ラーメンを一つお願いします)..."
+                disabled={isBotTyping}
+                className="w-full"
+                inputClassName="bg-slate-100 dark:bg-slate-800 rounded-2xl border border-transparent focus:border-indigo-500 outline-none text-xs sm:text-sm text-slate-900 dark:text-white"
+              />
+            </div>
 
             {/* Mic STT Button */}
             <button

@@ -9,11 +9,13 @@ import {
   RotateCcw,
   ArrowRight,
   ShieldCheck,
+  Keyboard,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { speechService } from '../services/speechService';
 import { AudioButton } from '../components/common/AudioButton';
+import { JapaneseInput } from '../components/keyboard/JapaneseInput';
 import { SpeakingAttemptResult } from '../types/ai';
 import { JLPTLevel } from '../types';
 import { SPEAKING_EXERCISES } from '../data/speakingData';
@@ -30,11 +32,17 @@ export const SpeakingPracticeView: React.FC = () => {
   }, [selectedSpeakingLevel]);
 
   const [currentIndex, setCurrentIndex] = useState(0);
+  const [practiceMode, setPracticeMode] = useState<'voice' | 'typing'>('voice');
+  const [typedInput, setTypedInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [result, setResult] = useState<SpeakingAttemptResult | null>(null);
 
   const currentEx = exercises[currentIndex] || exercises[0];
+
+  const handleEvaluateInput = (inputText: string) => {
+    evaluateSpeech(inputText);
+  };
 
   const handleStartRecording = () => {
     setResult(null);
@@ -89,6 +97,7 @@ export const SpeakingPracticeView: React.FC = () => {
   const handleNext = () => {
     setResult(null);
     setTranscript('');
+    setTypedInput('');
     setCurrentIndex((prev) => (prev < exercises.length - 1 ? prev + 1 : 0));
   };
 
@@ -181,30 +190,90 @@ export const SpeakingPracticeView: React.FC = () => {
           ))}
         </div>
 
-        {/* Microphone Recording Button */}
-        <div className="pt-4 flex flex-col items-center gap-3">
-          <button
-            type="button"
-            onClick={handleStartRecording}
-            className={`w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-xl ${
-              isRecording
-                ? 'bg-rose-500 text-white animate-pulse shadow-rose-500/50 scale-110'
-                : 'bg-gradient-to-tr from-brand-600 to-rose-500 hover:scale-105 text-white shadow-brand-500/30'
-            }`}
-          >
-            {isRecording ? <MicOff size={36} /> : <Mic size={36} />}
-          </button>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
-            {isRecording ? 'Listening... speak clearly now' : 'Click to Speak into Microphone'}
-          </span>
+        {/* Practice Mode Selector */}
+        <div className="flex justify-center pt-2">
+          <div className="inline-flex items-center p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => {
+                setPracticeMode('voice');
+                setResult(null);
+              }}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                practiceMode === 'voice'
+                  ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Mic size={14} />
+              <span>音声認識 (Voice)</span>
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setPracticeMode('typing');
+                setResult(null);
+              }}
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                practiceMode === 'typing'
+                  ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Keyboard size={14} />
+              <span>タイピング確認 (Typing Check)</span>
+            </button>
+          </div>
         </div>
 
-        {/* Speech Recognition Result */}
+        {/* Voice Mode: Microphone Recording Button */}
+        {practiceMode === 'voice' && (
+          <div className="pt-2 flex flex-col items-center gap-3">
+            <button
+              type="button"
+              onClick={handleStartRecording}
+              className={`w-24 h-24 rounded-full flex items-center justify-center transition-all shadow-xl cursor-pointer ${
+                isRecording
+                  ? 'bg-rose-500 text-white animate-pulse shadow-rose-500/50 scale-110'
+                  : 'bg-gradient-to-tr from-brand-600 to-rose-500 hover:scale-105 text-white shadow-brand-500/30'
+              }`}
+            >
+              {isRecording ? <MicOff size={36} /> : <Mic size={36} />}
+            </button>
+            <span className="text-xs font-bold text-slate-500 dark:text-slate-400">
+              {isRecording ? 'Listening... speak clearly now' : 'Click to Speak into Microphone'}
+            </span>
+          </div>
+        )}
+
+        {/* Typing Mode: In-App Japanese Input */}
+        {practiceMode === 'typing' && (
+          <div className="max-w-xl mx-auto w-full space-y-3 pt-2">
+            <JapaneseInput
+              value={typedInput}
+              onChange={setTypedInput}
+              onSubmit={() => typedInput.trim() && handleEvaluateInput(typedInput)}
+              placeholder="例文を日本語で入力してください (Type the sentence in Japanese)..."
+              inputClassName="w-full px-4 py-3 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-sm font-japanese outline-none focus:border-rose-500"
+            />
+            <button
+              type="button"
+              onClick={() => typedInput.trim() && handleEvaluateInput(typedInput)}
+              disabled={!typedInput.trim()}
+              className="w-full py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-brand-600 hover:opacity-95 disabled:opacity-40 text-white font-bold text-xs shadow-md transition-all flex items-center justify-center gap-2 cursor-pointer"
+            >
+              <Sparkles size={16} />
+              <span>入力した日本語を採点する (Check Spelling & Sentence)</span>
+            </button>
+          </div>
+        )}
+
+        {/* Speech / Typing Recognition Result */}
         {result && (
           <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left space-y-4 max-w-xl mx-auto animate-fade-in">
             <div className="flex items-center justify-between">
               <span className="text-xs font-bold text-slate-400 uppercase">
-                Confidence Evaluation:
+                {practiceMode === 'voice' ? 'Pronunciation Evaluation:' : 'Spelling Evaluation:'}
               </span>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
@@ -215,12 +284,12 @@ export const SpeakingPracticeView: React.FC = () => {
                     : 'bg-rose-100 text-rose-700 dark:bg-rose-950 dark:text-rose-300'
                 }`}
               >
-                {result.confidenceScore}% Clarity
+                {result.confidenceScore}% Accuracy
               </span>
             </div>
 
             <div className="p-3 rounded-xl bg-white dark:bg-slate-900 text-xs font-japanese font-bold text-slate-900 dark:text-white">
-              Heard: "{result.transcript}"
+              {practiceMode === 'voice' ? 'Heard:' : 'Entered:'} "{result.transcript}"
             </div>
 
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">

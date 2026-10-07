@@ -11,10 +11,12 @@ import {
   ChevronDown,
   Menu,
   Crown,
+  Keyboard,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
 import { useI18n } from '../../i18n/I18nContext';
+import { useJapaneseKeyboard } from '../../context/JapaneseKeyboardContext';
 import { JLPT_LEVELS } from '../../data/jlptLevels';
 import { SupportedLanguage } from '../../types/i18n';
 
@@ -33,6 +35,7 @@ export const Navbar: React.FC = () => {
 
   const { profile, updateProfile, entitlements, isGuest } = useUser();
   const { language, setLanguage, supportedLanguages, t } = useI18n();
+  const { isOpen: isKeyboardOpen, toggleKeyboard } = useJapaneseKeyboard();
 
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
@@ -242,6 +245,21 @@ export const Navbar: React.FC = () => {
               </div>
             )}
           </div>
+
+          {/* Global In-App Keyboard Quick Toggle */}
+          <button
+            type="button"
+            onClick={toggleKeyboard}
+            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+              isKeyboardOpen
+                ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50 shadow-xs'
+                : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300'
+            }`}
+            title={`Japanese Virtual Keyboard: ${isKeyboardOpen ? 'Open' : 'Closed'} (Click to toggle)`}
+          >
+            <Keyboard size={14} />
+            <span className="font-japanese text-[11px] font-bold">かな</span>
+          </button>
 
           {/* Global Furigana Quick Toggle */}
           <button

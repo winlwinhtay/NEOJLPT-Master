@@ -30,7 +30,9 @@ import { DictionaryView } from './views/DictionaryView';
 import { ProfileView } from './views/ProfileView';
 import { SettingsView } from './views/SettingsView';
 import { AdminView } from './views/AdminView';
+import { TypingPracticeView } from './views/TypingPracticeView';
 import { ActiveLearningSessionModal } from './components/activeLearning/ActiveLearningSessionModal';
+import { JapaneseVirtualKeyboard } from './components/keyboard/JapaneseVirtualKeyboard';
 
 export const App: React.FC = () => {
   const { activeView } = useApp();
@@ -73,6 +75,8 @@ export const App: React.FC = () => {
         return <SettingsView />;
       case 'admin':
         return <AdminView />;
+      case 'typing-practice':
+        return <TypingPracticeView />;
       default:
         return <DashboardView />;
     }
@@ -101,6 +105,7 @@ export const App: React.FC = () => {
       <GuestSavePromptModal />
       <AITutorModal />
       <ActiveLearningSessionModal />
+      <JapaneseVirtualKeyboard />
     </div>
   );
 };

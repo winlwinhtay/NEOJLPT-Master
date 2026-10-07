@@ -8,6 +8,7 @@ import { UserProvider } from './context/UserContext';
 import { SRSProvider } from './context/SRSContext';
 import { I18nProvider } from './i18n/I18nContext';
 import { ActiveLearningProvider } from './context/ActiveLearningContext';
+import { JapaneseKeyboardProvider } from './context/JapaneseKeyboardContext';
 
 ReactDOM.createRoot(document.getElementById('root')!).render(
   <React.StrictMode>
@@ -16,7 +17,9 @@ ReactDOM.createRoot(document.getElementById('root')!).render(
         <SRSProvider>
           <AppProvider>
             <ActiveLearningProvider>
-              <App />
+              <JapaneseKeyboardProvider>
+                <App />
+              </JapaneseKeyboardProvider>
             </ActiveLearningProvider>
           </AppProvider>
         </SRSProvider>

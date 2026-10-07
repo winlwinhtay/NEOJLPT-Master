@@ -21,6 +21,7 @@ import {
   Crown,
   Shield,
   X,
+  Keyboard,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/I18nContext';
@@ -73,6 +74,12 @@ export const Sidebar: React.FC = () => {
     },
     { id: 'ai-conversation', label: t('nav.aiConversation', 'AI Conversation'), icon: <Bot size={20} /> },
     { id: 'speaking', label: t('nav.speaking', 'Speaking Practice'), icon: <Mic size={20} /> },
+    {
+      id: 'typing-practice',
+      label: 'Typing Practice (入力練習)',
+      icon: <Keyboard size={20} />,
+      badge: 'New',
+    },
     { id: 'progress', label: t('nav.progress', 'Progress Analytics'), icon: <BarChart3 size={20} /> },
     { id: 'dictionary', label: t('nav.dictionary', 'Dictionary'), icon: <BookA size={20} /> },
   ];

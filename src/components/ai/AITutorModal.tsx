@@ -4,6 +4,7 @@ import { useApp } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
 import { AIService } from '../../services/aiService';
 import { AudioButton } from '../common/AudioButton';
+import { JapaneseInput } from '../keyboard/JapaneseInput';
 
 export const AITutorModal: React.FC = () => {
   const { aiTutorOpen, setAiTutorOpen, activeLevel } = useApp();
@@ -166,13 +167,17 @@ export const AITutorModal: React.FC = () => {
             }}
             className="flex items-center gap-2"
           >
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Ask anything (e.g. 'Why is this particle used?')..."
-              className="flex-1 px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400"
-            />
+            <div className="flex-1">
+              <JapaneseInput
+                value={query}
+                onChange={setQuery}
+                onSubmit={() => handleAsk()}
+                placeholder="Ask anything (e.g. 'Why is this particle used?')..."
+                disabled={loading}
+                className="w-full"
+                inputClassName="px-4 py-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 border border-transparent focus:border-indigo-500 outline-none text-sm text-slate-900 dark:text-white placeholder-slate-400"
+              />
+            </div>
             <button
               type="submit"
               disabled={!query.trim() || loading}

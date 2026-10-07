@@ -48,8 +48,9 @@ export default {
       },
       fontFamily: {
         sans: ['Inter', 'system-ui', '-apple-system', 'BlinkMacSystemFont', 'Segoe UI', 'Roboto', 'sans-serif'],
-        japanese: ['"Noto Sans JP"', '"Hiragino Sans"', '"Hiragino Kaku Gothic ProN"', '"Meiryo"', 'sans-serif'],
-        kanji: ['"Shippori Mincho"', '"Yu Mincho"', 'serif'],
+        japanese: ['"Noto Sans JP"', '"Noto Sans CJK JP"', 'system-ui', 'sans-serif'],
+        'japanese-serif': ['"Noto Serif JP"', '"Noto Serif CJK JP"', '"Shippori Mincho"', 'serif'],
+        kanji: ['"Noto Serif JP"', '"Noto Serif CJK JP"', '"Shippori Mincho"', 'serif'],
       },
       animation: {
         'pulse-subtle': 'pulse 3s cubic-bezier(0.4, 0, 0.6, 1) infinite',

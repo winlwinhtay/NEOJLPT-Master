@@ -18,6 +18,7 @@ export type ViewType =
   | 'speaking'
   | 'progress'
   | 'dictionary'
+  | 'typing-practice'
   | 'profile'
   | 'settings'
   | 'admin';

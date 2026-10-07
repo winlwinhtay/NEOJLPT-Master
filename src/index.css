@@ -28,6 +28,26 @@
   }
 }
 
+@layer utilities {
+  .font-japanese {
+    font-family: 'Noto Sans JP', 'Noto Sans CJK JP', system-ui, -apple-system, sans-serif;
+    font-feature-settings: 'palt' 1;
+    font-display: swap;
+  }
+
+  .font-japanese-serif {
+    font-family: 'Noto Serif JP', 'Noto Serif CJK JP', 'Shippori Mincho', serif;
+    font-feature-settings: 'palt' 1;
+    font-display: swap;
+  }
+
+  .japanese-text {
+    font-family: 'Noto Sans JP', 'Noto Sans CJK JP', system-ui, -apple-system, sans-serif;
+    word-break: break-all;
+    line-height: 1.6;
+  }
+}
+
 /* Furigana Ruby Styling */
 ruby {
   ruby-align: center;

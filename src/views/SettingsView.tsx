@@ -10,16 +10,19 @@ import {
   Eye,
   Trash2,
   CheckCircle2,
+  Keyboard,
 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
+import { useJapaneseKeyboard } from '../context/JapaneseKeyboardContext';
 import { SupportedLanguage } from '../types/i18n';
 
 export const SettingsView: React.FC = () => {
   const { profile, updateProfile } = useUser();
   const { resetSRS } = useSRS();
   const { language, setLanguage, supportedLanguages, t } = useI18n();
+  const { settings: keyboardSettings, updateSettings: updateKeyboardSettings, openKeyboard } = useJapaneseKeyboard();
 
   const [resetConfirm, setResetConfirm] = useState(false);
   const [successToast, setSuccessToast] = useState('');
@@ -246,7 +249,163 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
-        {/* 5. Danger Zone: Reset Data */}
+        {/* 5. Japanese Virtual Keyboard & In-App Typing Settings */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+            <div className="flex items-center gap-2.5">
+              <Keyboard size={20} className="text-indigo-600 dark:text-indigo-400" />
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                  Japanese Virtual Keyboard & In-App Typing (日本語入力・仮想キーボード)
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400">
+                  Type and convert Japanese offline without installing OS Japanese IMEs or language packs.
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={openKeyboard}
+              className="px-3.5 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950/50 border border-indigo-200 dark:border-indigo-800 text-indigo-600 dark:text-indigo-400 font-bold text-xs hover:bg-indigo-100 transition-colors flex items-center gap-1.5 self-start sm:self-auto cursor-pointer"
+            >
+              <span>キーボードを開く (Open)</span>
+            </button>
+          </div>
+
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            {/* Default Mode */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+                Default Input Mode (初期入力モード)
+              </label>
+              <div className="grid grid-cols-3 gap-2">
+                {(['hiragana', 'katakana', 'romaji'] as const).map((m) => (
+                  <button
+                    key={m}
+                    type="button"
+                    onClick={() => {
+                      updateKeyboardSettings({ defaultMode: m });
+                      showSuccess(`Default input mode set to ${m}`);
+                    }}
+                    className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      keyboardSettings.defaultMode === m
+                        ? 'bg-indigo-600 text-white shadow-sm font-black'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {m === 'hiragana' ? 'ひらがな' : m === 'katakana' ? 'カタカナ' : 'Romaji'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Keyboard Dock Position */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 uppercase tracking-wider block">
+                Keyboard Layout Position (配置)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {(['bottom', 'floating'] as const).map((pos) => (
+                  <button
+                    key={pos}
+                    type="button"
+                    onClick={() => {
+                      updateKeyboardSettings({ keyboardPosition: pos });
+                      showSuccess(`Keyboard position: ${pos === 'bottom' ? 'Bottom Dock' : 'Floating Modal'}`);
+                    }}
+                    className={`py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+                      keyboardSettings.keyboardPosition === pos
+                        ? 'bg-indigo-600 text-white shadow-sm font-black'
+                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border border-slate-200 dark:border-slate-700'
+                    }`}
+                  >
+                    {pos === 'bottom' ? 'Bottom Dock' : 'Floating Modal'}
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Romaji Key Sub-Labels */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                  Romaji Sub-Labels on Keys
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Shows latin pronunciation below kana keys (e.g. 'ka' below 'か')
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  updateKeyboardSettings({ showRomaji: !keyboardSettings.showRomaji });
+                  showSuccess(`Romaji labels: ${!keyboardSettings.showRomaji ? 'Enabled' : 'Disabled'}`);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                  keyboardSettings.showRomaji
+                    ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-transparent'
+                }`}
+              >
+                {keyboardSettings.showRomaji ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+
+            {/* Kana Learning Hints & Popups */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                  Kana Learning Vocabulary Hints
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Educational tooltips showing example words and meanings on key press
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  updateKeyboardSettings({ showKanaHints: !keyboardSettings.showKanaHints });
+                  showSuccess(`Kana hints: ${!keyboardSettings.showKanaHints ? 'Enabled' : 'Disabled'}`);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                  keyboardSettings.showKanaHints
+                    ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-transparent'
+                }`}
+              >
+                {keyboardSettings.showKanaHints ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+
+            {/* Auto Kanji Candidate Selector */}
+            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 flex items-center justify-between sm:col-span-2">
+              <div>
+                <span className="text-xs font-bold text-slate-800 dark:text-slate-200 block">
+                  Real-time Kanji Candidate Selector (漢字変換候補バー)
+                </span>
+                <span className="text-[11px] text-slate-400">
+                  Suggests Kanji conversions automatically based on JLPT vocabulary as you type kana
+                </span>
+              </div>
+              <button
+                type="button"
+                onClick={() => {
+                  updateKeyboardSettings({ autoKanji: !keyboardSettings.autoKanji });
+                  showSuccess(`Kanji suggestions: ${!keyboardSettings.autoKanji ? 'Enabled' : 'Disabled'}`);
+                }}
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors cursor-pointer ${
+                  keyboardSettings.autoKanji
+                    ? 'bg-emerald-50 dark:bg-emerald-950 text-emerald-600 border-emerald-300 dark:border-emerald-800'
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-600 dark:text-slate-400 border-transparent'
+                }`}
+              >
+                {keyboardSettings.autoKanji ? 'Enabled' : 'Disabled'}
+              </button>
+            </div>
+          </div>
+        </div>
+
+        {/* 6. Danger Zone: Reset Data */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-rose-200 dark:border-rose-900/50 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>

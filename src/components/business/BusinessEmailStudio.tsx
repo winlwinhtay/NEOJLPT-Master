@@ -25,6 +25,7 @@ import { BUSINESS_EMAIL_TEMPLATES } from '../../data/business/businessEmailData'
 import { BUSINESS_EMAIL_COMPARATIVE_DATA } from '../../data/business/businessEmailDetailedData';
 import { AIGatewayService } from '../../services/aiGatewayService';
 import { AudioButton } from '../common/AudioButton';
+import { JapaneseInput } from '../keyboard/JapaneseInput';
 
 export const BusinessEmailStudio: React.FC = () => {
   // Mode switcher: 'comparative' (4-step bad vs professional) | 'templates' (7-part library) | 'practice' (AI review)
@@ -510,12 +511,13 @@ export const BusinessEmailStudio: React.FC = () => {
               </p>
             </div>
 
-            <textarea
-              value={userDraft}
-              onChange={(e) => setUserDraft(e.target.value)}
-              placeholder="ここに作成したビジネスメールを入力してください（件名、宛名、挨拶、本文、署名）..."
+            <JapaneseInput
+              multiline
               rows={8}
-              className="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-japanese outline-none focus:border-indigo-500 leading-relaxed"
+              value={userDraft}
+              onChange={setUserDraft}
+              placeholder="ここに作成したビジネスメールを入力してください（件名、宛名、挨拶、本文、署名）..."
+              inputClassName="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-japanese outline-none focus:border-indigo-500 leading-relaxed"
             />
 
             <div className="flex items-center justify-between gap-3">

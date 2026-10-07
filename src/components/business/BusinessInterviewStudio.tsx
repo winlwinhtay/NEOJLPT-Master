@@ -15,12 +15,15 @@ import {
   BookOpen,
   MessageSquare,
   ShieldCheck,
+  PenTool,
 } from 'lucide-react';
 import { AudioButton } from '../common/AudioButton';
+import { JapaneseInput } from '../keyboard/JapaneseInput';
 
 export const BusinessInterviewStudio: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'interview' | 'etiquette' | 'resume'>('interview');
   const [selectedQuestionIdx, setSelectedQuestionIdx] = useState(0);
+  const [userAnswers, setUserAnswers] = useState<Record<string, string>>({});
 
   const interviewQuestions = [
     {
@@ -237,6 +240,41 @@ export const BusinessInterviewStudio: React.FC = () => {
             <div className="p-3.5 rounded-xl bg-amber-50/60 dark:bg-amber-950/30 border border-amber-200/70 dark:border-amber-900/40 text-xs text-slate-700 dark:text-slate-300 flex items-start gap-2">
               <AlertCircle size={15} className="text-amber-600 shrink-0 mt-0.5" />
               <span><strong>注意点 (Caution):</strong> {currentQ.caution}</span>
+            </div>
+
+            {/* Interactive Candidate Response Practice */}
+            <div className="space-y-2 pt-2 border-t border-slate-100 dark:border-slate-800">
+              <div className="flex items-center justify-between">
+                <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider flex items-center gap-1.5">
+                  <PenTool size={14} />
+                  <span>面接回答の作成・タイピング実践 (Draft & Practice Your Answer)</span>
+                </span>
+                <span className="text-[11px] text-slate-400 font-mono">
+                  {(userAnswers[currentQ.id] || '').length} 文字
+                </span>
+              </div>
+              <JapaneseInput
+                multiline
+                rows={4}
+                value={userAnswers[currentQ.id] || ''}
+                onChange={(val) => setUserAnswers((prev) => ({ ...prev, [currentQ.id]: val }))}
+                placeholder="この質問に対するあなた自身の回答を日本語で入力してみましょう（結論→エピソード→意気込み）..."
+                inputClassName="w-full p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-xs sm:text-sm font-japanese outline-none focus:border-indigo-500 leading-relaxed"
+              />
+              <div className="flex items-center justify-between">
+                <p className="text-[11px] text-slate-400">
+                  ※ ローマ字直接入力または仮想キーボード[⌨ 日本語]で入力できます。
+                </p>
+                {userAnswers[currentQ.id] && (
+                  <button
+                    type="button"
+                    onClick={() => setUserAnswers((prev) => ({ ...prev, [currentQ.id]: '' }))}
+                    className="text-[11px] text-slate-400 hover:text-rose-500 transition-colors cursor-pointer"
+                  >
+                    クリア
+                  </button>
+                )}
+              </div>
             </div>
           </div>
         </div>

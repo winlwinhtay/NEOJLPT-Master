@@ -8,6 +8,7 @@ import { LevelSelectorModal } from './components/layout/LevelSelectorModal';
 import { NotificationDrawer } from './components/layout/NotificationDrawer';
 import { AuthModal } from './components/layout/AuthModal';
 import { UpgradeModal } from './components/common/UpgradeModal';
+import { GuestSavePromptModal } from './components/common/GuestSavePromptModal';
 import { AITutorModal } from './components/ai/AITutorModal';
 
 // Views
@@ -97,6 +98,7 @@ export const App: React.FC = () => {
       <NotificationDrawer />
       <AuthModal />
       <UpgradeModal />
+      <GuestSavePromptModal />
       <AITutorModal />
       <ActiveLearningSessionModal />
     </div>

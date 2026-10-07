@@ -18,6 +18,8 @@ import {
   ShieldAlert,
   Briefcase,
   Sparkles,
+  Crown,
+  Shield,
   X,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
@@ -27,9 +29,16 @@ import { useSRS } from '../../context/SRSContext';
 import { ViewType } from '../../types';
 
 export const Sidebar: React.FC = () => {
-  const { activeView, setActiveView, activeLevel, mobileMenuOpen, setMobileMenuOpen, setUpgradeModalOpen } =
-    useApp();
-  const { profile } = useUser();
+  const {
+    activeView,
+    setActiveView,
+    activeLevel,
+    mobileMenuOpen,
+    setMobileMenuOpen,
+    setUpgradeModalOpen,
+    setAuthModalOpen,
+  } = useApp();
+  const { profile, entitlements, isGuest } = useUser();
   const { t } = useI18n();
   const { getDueTodayCount } = useSRS();
 
@@ -166,11 +175,30 @@ export const Sidebar: React.FC = () => {
         </div>
       </div>
 
-      {/* Bottom Premium Card */}
-      {!profile.isPremium && (
+      {/* Bottom Membership & Conversion Card */}
+      {isGuest ? (
+        <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-indigo-500/10 via-purple-500/10 to-brand-500/10 border border-indigo-500/20 text-center">
+          <div className="w-8 h-8 mx-auto rounded-full bg-gradient-to-tr from-brand-500 to-indigo-600 flex items-center justify-center text-white shadow-sm mb-2">
+            <Sparkles size={16} />
+          </div>
+          <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-1">
+            Guest Session Active
+          </h4>
+          <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
+            Save your progress & sync across devices with a free account.
+          </p>
+          <button
+            type="button"
+            onClick={() => setAuthModalOpen(true)}
+            className="w-full py-2 px-3 bg-gradient-to-r from-brand-500 to-indigo-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+          >
+            Save Progress (Free)
+          </button>
+        </div>
+      ) : entitlements.subscriptionPlan === 'FREE' ? (
         <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-rose-500/10 to-indigo-500/10 border border-amber-500/20 text-center">
           <div className="w-8 h-8 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white shadow-sm mb-2">
-            <Sparkles size={16} />
+            <Crown size={16} />
           </div>
           <h4 className="text-xs font-bold text-slate-900 dark:text-white mb-1">
             Unlock N5–N1 Unlimited
@@ -185,6 +213,15 @@ export const Sidebar: React.FC = () => {
           >
             Upgrade to Pro
           </button>
+        </div>
+      ) : (
+        <div className="mt-6 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-center">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 text-[11px] font-bold mb-1.5 border border-amber-500/20">
+            <Crown size={12} /> {entitlements.subscriptionPlan} Scholar Pass
+          </div>
+          <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
+            100% Ad-Free • Complete Access
+          </p>
         </div>
       )}
     </div>

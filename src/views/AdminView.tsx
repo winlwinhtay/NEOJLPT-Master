@@ -21,6 +21,7 @@ import {
   Download,
   Upload,
   Clock,
+  DollarSign,
 } from 'lucide-react';
 import { VOCABULARY_DATA } from '../data/vocabularyData';
 import { KANJI_DATA } from '../data/kanjiData';
@@ -31,8 +32,9 @@ import { CurriculumPlannerConfig } from '../types/studyPlan';
 import { StudyPlannerService, DEFAULT_CURRICULUM_CONFIG } from '../services/studyPlannerService';
 import { StorageService } from '../services/storageService';
 import { AdminActiveLearningPanel } from '../components/admin/AdminActiveLearningPanel';
+import { AdminMonetizationPanel } from '../components/admin/AdminMonetizationPanel';
 
-type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'planner' | 'review' | 'ai-active';
+type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'planner' | 'review' | 'ai-active' | 'monetization';
 
 
 export interface JapaneseReviewItem {
@@ -505,7 +507,7 @@ export const AdminView: React.FC = () => {
       )}
 
       {/* Dataset Metric Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-7 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
         <button
           onClick={() => handleTabChange('vocab')}
           className={`p-4 sm:p-5 text-left rounded-2xl border transition-all ${
@@ -622,6 +624,23 @@ export const AdminView: React.FC = () => {
           </div>
           <div className="text-xs sm:text-sm font-black text-purple-600 dark:text-purple-400 mt-2 flex items-center gap-1">
             Gemini & Audit
+          </div>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('monetization')}
+          className={`p-4 sm:p-5 text-left rounded-2xl border transition-all col-span-2 sm:col-span-1 ${
+            activeTab === 'monetization'
+              ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-300 dark:border-emerald-700 shadow-sm ring-2 ring-emerald-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-emerald-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Monetization</span>
+            <DollarSign size={14} className="text-emerald-500" />
+          </div>
+          <div className="text-xs sm:text-sm font-black text-emerald-600 dark:text-emerald-400 mt-2 flex items-center gap-1">
+            Funnel & Pricing
           </div>
         </button>
       </div>
@@ -1406,8 +1425,11 @@ export const AdminView: React.FC = () => {
       {/* TAB CONTENT: AI ACTIVE LEARNING & GEMINI AUDIT */}
       {activeTab === 'ai-active' && <AdminActiveLearningPanel />}
 
+      {/* TAB CONTENT: MONETIZATION FUNNEL & ACCESS STUDIO */}
+      {activeTab === 'monetization' && <AdminMonetizationPanel />}
+
       {/* TAB CONTENT: DATASET MANAGEMENT (VOCAB / KANJI / GRAMMAR / READING) */}
-      {activeTab !== 'planner' && activeTab !== 'review' && activeTab !== 'ai-active' && (
+      {activeTab !== 'planner' && activeTab !== 'review' && activeTab !== 'ai-active' && activeTab !== 'monetization' && (
         <>
           {/* Filter Toolbar */}
           <div className="flex flex-col sm:flex-row items-center justify-between gap-3">

@@ -27,6 +27,7 @@ import { ProgressRing, ProgressBar } from '../components/common/ProgressBar';
 import { RecommendationService } from '../services/recommendationService';
 import { StorageService } from '../services/storageService';
 import { ActiveLearningCard } from '../components/activeLearning/ActiveLearningCard';
+import { AdBanner } from '../components/common/AdBanner';
 
 export const DashboardView: React.FC = () => {
   const { activeLevel, setActiveView, setLevelSelectorOpen, navigateToLesson } = useApp();
@@ -486,6 +487,9 @@ export const DashboardView: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* Respectful Ad Banner for Guest & Free tiers */}
+      <AdBanner placement="dashboard" />
     </div>
   );
 };

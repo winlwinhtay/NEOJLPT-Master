@@ -51,6 +51,8 @@ export interface UserProfile {
   audioAutoPlay: boolean;
   soundEffects: boolean;
   notificationsEnabled: boolean;
+  role?: 'admin' | 'user';
+  account_type?: string;
 }
 
 export interface VocabularyItem {

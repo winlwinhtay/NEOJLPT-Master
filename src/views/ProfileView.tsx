@@ -10,15 +10,20 @@ import {
   CheckCircle2,
   Lock,
   Save,
+  Gift,
+  Shield,
+  Clock,
+  ArrowRight,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
 import { JLPTLevel } from '../types';
+import { GiftRedeemModal } from '../components/common/GiftRedeemModal';
 
 export const ProfileView: React.FC = () => {
-  const { setUpgradeModalOpen } = useApp();
-  const { profile, updateProfile } = useUser();
+  const { setUpgradeModalOpen, setAuthModalOpen } = useApp();
+  const { profile, updateProfile, entitlements, isGuest } = useUser();
   const { t } = useI18n();
 
   const [name, setName] = useState(profile.name);
@@ -28,6 +33,7 @@ export const ProfileView: React.FC = () => {
   const [dailyKanji, setDailyKanji] = useState(profile.dailyGoalKanji);
   const [dailyGrammar, setDailyGrammar] = useState(profile.dailyGoalGrammar);
   const [savedSuccess, setSavedSuccess] = useState(false);
+  const [giftModalOpen, setGiftModalOpen] = useState(false);
 
   const badges = [
     { id: 'b-1', title: '7-Day Streak', desc: 'Study 7 consecutive days', icon: '🔥', unlocked: true },
@@ -67,6 +73,118 @@ export const ProfileView: React.FC = () => {
         <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
           Customize your target JLPT level, daily quotas, and review your unlocked achievements.
         </p>
+      </div>
+
+      {/* Subscription & Entitlements Card */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+          <div>
+            <div className="flex items-center gap-2 mb-1.5">
+              <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                Current Access Tier
+              </span>
+            </div>
+            <div className="flex flex-wrap items-center gap-2.5">
+              {entitlements.accountType === 'ADMIN' ? (
+                <span className="px-3.5 py-1.5 rounded-full bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 text-sm font-bold flex items-center gap-1.5">
+                  <Shield size={16} /> Administrator Access
+                </span>
+              ) : entitlements.subscriptionPlan === 'PREMIUM' ? (
+                <span className="px-3.5 py-1.5 rounded-full bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-sm font-bold flex items-center gap-1.5">
+                  <Crown size={16} /> PREMIUM Scholar Pass
+                </span>
+              ) : entitlements.subscriptionPlan === 'PRO' ? (
+                <span className="px-3.5 py-1.5 rounded-full bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-sm font-bold flex items-center gap-1.5">
+                  <Crown size={16} /> PRO Scholar Pass
+                </span>
+              ) : isGuest ? (
+                <span className="px-3.5 py-1.5 rounded-full bg-slate-500/10 text-slate-600 dark:text-slate-400 border border-slate-500/20 text-sm font-bold flex items-center gap-1.5">
+                  <User size={16} /> Guest Explorer (Temporary Session)
+                </span>
+              ) : (
+                <span className="px-3.5 py-1.5 rounded-full bg-emerald-500/10 text-emerald-600 dark:text-emerald-400 border border-emerald-500/20 text-sm font-bold flex items-center gap-1.5">
+                  <Sparkles size={16} /> Free Scholar Account
+                </span>
+              )}
+
+              {entitlements.subscriptionSource === 'gift' && (
+                <span className="px-2 py-0.5 rounded-md bg-purple-100 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 text-xs font-semibold">
+                  🎁 Gift Voucher
+                </span>
+              )}
+            </div>
+
+            {entitlements.subscriptionEnd && (
+              <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
+                <Clock size={13} />
+                <span>
+                  Valid until {new Date(entitlements.subscriptionEnd).toLocaleDateString()} (Auto-renews or reverts to Free safely)
+                </span>
+              </p>
+            )}
+          </div>
+
+          <div className="flex flex-wrap items-center gap-2.5">
+            <button
+              type="button"
+              onClick={() => setGiftModalOpen(true)}
+              className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-700"
+            >
+              <Gift size={15} className="text-purple-500" />
+              <span>Redeem Gift Code</span>
+            </button>
+
+            {isGuest ? (
+              <button
+                type="button"
+                onClick={() => setAuthModalOpen(true)}
+                className="px-4 py-2.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
+              >
+                <span>Save Progress (Free Account)</span>
+              </button>
+            ) : entitlements.subscriptionPlan === 'FREE' ? (
+              <button
+                type="button"
+                onClick={() => setUpgradeModalOpen(true)}
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all"
+              >
+                <Crown size={15} />
+                <span>Upgrade to PRO / PREMIUM</span>
+              </button>
+            ) : null}
+          </div>
+        </div>
+
+        {/* Entitlements Details Grid */}
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 pt-2">
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Daily AI Requests</span>
+            <span className="text-sm font-black text-slate-900 dark:text-white">
+              {entitlements.aiDailyLimit} / day
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Speaking Practice</span>
+            <span className="text-sm font-black text-slate-900 dark:text-white">
+              {entitlements.speakingDailyLimit} min / day
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Ad Experience</span>
+            <span className={`text-sm font-black ${!entitlements.adsEnabled ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-700 dark:text-slate-300'}`}>
+              {!entitlements.adsEnabled ? '100% Ad-Free ✨' : 'Supported by Ads'}
+            </span>
+          </div>
+
+          <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
+            <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Curriculum Access</span>
+            <span className="text-sm font-black text-slate-900 dark:text-white capitalize">
+              {entitlements.courseAccess} N5–N1
+            </span>
+          </div>
+        </div>
       </div>
 
       <form onSubmit={handleSave} className="space-y-8">
@@ -286,6 +404,9 @@ export const ProfileView: React.FC = () => {
           ))}
         </div>
       </div>
+
+      {/* Gift Code Redemption Modal */}
+      <GiftRedeemModal isOpen={giftModalOpen} onClose={() => setGiftModalOpen(false)} />
     </div>
   );
 };

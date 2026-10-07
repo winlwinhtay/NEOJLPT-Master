@@ -1,9 +1,38 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import { UserProfile, DailyStudyLog } from '../types';
 import { StorageService, defaultProfile } from '../services/storageService';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 import { SupabaseSyncService } from '../services/supabaseSyncService';
+import { UserEntitlements, BillingCycle } from '../types/monetization';
+import { EntitlementService } from '../services/entitlementService';
+import { GuestMigrationService } from '../services/guestMigrationService';
 import confetti from 'canvas-confetti';
+
+const DEFAULT_GUEST_ENTITLEMENTS: UserEntitlements = {
+  accountType: 'GUEST',
+  subscriptionPlan: 'FREE',
+  subscriptionStatus: 'none',
+  subscriptionSource: 'none',
+  subscriptionStart: null,
+  subscriptionEnd: null,
+  adsEnabled: true,
+  courseAccess: 'preview',
+  grammarAccess: 'preview',
+  vocabularyAccess: 'preview',
+  kanjiAccess: 'preview',
+  readingAccess: 'preview',
+  listeningAccess: 'preview',
+  speakingAccess: 'preview',
+  aiDailyLimit: 3,
+  speakingDailyLimit: 2,
+  mockTestAccess: 'preview',
+  advancedAnalytics: false,
+  learningPathLevel: 'preview',
+  saveProgress: false,
+  bookmarks: false,
+  exports: false,
+  isGuest: true,
+};
 
 interface UserContextType {
   profile: UserProfile;
@@ -30,6 +59,15 @@ interface UserContextType {
   register: (name: string, email?: string, targetLevel?: UserProfile['targetLevel']) => void;
   logout: () => void;
   isCloudSynced: boolean;
+
+  // Monetization Funnel & Entitlements
+  entitlements: UserEntitlements;
+  isGuest: boolean;
+  guestSavePromptOpen: boolean;
+  setGuestSavePromptOpen: (open: boolean) => void;
+  refreshEntitlements: () => Promise<void>;
+  redeemGiftCode: (code: string) => Promise<{ success: boolean; plan?: string; durationDays?: number; error?: string }>;
+  upgradeSubscription: (plan: 'PRO' | 'PREMIUM', billingCycle?: BillingCycle) => Promise<{ success: boolean; error?: string }>;
 }
 
 const UserContext = createContext<UserContextType | undefined>(undefined);
@@ -40,6 +78,23 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     StorageService.loadCompletedLessons()
   );
   const [isCloudSynced, setIsCloudSynced] = useState(false);
+  const [entitlements, setEntitlements] = useState<UserEntitlements>(DEFAULT_GUEST_ENTITLEMENTS);
+  const [guestSavePromptOpen, setGuestSavePromptOpen] = useState(false);
+
+  const isGuest = !profile.id || profile.id === 'guest' || profile.id.startsWith('guest') || profile.email === 'guest@jlpt.study';
+
+  const refreshEntitlements = useCallback(async () => {
+    if (isGuest) {
+      setEntitlements(DEFAULT_GUEST_ENTITLEMENTS);
+      return;
+    }
+    try {
+      const ents = await EntitlementService.getUserEntitlements(profile.id, true);
+      setEntitlements(ents);
+    } catch (e) {
+      console.warn('Failed to refresh user entitlements:', e);
+    }
+  }, [profile.id, isGuest]);
 
   // Hydrate from Supabase on mount or session change
   useEffect(() => {
@@ -48,6 +103,11 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleAuthUser = async (user: any) => {
       if (!user?.id) return;
       try {
+        // If user just signed in/registered with pending guest progress, seamlessly merge it!
+        if (GuestMigrationService.hasGuestProgress()) {
+          await GuestMigrationService.mergeGuestProgressIntoAccount(user.id);
+        }
+
         const cloudData = await SupabaseSyncService.fetchProfile(user.id);
         if (cloudData) {
           setProfile((prev) => {
@@ -62,13 +122,17 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             ...profile,
             id: user.id,
             email: user.email || profile.email,
-            name: user.user_metadata?.name || profile.name,
+            name: user.user_metadata?.name || user.user_metadata?.full_name || profile.name,
             targetLevel: user.user_metadata?.targetLevel || profile.targetLevel,
           };
           setProfile(initial);
           await SupabaseSyncService.syncProfile(initial);
           setIsCloudSynced(true);
         }
+
+        // Fetch validated entitlements for the authenticated user
+        const userEnts = await EntitlementService.getUserEntitlements(user.id, true);
+        setEntitlements(userEnts);
       } catch (err) {
         console.warn('Error during Supabase profile hydration:', err);
       }
@@ -78,6 +142,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     supabase.auth.getSession().then(({ data: { session } }) => {
       if (session?.user) {
         handleAuthUser(session.user);
+      } else {
+        setEntitlements(DEFAULT_GUEST_ENTITLEMENTS);
       }
     });
 
@@ -88,6 +154,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         await handleAuthUser(session.user);
       } else {
         setIsCloudSynced(false);
+        setEntitlements(DEFAULT_GUEST_ENTITLEMENTS);
       }
     });
 
@@ -185,6 +252,14 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
       } catch (e) {
         // ignore
       }
+
+      // Guest conversion trigger:
+      // When guest completes their first lesson or every 3 lessons, show the friendly Save Progress prompt
+      if (isGuest && (updated.length === 1 || updated.length % 3 === 0)) {
+        setTimeout(() => {
+          setGuestSavePromptOpen(true);
+        }, 1200);
+      }
     }
   };
 
@@ -213,6 +288,24 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     } catch (e) {
       // ignore
     }
+  };
+
+  const redeemGiftCode = async (code: string) => {
+    const res = await EntitlementService.redeemGiftCode(profile.id, code);
+    if (res.success) {
+      updateProfile({ isPremium: true });
+      await refreshEntitlements();
+    }
+    return res;
+  };
+
+  const upgradeSubscription = async (plan: 'PRO' | 'PREMIUM', billingCycle: BillingCycle = 'yearly') => {
+    const res = await EntitlementService.activateSubscription(profile.id, plan, billingCycle);
+    if (res.success) {
+      updateProfile({ isPremium: true });
+      await refreshEntitlements();
+    }
+    return res;
   };
 
   const login = (name: string, email?: string) => {
@@ -256,6 +349,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setProfile(guest);
     StorageService.saveProfile(guest);
     setIsCloudSynced(false);
+    EntitlementService.clearCache();
+    setEntitlements(DEFAULT_GUEST_ENTITLEMENTS);
   };
 
   // Calculate overall goal completion %
@@ -285,6 +380,13 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         register,
         logout,
         isCloudSynced,
+        entitlements,
+        isGuest,
+        guestSavePromptOpen,
+        setGuestSavePromptOpen,
+        refreshEntitlements,
+        redeemGiftCode,
+        upgradeSubscription,
       }}
     >
       {children}

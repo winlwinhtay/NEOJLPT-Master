@@ -41,6 +41,8 @@ import { StorageService } from '../services/storageService';
 import { StudyPlanSetupModal } from '../components/planner/StudyPlanSetupModal';
 import { DiagnosticPlacementModal } from '../components/planner/DiagnosticPlacementModal';
 import { DailyStudySessionModal } from '../components/planner/DailyStudySessionModal';
+import { UpgradePrompt } from '../components/common/UpgradePrompt';
+import { AdBanner } from '../components/common/AdBanner';
 
 export const LearnRoadmapView: React.FC = () => {
   const { activeLevel, setActiveLevel, selectedLessonId, setSelectedLessonId, setActiveView } = useApp();
@@ -830,6 +832,16 @@ export const LearnRoadmapView: React.FC = () => {
             </div>
           ))}
         </div>
+
+        {/* Contextual Upgrade Prompt / Ad Banner */}
+        <UpgradePrompt
+          triggerFeature="unlimited_lessons"
+          title="Supercharge Your JLPT Preparation"
+          subtitle="Unlock full mock exams, speaking practice with AI native feedback, and ad-free offline access."
+          className="mt-8"
+        />
+
+        <AdBanner placement="lesson_footer" className="mt-4" />
       </div>
 
       {/* Modals */}

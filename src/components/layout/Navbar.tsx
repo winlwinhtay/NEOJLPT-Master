@@ -31,7 +31,7 @@ export const Navbar: React.FC = () => {
     setActiveView,
   } = useApp();
 
-  const { profile, updateProfile } = useUser();
+  const { profile, updateProfile, entitlements, isGuest } = useUser();
   const { language, setLanguage, supportedLanguages, t } = useI18n();
 
   const [langMenuOpen, setLangMenuOpen] = useState(false);
@@ -75,11 +75,31 @@ export const Navbar: React.FC = () => {
                 <span className="font-bold text-slate-900 dark:text-white tracking-tight text-lg">
                   JLPT<span className="text-brand-500">Master</span>
                 </span>
-                {profile.isPremium && (
+                {entitlements.accountType === 'ADMIN' ? (
+                  <span className="px-1.5 py-0.5 rounded bg-purple-500/10 text-purple-600 dark:text-purple-400 border border-purple-500/20 text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5">
+                    ADMIN
+                  </span>
+                ) : entitlements.subscriptionPlan === 'PREMIUM' ? (
+                  <span className="px-1.5 py-0.5 rounded bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-500/20 text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5">
+                    <Crown size={10} /> PREMIUM
+                  </span>
+                ) : entitlements.subscriptionPlan === 'PRO' ? (
                   <span className="px-1.5 py-0.5 rounded bg-amber-500/10 text-amber-600 dark:text-amber-400 border border-amber-500/20 text-[10px] font-bold uppercase tracking-wider flex items-center gap-0.5">
                     <Crown size={10} /> PRO
                   </span>
-                )}
+                ) : isGuest ? (
+                  <button
+                    type="button"
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      setAuthModalOpen(true);
+                    }}
+                    className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200 dark:border-brand-800 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
+                    title="Click to create a free account and save your progress"
+                  >
+                    GUEST
+                  </button>
+                ) : null}
               </div>
               <p className="text-[10px] text-slate-400 font-medium">日本語能力試験対策</p>
             </div>

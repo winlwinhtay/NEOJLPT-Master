@@ -16,6 +16,7 @@ import { CANONICAL_GRAMMAR } from '../data/canonicalGrammarData';
 import { READING_DATA } from '../data/readingData';
 import { LISTENING_DATA } from '../data/listeningData';
 import { CONFUSION_PAIRS_DATA } from '../data/confusionPairsData';
+import { AIGatewayService } from './aiGatewayService';
 
 const STORAGE_KEYS = {
   DAILY_PLAN: 'jlpt_active_daily_plan',
@@ -449,7 +450,7 @@ export class ActiveLearningService {
   }
 
   /**
-   * Request an adaptive explanation from Gemini or return deterministic explanation
+   * Request an adaptive explanation from Cache-First AI Gateway
    */
   public static async getAdaptiveExplanation(
     contentId: string,
@@ -461,46 +462,10 @@ export class ActiveLearningService {
     structure?: string;
     examples?: { jp: string; reading: string; meaning: string }[];
     studyTip: string;
+    _source?: string;
+    _cacheKey?: string;
   }> {
-    if (isSupabaseConfigured()) {
-      try {
-        const { data, error } = await supabase.functions.invoke('active-learning', {
-          body: {
-            action: 'explain',
-            contentId,
-            level,
-            supportLanguage,
-          },
-        });
-        if (!error && data?.explanation) {
-          return data;
-        }
-      } catch (e) {
-        console.warn('Fallback for adaptive explanation:', e);
-      }
-    }
-
-    // Deterministic fallback explanation
-    const grammar = CANONICAL_GRAMMAR.find((g) => g.id === contentId || g.pattern.includes(contentId));
-    if (grammar) {
-      return {
-        title: `Grammar Guide: ${grammar.pattern}`,
-        explanation: grammar.explanation,
-        structure: grammar.structure,
-        examples: grammar.examples.map((ex) => ({
-          jp: ex.jp,
-          reading: ex.reading,
-          meaning: ex.en,
-        })),
-        studyTip: `Pay careful attention to the preceding particle and whether the verb is plain, polite, or in the te-form.`,
-      };
-    }
-
-    return {
-      title: `Concept Guide for ${level}`,
-      explanation: `Mastering this Japanese pattern requires understanding both structural placement and conversational nuance.`,
-      studyTip: `Review every evening for 5 minutes to transfer this pattern into long-term active memory.`,
-    };
+    return AIGatewayService.getAdaptiveExplanation(contentId, level, supportLanguage);
   }
 
   /**

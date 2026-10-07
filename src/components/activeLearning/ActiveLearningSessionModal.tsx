@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   X,
   Volume2,
@@ -14,10 +14,12 @@ import {
   Headphones,
   RotateCcw,
   Check,
+  Zap,
 } from 'lucide-react';
 import { useActiveLearning } from '../../context/ActiveLearningContext';
 import { speechService } from '../../services/speechService';
 import { ConfusionPair, LearningPlanItem } from '../../types/activeLearning';
+import { AIGatewayService, ExplanationResponse, PracticeQuestionItem } from '../../services/aiGatewayService';
 
 export const ActiveLearningSessionModal: React.FC = () => {
   const {
@@ -37,6 +39,35 @@ export const ActiveLearningSessionModal: React.FC = () => {
   const [isAnswerSubmitted, setIsAnswerSubmitted] = useState(false);
   const [answerIsCorrect, setAnswerIsCorrect] = useState(false);
   const [showFurigana, setShowFurigana] = useState(true);
+
+  // Cache-Backed AI Explanation & Question Bank
+  const [adaptiveExpl, setAdaptiveExpl] = useState<ExplanationResponse | null>(null);
+  const [bankQuestions, setBankQuestions] = useState<PracticeQuestionItem[]>([]);
+  const [isLoadingAi, setIsLoadingAi] = useState(false);
+
+  useEffect(() => {
+    if (!activeSessionItem) return;
+    let isMounted = true;
+    setIsLoadingAi(true);
+
+    const level = (dailyPlan?.focus?.[0] ? 'N5' : 'N5') as any;
+    Promise.all([
+      AIGatewayService.getAdaptiveExplanation(activeSessionItem.contentId, level),
+      AIGatewayService.getPracticeQuestions(activeSessionItem.contentId, level, activeSessionItem.skill, 3)
+    ]).then(([expl, qList]) => {
+      if (isMounted) {
+        if (expl) setAdaptiveExpl(expl);
+        if (qList && qList.length > 0) setBankQuestions(qList);
+        setIsLoadingAi(false);
+      }
+    }).catch(() => {
+      if (isMounted) setIsLoadingAi(false);
+    });
+
+    return () => {
+      isMounted = false;
+    };
+  }, [activeSessionItem?.contentId]);
 
   if (!isSessionActive || !activeSessionItem) return null;
 
@@ -233,24 +264,51 @@ export const ActiveLearningSessionModal: React.FC = () => {
                 </div>
               ) : (
                 <div className="space-y-4">
-                  {content?.structure && (
+                  {/* Cache-Backed Adaptive AI Explanation Badge */}
+                  {adaptiveExpl?._source && (
+                    <div className="flex items-center justify-between text-[11px] font-bold px-3 py-1.5 rounded-xl bg-purple-950/40 border border-purple-500/30 text-purple-300">
+                      <span className="flex items-center gap-1.5">
+                        <Zap className="w-3.5 h-3.5 text-amber-400" />
+                        {adaptiveExpl._source === 'cache'
+                          ? 'Instant Reusable AI Explanation (0 Tokens Cached)'
+                          : 'Adaptive Pedagogical Curriculum Guide'}
+                      </span>
+                      <span className="text-slate-400 uppercase tracking-wider text-[10px]">Verified JLPT</span>
+                    </div>
+                  )}
+
+                  {(adaptiveExpl?.structure || content?.structure) && (
                     <div className="p-4 rounded-2xl bg-indigo-950/40 border border-indigo-500/30 space-y-1">
                       <span className="text-xs font-bold text-indigo-400 uppercase">Grammar Structure</span>
-                      <p className="text-sm font-bold text-white font-mono">{content.structure}</p>
+                      <p className="text-sm font-bold text-white font-mono">
+                        {adaptiveExpl?.structure || content.structure}
+                      </p>
                     </div>
                   )}
 
                   <div className="p-4 rounded-2xl bg-slate-800/80 border border-slate-700 space-y-2">
                     <span className="text-xs font-bold text-brand-400 uppercase">Explanation</span>
                     <p className="text-sm text-slate-200 leading-relaxed">
-                      {content?.explanation || content?.meaning || 'Master this validated Japanese curriculum item.'}
+                      {adaptiveExpl?.explanation ||
+                        content?.explanation ||
+                        content?.meaning ||
+                        'Master this validated Japanese curriculum item.'}
                     </p>
                   </div>
 
-                  {content?.examples && content.examples.length > 0 && (
+                  {adaptiveExpl?.commonMistakes && (
+                    <div className="p-3.5 rounded-2xl bg-amber-500/10 border border-amber-500/25 space-y-1 text-xs">
+                      <span className="font-bold text-amber-300 uppercase text-[10px]">Common Learner Pitfall</span>
+                      <p className="text-amber-100">{adaptiveExpl.commonMistakes}</p>
+                    </div>
+                  )}
+
+                  {/* Authentic Examples */}
+                  {((adaptiveExpl?.examples && adaptiveExpl.examples.length > 0) ||
+                    (content?.examples && content.examples.length > 0)) && (
                     <div className="space-y-2">
                       <span className="text-xs font-bold text-slate-400 uppercase">Authentic Examples</span>
-                      {content.examples.slice(0, 2).map((ex: any, idx: number) => (
+                      {(adaptiveExpl?.examples || content.examples).slice(0, 2).map((ex: any, idx: number) => (
                         <div key={idx} className="p-3.5 rounded-xl bg-slate-800/50 border border-slate-700/60 space-y-1">
                           <div className="flex items-center justify-between">
                             <p className="text-base font-bold text-white">{ex.jp}</p>
@@ -259,9 +317,16 @@ export const ActiveLearningSessionModal: React.FC = () => {
                             </button>
                           </div>
                           <p className="text-xs text-brand-200">{ex.reading}</p>
-                          <p className="text-xs text-slate-300">{ex.en}</p>
+                          <p className="text-xs text-slate-300">{ex.meaning || ex.en}</p>
                         </div>
                       ))}
+                    </div>
+                  )}
+
+                  {adaptiveExpl?.studyTip && (
+                    <div className="p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 text-[11px] text-slate-300 flex items-center gap-2">
+                      <Sparkles className="w-3.5 h-3.5 text-brand-400 flex-shrink-0" />
+                      <span>{adaptiveExpl.studyTip}</span>
                     </div>
                   )}
                 </div>
@@ -269,10 +334,11 @@ export const ActiveLearningSessionModal: React.FC = () => {
             </div>
           )}
 
-          {/* STEP 3: GUIDED PRACTICE (Active Multi-Choice) */}
+          {/* STEP 3: GUIDED PRACTICE (Active Multi-Choice / Question Bank) */}
           {step === 'practice' && (
             <div className="space-y-5 animate-fade-in">
-              <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide">
+              <span className="text-xs font-bold text-indigo-400 uppercase tracking-wide flex items-center gap-1.5">
+                <Sparkles className="w-3.5 h-3.5" />
                 Active Retrieval Practice
               </span>
 
@@ -316,6 +382,54 @@ export const ActiveLearningSessionModal: React.FC = () => {
                         {answerIsCorrect ? '✓ Correct!' : '✖ Needs Review'}
                       </p>
                       <p>{confData.practiceQuestions[0].explanation}</p>
+                    </div>
+                  )}
+                </div>
+              ) : bankQuestions.length > 0 ? (
+                <div className="space-y-4">
+                  <div className="flex items-center justify-between text-[11px] text-slate-400 font-bold">
+                    <span>Authentic Practice Question</span>
+                    <span className="text-brand-400">⚡ Reusable Question Bank</span>
+                  </div>
+
+                  <p className="text-base sm:text-lg font-bold text-white leading-relaxed">
+                    {bankQuestions[0].prompt}
+                  </p>
+
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                    {bankQuestions[0].options.map((opt, idx) => (
+                      <button
+                        key={idx}
+                        onClick={() =>
+                          handleCheckPracticeAnswer(idx, bankQuestions[0].correctIndex)
+                        }
+                        className={`p-4 rounded-2xl text-left font-bold text-sm border transition-all ${
+                          isAnswerSubmitted
+                            ? idx === bankQuestions[0].correctIndex
+                              ? 'bg-emerald-500/20 border-emerald-500 text-emerald-300'
+                              : idx === selectedOption
+                              ? 'bg-rose-500/20 border-rose-500 text-rose-300'
+                              : 'bg-slate-800/40 border-slate-700 text-slate-400'
+                            : 'bg-slate-800 hover:bg-slate-750 border-slate-700 text-white hover:border-brand-500'
+                        }`}
+                      >
+                        {opt}
+                      </button>
+                    ))}
+                  </div>
+
+                  {isAnswerSubmitted && (
+                    <div
+                      className={`p-4 rounded-2xl text-xs space-y-1 ${
+                        answerIsCorrect
+                          ? 'bg-emerald-500/10 border border-emerald-500/30 text-emerald-200'
+                          : 'bg-rose-500/10 border border-rose-500/30 text-rose-200'
+                      }`}
+                    >
+                      <p className="font-bold">
+                        {answerIsCorrect ? '✓ Correct!' : '✖ Needs Review'}
+                      </p>
+                      <p>{bankQuestions[0].explanation}</p>
                     </div>
                   )}
                 </div>

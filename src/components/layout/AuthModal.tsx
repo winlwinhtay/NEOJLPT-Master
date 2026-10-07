@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { X, LogIn, UserPlus, Sparkles, Check, AlertCircle, Cloud, Loader2 } from 'lucide-react';
+import { X, LogIn, UserPlus, Sparkles, Check, AlertCircle, Cloud, Loader2, Mail } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
 import { JLPTLevel } from '../../types';
 import { supabase, isSupabaseConfigured } from '../../services/supabaseClient';
+import { AuthService } from '../../services/authService';
 import { GuestMigrationService } from '../../services/guestMigrationService';
 
 export const AuthModal: React.FC = () => {
@@ -21,6 +22,28 @@ export const AuthModal: React.FC = () => {
 
   if (!authModalOpen) return null;
 
+  const handleMagicLink = async () => {
+    const targetEmail = (email.trim() || name.trim()).toLowerCase();
+    if (!targetEmail || !targetEmail.includes('@')) {
+      setError('Please enter a valid email address to receive a magic sign-in link.');
+      return;
+    }
+    setLoading(true);
+    setError(null);
+    try {
+      const { error: otpErr } = await AuthService.signInWithMagicLink(targetEmail);
+      if (otpErr) {
+        setError(otpErr.message);
+      } else {
+        setSuccess(`Magic sign-in link sent to ${targetEmail}! Please check your email.`);
+      }
+    } catch (err: any) {
+      setError(err.message || 'Failed to send login email.');
+    } finally {
+      setLoading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
@@ -31,10 +54,7 @@ export const AuthModal: React.FC = () => {
       try {
         if (mode === 'login') {
           const loginEmail = email.trim() || (name.includes('@') ? name.trim() : `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`);
-          const { data, error: authErr } = await supabase.auth.signInWithPassword({
-            email: loginEmail,
-            password: password.trim(),
-          });
+          const { data, error: authErr } = await AuthService.signInWithPassword(loginEmail, password.trim());
 
           if (authErr) {
             setError(authErr.message);
@@ -42,11 +62,7 @@ export const AuthModal: React.FC = () => {
             return;
           }
 
-          if (data?.user?.id) {
-            await GuestMigrationService.mergeGuestProgressIntoAccount(data.user.id);
-          }
-
-          setSuccess(`Welcome back! Cloud sync active.`);
+          setSuccess(`Welcome back! Authenticated with Supabase.`);
         } else {
           if (!name.trim()) {
             setError('Please enter your name.');
@@ -60,16 +76,7 @@ export const AuthModal: React.FC = () => {
           }
 
           const registerEmail = email.trim() || `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`;
-          const { data, error: authErr } = await supabase.auth.signUp({
-            email: registerEmail,
-            password: password.trim(),
-            options: {
-              data: {
-                name: name.trim(),
-                targetLevel,
-              },
-            },
-          });
+          const { data, error: authErr } = await AuthService.signUp(registerEmail, password.trim(), name.trim(), targetLevel);
 
           if (authErr) {
             setError(authErr.message);
@@ -77,11 +84,7 @@ export const AuthModal: React.FC = () => {
             return;
           }
 
-          if (data?.user?.id) {
-            await GuestMigrationService.mergeGuestProgressIntoAccount(data.user.id);
-          }
-
-          setSuccess(`Account registered! Your progress is now synced with Supabase.`);
+          setSuccess(`Account registered! Your progress and AI features are now active in Supabase.`);
         }
       } catch (err: any) {
         setError(err.message || 'Authentication error');
@@ -267,16 +270,34 @@ export const AuthModal: React.FC = () => {
             <div className="h-px bg-slate-200 dark:bg-slate-800 flex-1" />
           </div>
 
+          {/* Informational Guidance Badge */}
+          <div className="p-3.5 rounded-2xl bg-indigo-50/80 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/50 space-y-1">
+            <div className="flex items-center gap-1.5 text-xs font-bold text-indigo-700 dark:text-indigo-300">
+              <Sparkles size={14} className="shrink-0" />
+              <span>Normal users: No login required to study JLPT!</span>
+            </div>
+            <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+              All curriculum, vocabulary, kanji, listening, mock tests, and virtual keyboard typing are completely free. Sign in with your email in our Supabase database to unlock full AI API features (AI Conversation, AI Tutor Explainer & Email Proofreading).
+            </p>
+          </div>
+
           <form onSubmit={handleSubmit} className="space-y-3.5">
             <div>
               <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                {mode === 'login' ? 'Email or Username' : 'Your Name / Username'}
+                {mode === 'login' ? 'Email Address (linked in Supabase)' : 'Your Name / Username'}
               </label>
               <input
-                type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder={mode === 'login' ? 'e.g. Kenji or user@example.com' : 'e.g. Kenji'}
+                type={mode === 'login' ? 'email' : 'text'}
+                value={mode === 'login' ? (email || name) : name}
+                onChange={(e) => {
+                  if (mode === 'login') {
+                    setEmail(e.target.value);
+                    setName(e.target.value);
+                  } else {
+                    setName(e.target.value);
+                  }
+                }}
+                placeholder={mode === 'login' ? 'learner@example.com (or neowin001@gmail.com)' : 'e.g. Kenji'}
                 className="w-full px-3.5 py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 bg-slate-50/50 dark:bg-slate-800/50 text-slate-900 dark:text-white text-sm focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500"
               />
             </div>
@@ -285,7 +306,7 @@ export const AuthModal: React.FC = () => {
               <>
                 <div>
                   <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Email Address (Optional)
+                    Email Address (stored in Supabase)
                   </label>
                   <input
                     type="email"
@@ -321,9 +342,21 @@ export const AuthModal: React.FC = () => {
             )}
 
             <div>
-              <label className="block text-xs font-bold text-slate-700 dark:text-slate-300 mb-1">
-                Password
-              </label>
+              <div className="flex items-center justify-between mb-1">
+                <label className="block text-xs font-bold text-slate-700 dark:text-slate-300">
+                  Password
+                </label>
+                {mode === 'login' && (
+                  <button
+                    type="button"
+                    onClick={handleMagicLink}
+                    className="text-[11px] font-semibold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                  >
+                    <Mail size={12} />
+                    <span>Send Magic Link to Email</span>
+                  </button>
+                )}
+              </div>
               <input
                 type="password"
                 value={password}

@@ -19,6 +19,8 @@ import { AIService } from '../services/aiService';
 import { speechService } from '../services/speechService';
 import { AudioButton } from '../components/common/AudioButton';
 import { JapaneseInput } from '../components/keyboard/JapaneseInput';
+import { AuthService } from '../services/authService';
+import { AIAccessGateModal } from '../components/auth/AIAccessGateModal';
 import { AIConversationTopic, AIMessage } from '../types/ai';
 
 export const AIConversationView: React.FC = () => {
@@ -32,6 +34,7 @@ export const AIConversationView: React.FC = () => {
   const [isListening, setIsListening] = useState(false);
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [summaryReport, setSummaryReport] = useState<any | null>(null);
+  const [aiGateModalOpen, setAiGateModalOpen] = useState(false);
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -60,6 +63,13 @@ export const AIConversationView: React.FC = () => {
   const handleSendMessage = async (customText?: string) => {
     const textToSend = customText || inputVal;
     if (!textToSend.trim() || isBotTyping) return;
+
+    // Supabase Email Authentication Check for Full AI Feature
+    const authCheck = AuthService.canAccessAIFeature(profile);
+    if (!authCheck.allowed) {
+      setAiGateModalOpen(true);
+      return;
+    }
 
     const userMsg: AIMessage = {
       id: 'user-' + Date.now(),
@@ -97,6 +107,13 @@ export const AIConversationView: React.FC = () => {
 
   // Microphone STT recognition trigger
   const handleMicToggle = () => {
+    // Supabase Email Authentication Check for Full AI Feature
+    const authCheck = AuthService.canAccessAIFeature(profile);
+    if (!authCheck.allowed) {
+      setAiGateModalOpen(true);
+      return;
+    }
+
     if (isListening) {
       setIsListening(false);
       return;
@@ -293,6 +310,23 @@ export const AIConversationView: React.FC = () => {
           <div ref={messagesEndRef} />
         </div>
 
+        {/* Full AI API Status Banner */}
+        {!AuthService.canAccessAIFeature(profile).allowed && (
+          <div className="px-5 py-2.5 bg-indigo-50/90 dark:bg-indigo-950/50 border-t border-indigo-200 dark:border-indigo-900/40 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-indigo-800 dark:text-indigo-200">
+              <Sparkles size={14} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>Full AI Conversation Tutor requires email sign-in (Supabase). Standard lessons are 100% free with no login!</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAiGateModalOpen(true)}
+              className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] shadow-sm transition-all shrink-0 cursor-pointer"
+            >
+              Sign In with Email
+            </button>
+          </div>
+        )}
+
         {/* Input Footer */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <form
@@ -393,6 +427,14 @@ export const AIConversationView: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* AI Access Gate Modal */}
+      <AIAccessGateModal
+        isOpen={aiGateModalOpen}
+        onClose={() => setAiGateModalOpen(false)}
+        featureTitle="AI Japanese Conversation Tutor"
+        featureDescription="Engage in dynamic, conversational Japanese roleplay with our adaptive AI conversation partner."
+      />
     </div>
   );
 };

@@ -5,6 +5,8 @@ import { useUser } from '../../context/UserContext';
 import { AIService } from '../../services/aiService';
 import { AudioButton } from '../common/AudioButton';
 import { JapaneseInput } from '../keyboard/JapaneseInput';
+import { AuthService } from '../../services/authService';
+import { AIAccessGateModal } from '../auth/AIAccessGateModal';
 
 export const AITutorModal: React.FC = () => {
   const { aiTutorOpen, setAiTutorOpen, activeLevel } = useApp();
@@ -17,6 +19,7 @@ export const AITutorModal: React.FC = () => {
     examples: { jp: string; reading: string; en: string }[];
     studyTip: string;
   } | null>(null);
+  const [aiGateModalOpen, setAiGateModalOpen] = useState(false);
 
   if (!aiTutorOpen) return null;
 
@@ -30,6 +33,13 @@ export const AITutorModal: React.FC = () => {
   const handleAsk = async (textToAsk?: string) => {
     const q = textToAsk || query;
     if (!q.trim() || loading) return;
+
+    // Supabase Email Authentication Check for Full AI Feature
+    const authCheck = AuthService.canAccessAIFeature(profile);
+    if (!authCheck.allowed) {
+      setAiGateModalOpen(true);
+      return;
+    }
 
     setLoading(true);
     setAnswer(null);
@@ -158,6 +168,23 @@ export const AITutorModal: React.FC = () => {
           )}
         </div>
 
+        {/* Full AI API Status Banner */}
+        {!AuthService.canAccessAIFeature(profile).allowed && (
+          <div className="px-5 py-2.5 bg-indigo-50/90 dark:bg-indigo-950/50 border-t border-indigo-200 dark:border-indigo-900/40 flex items-center justify-between text-xs">
+            <div className="flex items-center gap-2 text-indigo-800 dark:text-indigo-200">
+              <Sparkles size={14} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
+              <span>Full AI Tutor requires email sign-in (Supabase). Standard lessons are 100% free!</span>
+            </div>
+            <button
+              type="button"
+              onClick={() => setAiGateModalOpen(true)}
+              className="px-3 py-1 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-[11px] shadow-sm transition-all shrink-0 cursor-pointer"
+            >
+              Sign In with Email
+            </button>
+          </div>
+        )}
+
         {/* Question Input Footer */}
         <div className="p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900">
           <form
@@ -189,6 +216,14 @@ export const AITutorModal: React.FC = () => {
           </form>
         </div>
       </div>
+
+      {/* AI Access Gate Modal */}
+      <AIAccessGateModal
+        isOpen={aiGateModalOpen}
+        onClose={() => setAiGateModalOpen(false)}
+        featureTitle="AI Personal Japanese Tutor"
+        featureDescription="Ask custom grammar, vocabulary, and nuance questions to our contextual AI tutor."
+      />
     </div>
   );
 };

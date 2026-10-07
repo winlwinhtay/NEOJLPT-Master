@@ -26,8 +26,14 @@ import { BUSINESS_EMAIL_COMPARATIVE_DATA } from '../../data/business/businessEma
 import { AIGatewayService } from '../../services/aiGatewayService';
 import { AudioButton } from '../common/AudioButton';
 import { JapaneseInput } from '../keyboard/JapaneseInput';
+import { useUser } from '../../context/UserContext';
+import { AuthService } from '../../services/authService';
+import { AIAccessGateModal } from '../auth/AIAccessGateModal';
 
 export const BusinessEmailStudio: React.FC = () => {
+  const { profile } = useUser();
+  const [aiGateModalOpen, setAiGateModalOpen] = useState(false);
+
   // Mode switcher: 'comparative' (4-step bad vs professional) | 'templates' (7-part library) | 'practice' (AI review)
   const [studioMode, setStudioMode] = useState<'comparative' | 'templates' | 'practice'>('comparative');
 
@@ -73,6 +79,14 @@ export const BusinessEmailStudio: React.FC = () => {
 
   const handleReviewDraft = async () => {
     if (!userDraft.trim()) return;
+
+    // Supabase Email Authentication Check for Full AI Feature
+    const authCheck = AuthService.canAccessAIFeature(profile);
+    if (!authCheck.allowed) {
+      setAiGateModalOpen(true);
+      return;
+    }
+
     setIsReviewing(true);
     try {
       const res = await AIGatewayService.reviewBusinessEmail(userDraft, selectedCompItem.category);
@@ -597,6 +611,14 @@ export const BusinessEmailStudio: React.FC = () => {
           </div>
         </div>
       )}
+
+      {/* AI Access Gate Modal */}
+      <AIAccessGateModal
+        isOpen={aiGateModalOpen}
+        onClose={() => setAiGateModalOpen(false)}
+        featureTitle="AI Business Email Proofreader"
+        featureDescription="Submit your draft for real-time analysis against the 7-part architecture, Keigo correctness, and business cushion words."
+      />
     </div>
   );
 };

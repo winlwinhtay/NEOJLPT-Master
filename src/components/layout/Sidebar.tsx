@@ -195,6 +195,15 @@ export const Sidebar: React.FC = () => {
             Save Progress (Free)
           </button>
         </div>
+      ) : entitlements.accountType === 'ADMIN' ? (
+        <div className="mt-6 p-3.5 rounded-2xl bg-purple-500/10 dark:bg-purple-950/30 border border-purple-500/20 text-center">
+          <div className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full bg-purple-500/20 text-purple-600 dark:text-purple-300 text-[11px] font-bold mb-1.5 border border-purple-500/30">
+            <Shield size={12} /> Administrator Access
+          </div>
+          <p className="text-[11px] text-purple-600 dark:text-purple-300 font-medium">
+            Full Unrestricted System Access
+          </p>
+        </div>
       ) : entitlements.subscriptionPlan === 'FREE' ? (
         <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-rose-500/10 to-indigo-500/10 border border-amber-500/20 text-center">
           <div className="w-8 h-8 mx-auto rounded-full bg-gradient-to-tr from-amber-500 to-rose-500 flex items-center justify-center text-white shadow-sm mb-2">

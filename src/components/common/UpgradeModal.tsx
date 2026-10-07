@@ -217,6 +217,16 @@ export const UpgradeModal: React.FC = () => {
             </div>
           )}
 
+          {/* Admin Notice */}
+          {entitlements.accountType === 'ADMIN' && (
+            <div className="p-4 bg-purple-600/90 text-white font-medium text-xs flex items-center gap-2.5 shadow-inner">
+              <Shield size={18} className="shrink-0 text-purple-200" />
+              <span>
+                <strong>Administrator Status Active:</strong> Your account (<code>neowin001@gmail.com</code>) has permanent unrestricted access to all N5–N1 curricula, mock tests, AI tutoring, and Business Japanese with no subscription required.
+              </span>
+            </div>
+          )}
+
           {/* Plan Comparison Cards */}
           <div className="p-4 sm:p-6 overflow-y-auto space-y-6 flex-1">
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
@@ -272,12 +282,14 @@ export const UpgradeModal: React.FC = () => {
 
                 <button
                   onClick={() => handleCheckout('PRO')}
-                  disabled={isProcessing || entitlements.subscriptionPlan === 'PRO'}
-                  className="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 text-white text-xs font-black shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-1.5"
+                  disabled={isProcessing || entitlements.subscriptionPlan === 'PRO' || entitlements.accountType === 'ADMIN'}
+                  className="w-full py-3 rounded-2xl bg-purple-600 hover:bg-purple-500 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-black shadow-lg shadow-purple-600/30 transition-all flex items-center justify-center gap-1.5"
                 >
                   <Crown size={14} />
                   <span>
-                    {entitlements.subscriptionPlan === 'PRO'
+                    {entitlements.accountType === 'ADMIN'
+                      ? 'Included with Admin Access'
+                      : entitlements.subscriptionPlan === 'PRO'
                       ? 'PRO Plan Active'
                       : isGuest
                       ? 'Sign Up & Choose PRO'
@@ -308,11 +320,17 @@ export const UpgradeModal: React.FC = () => {
 
                 <button
                   onClick={() => handleCheckout('PREMIUM')}
-                  disabled={isProcessing || entitlements.subscriptionPlan === 'PREMIUM'}
-                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:opacity-95 text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-1.5"
+                  disabled={isProcessing || entitlements.subscriptionPlan === 'PREMIUM' || entitlements.accountType === 'ADMIN'}
+                  className="w-full py-3 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:opacity-95 disabled:opacity-60 disabled:cursor-not-allowed text-white text-xs font-black shadow-md transition-all flex items-center justify-center gap-1.5"
                 >
                   <Sparkles size={14} />
-                  <span>{entitlements.subscriptionPlan === 'PREMIUM' ? 'PREMIUM Active' : 'Choose PREMIUM'}</span>
+                  <span>
+                    {entitlements.accountType === 'ADMIN'
+                      ? 'Included with Admin Access'
+                      : entitlements.subscriptionPlan === 'PREMIUM'
+                      ? 'PREMIUM Active'
+                      : 'Choose PREMIUM'}
+                  </span>
                 </button>
               </div>
             </div>

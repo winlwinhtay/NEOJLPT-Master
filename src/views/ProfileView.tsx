@@ -114,25 +114,32 @@ export const ProfileView: React.FC = () => {
               )}
             </div>
 
-            {entitlements.subscriptionEnd && (
+            {entitlements.accountType === 'ADMIN' ? (
+              <p className="text-xs text-purple-600 dark:text-purple-400 mt-2 flex items-center gap-1.5 font-semibold">
+                <Shield size={13} />
+                <span>Permanent Admin Access • No Subscription Required</span>
+              </p>
+            ) : entitlements.subscriptionEnd ? (
               <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 flex items-center gap-1.5">
                 <Clock size={13} />
                 <span>
                   Valid until {new Date(entitlements.subscriptionEnd).toLocaleDateString()} (Auto-renews or reverts to Free safely)
                 </span>
               </p>
-            )}
+            ) : null}
           </div>
 
           <div className="flex flex-wrap items-center gap-2.5">
-            <button
-              type="button"
-              onClick={() => setGiftModalOpen(true)}
-              className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-700"
-            >
-              <Gift size={15} className="text-purple-500" />
-              <span>Redeem Gift Code</span>
-            </button>
+            {entitlements.accountType !== 'ADMIN' && (
+              <button
+                type="button"
+                onClick={() => setGiftModalOpen(true)}
+                className="px-4 py-2.5 rounded-2xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs flex items-center gap-1.5 transition-colors border border-slate-200 dark:border-slate-700"
+              >
+                <Gift size={15} className="text-purple-500" />
+                <span>Redeem Gift Code</span>
+              </button>
+            )}
 
             {isGuest ? (
               <button
@@ -142,7 +149,7 @@ export const ProfileView: React.FC = () => {
               >
                 <span>Save Progress (Free Account)</span>
               </button>
-            ) : entitlements.subscriptionPlan === 'FREE' ? (
+            ) : entitlements.subscriptionPlan === 'FREE' && entitlements.accountType !== 'ADMIN' ? (
               <button
                 type="button"
                 onClick={() => setUpgradeModalOpen(true)}
@@ -160,14 +167,14 @@ export const ProfileView: React.FC = () => {
           <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
             <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Daily AI Requests</span>
             <span className="text-sm font-black text-slate-900 dark:text-white">
-              {entitlements.aiDailyLimit} / day
+              {entitlements.accountType === 'ADMIN' ? 'Unlimited' : `${entitlements.aiDailyLimit} / day`}
             </span>
           </div>
 
           <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
             <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Speaking Practice</span>
             <span className="text-sm font-black text-slate-900 dark:text-white">
-              {entitlements.speakingDailyLimit} min / day
+              {entitlements.accountType === 'ADMIN' ? 'Unlimited' : `${entitlements.speakingDailyLimit} min / day`}
             </span>
           </div>
 
@@ -181,7 +188,7 @@ export const ProfileView: React.FC = () => {
           <div className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800">
             <span className="text-[10px] uppercase font-bold text-slate-400 block mb-1">Curriculum Access</span>
             <span className="text-sm font-black text-slate-900 dark:text-white capitalize">
-              {entitlements.courseAccess} N5–N1
+              {entitlements.accountType === 'ADMIN' ? 'Full Access N5–N1' : `${entitlements.courseAccess} N5–N1`}
             </span>
           </div>
         </div>

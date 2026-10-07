@@ -4,7 +4,7 @@ import { StorageService, defaultProfile } from '../services/storageService';
 import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 import { SupabaseSyncService } from '../services/supabaseSyncService';
 import { UserEntitlements, BillingCycle } from '../types/monetization';
-import { EntitlementService } from '../services/entitlementService';
+import { EntitlementService, isSuperAdminEmail, ADMIN_ENTITLEMENTS } from '../services/entitlementService';
 import { GuestMigrationService } from '../services/guestMigrationService';
 import confetti from 'canvas-confetti';
 
@@ -84,17 +84,21 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const isGuest = !profile.id || profile.id === 'guest' || profile.id.startsWith('guest') || profile.email === 'guest@jlpt.study';
 
   const refreshEntitlements = useCallback(async () => {
+    if (isSuperAdminEmail(profile.email) || profile.role === 'admin') {
+      setEntitlements(ADMIN_ENTITLEMENTS);
+      return;
+    }
     if (isGuest) {
       setEntitlements(DEFAULT_GUEST_ENTITLEMENTS);
       return;
     }
     try {
-      const ents = await EntitlementService.getUserEntitlements(profile.id, true);
+      const ents = await EntitlementService.getUserEntitlements(profile.id, profile.email, true);
       setEntitlements(ents);
     } catch (e) {
       console.warn('Failed to refresh user entitlements:', e);
     }
-  }, [profile.id, isGuest]);
+  }, [profile.id, profile.email, profile.role, isGuest]);
 
   // Hydrate from Supabase on mount or session change
   useEffect(() => {
@@ -103,6 +107,8 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const handleAuthUser = async (user: any) => {
       if (!user?.id) return;
       try {
+        const isSuperAdmin = isSuperAdminEmail(user.email);
+
         // If user just signed in/registered with pending guest progress, seamlessly merge it!
         if (GuestMigrationService.hasGuestProgress()) {
           await GuestMigrationService.mergeGuestProgressIntoAccount(user.id);
@@ -111,7 +117,15 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         const cloudData = await SupabaseSyncService.fetchProfile(user.id);
         if (cloudData) {
           setProfile((prev) => {
-            const merged = { ...prev, ...cloudData, id: user.id, email: user.email || prev.email };
+            const merged = {
+              ...prev,
+              ...cloudData,
+              id: user.id,
+              email: user.email || prev.email,
+              role: isSuperAdmin ? ('admin' as const) : (cloudData.role || prev.role || 'user'),
+              isPremium: isSuperAdmin ? true : (cloudData.isPremium ?? prev.isPremium),
+              account_type: isSuperAdmin ? 'ADMIN' : (cloudData.account_type || prev.account_type),
+            };
             StorageService.saveProfile(merged);
             return merged;
           });
@@ -124,6 +138,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
             email: user.email || profile.email,
             name: user.user_metadata?.name || user.user_metadata?.full_name || profile.name,
             targetLevel: user.user_metadata?.targetLevel || profile.targetLevel,
+            role: isSuperAdmin ? ('admin' as const) : ('user' as const),
+            isPremium: isSuperAdmin ? true : false,
+            account_type: isSuperAdmin ? 'ADMIN' : 'FREE',
           };
           setProfile(initial);
           await SupabaseSyncService.syncProfile(initial);
@@ -131,7 +148,9 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
         }
 
         // Fetch validated entitlements for the authenticated user
-        const userEnts = await EntitlementService.getUserEntitlements(user.id, true);
+        const userEnts = isSuperAdmin
+          ? ADMIN_ENTITLEMENTS
+          : await EntitlementService.getUserEntitlements(user.id, user.email, true);
         setEntitlements(userEnts);
       } catch (err) {
         console.warn('Error during Supabase profile hydration:', err);
@@ -309,10 +328,19 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const login = (name: string, email?: string) => {
-    updateProfile({
+    const targetEmail = email?.trim() || `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`;
+    const isSuperAdmin = isSuperAdminEmail(targetEmail);
+    const updated: Partial<UserProfile> = {
       name: name.trim() || 'Learner',
-      email: email?.trim() || `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`,
-    });
+      email: targetEmail,
+      role: isSuperAdmin ? ('admin' as const) : ('user' as const),
+      isPremium: isSuperAdmin ? true : profile.isPremium,
+      account_type: isSuperAdmin ? 'ADMIN' : profile.account_type,
+    };
+    updateProfile(updated);
+    if (isSuperAdmin) {
+      setEntitlements(ADMIN_ENTITLEMENTS);
+    }
   };
 
   const register = (
@@ -320,18 +348,26 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
     email?: string,
     targetLevel: UserProfile['targetLevel'] = 'N5'
   ) => {
+    const targetEmail = email?.trim() || `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`;
+    const isSuperAdmin = isSuperAdminEmail(targetEmail);
     const freshProfile: UserProfile = {
       ...defaultProfile,
       name: name.trim() || 'New Learner',
-      email: email?.trim() || `${name.toLowerCase().replace(/\s+/g, '')}@jlpt.study`,
+      email: targetEmail,
       targetLevel,
       currentLevel: targetLevel,
       xp: 0,
       level: 1,
       streakDays: 1,
+      role: isSuperAdmin ? ('admin' as const) : ('user' as const),
+      isPremium: isSuperAdmin ? true : false,
+      account_type: isSuperAdmin ? 'ADMIN' : 'FREE',
     };
     setProfile(freshProfile);
     StorageService.saveProfile(freshProfile);
+    if (isSuperAdmin) {
+      setEntitlements(ADMIN_ENTITLEMENTS);
+    }
   };
 
   const logout = () => {

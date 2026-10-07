@@ -12,7 +12,44 @@ import {
 
 const ENTITLEMENTS_CACHE_TTL_MS = 5 * 60 * 1000; // 5 minutes
 
+export const ADMIN_EMAILS: string[] = ['neowin001@gmail.com'];
+
+export function isSuperAdminEmail(email?: string | null): boolean {
+  if (!email) return false;
+  const normalized = email.trim().toLowerCase();
+  return ADMIN_EMAILS.some((adminEmail) => adminEmail.toLowerCase() === normalized);
+}
+
+export const ADMIN_ENTITLEMENTS: UserEntitlements = {
+  accountType: 'ADMIN',
+  subscriptionPlan: 'PREMIUM',
+  subscriptionStatus: 'active',
+  subscriptionSource: 'admin',
+  subscriptionStart: '2026-01-01T00:00:00.000Z',
+  subscriptionEnd: '2126-12-31T23:59:59.999Z',
+  adsEnabled: false,
+  courseAccess: 'full',
+  grammarAccess: 'full',
+  vocabularyAccess: 'full',
+  kanjiAccess: 'full',
+  readingAccess: 'full',
+  listeningAccess: 'full',
+  speakingAccess: 'full',
+  aiDailyLimit: 999999,
+  speakingDailyLimit: 999999,
+  mockTestAccess: 'full',
+  advancedAnalytics: true,
+  learningPathLevel: 'complete',
+  saveProgress: true,
+  bookmarks: true,
+  exports: true,
+  isGuest: false,
+};
+
 export class EntitlementService {
+  public static readonly ADMIN_EMAILS = ADMIN_EMAILS;
+  public static readonly ADMIN_ENTITLEMENTS = ADMIN_ENTITLEMENTS;
+
   private static cachedEntitlements: {
     userId: string;
     entitlements: UserEntitlements;
@@ -48,9 +85,20 @@ export class EntitlementService {
    */
   public static async getUserEntitlements(
     userId?: string,
+    userEmail?: string,
     forceRefresh: boolean = false
   ): Promise<UserEntitlements> {
     const effectiveUserId = (userId || 'guest').trim();
+
+    // 1. Instant Admin Email Check: No subscription needed, unlimited access
+    if (isSuperAdminEmail(userEmail)) {
+      this.cachedEntitlements = {
+        userId: effectiveUserId,
+        entitlements: ADMIN_ENTITLEMENTS,
+        timestamp: Date.now(),
+      };
+      return ADMIN_ENTITLEMENTS;
+    }
 
     // Check memory cache
     if (
@@ -69,29 +117,30 @@ export class EntitlementService {
         });
 
         if (!error && data) {
+          const isAdmin = data.accountType === 'ADMIN' || isSuperAdminEmail(userEmail);
           const entitlements: UserEntitlements = {
-            accountType: data.accountType || 'FREE',
-            subscriptionPlan: data.subscriptionPlan || 'FREE',
-            subscriptionStatus: data.subscriptionStatus || 'none',
-            subscriptionSource: data.subscriptionSource || 'none',
-            subscriptionStart: data.subscriptionStart || null,
-            subscriptionEnd: data.subscriptionEnd || null,
-            adsEnabled: Boolean(data.adsEnabled),
-            courseAccess: data.courseAccess || 'foundational',
-            grammarAccess: data.grammarAccess || 'substantial',
-            vocabularyAccess: data.vocabularyAccess || 'substantial',
-            kanjiAccess: data.kanjiAccess || 'substantial',
-            readingAccess: data.readingAccess || 'selected',
-            listeningAccess: data.listeningAccess || 'selected',
-            speakingAccess: data.speakingAccess || 'limited',
-            aiDailyLimit: Number(data.aiDailyLimit) || 10,
-            speakingDailyLimit: Number(data.speakingDailyLimit) || 5,
-            mockTestAccess: data.mockTestAccess || 'limited',
-            advancedAnalytics: Boolean(data.advancedAnalytics),
-            learningPathLevel: data.learningPathLevel || 'basic',
+            accountType: isAdmin ? 'ADMIN' : (data.accountType || 'FREE'),
+            subscriptionPlan: isAdmin ? 'PREMIUM' : (data.subscriptionPlan || 'FREE'),
+            subscriptionStatus: isAdmin ? 'active' : (data.subscriptionStatus || 'none'),
+            subscriptionSource: isAdmin ? 'admin' : (data.subscriptionSource || 'none'),
+            subscriptionStart: data.subscriptionStart || (isAdmin ? '2026-01-01T00:00:00.000Z' : null),
+            subscriptionEnd: data.subscriptionEnd || (isAdmin ? '2126-12-31T23:59:59.999Z' : null),
+            adsEnabled: isAdmin ? false : Boolean(data.adsEnabled),
+            courseAccess: isAdmin ? 'full' : (data.courseAccess || 'foundational'),
+            grammarAccess: isAdmin ? 'full' : (data.grammarAccess || 'substantial'),
+            vocabularyAccess: isAdmin ? 'full' : (data.vocabularyAccess || 'substantial'),
+            kanjiAccess: isAdmin ? 'full' : (data.kanjiAccess || 'substantial'),
+            readingAccess: isAdmin ? 'full' : (data.readingAccess || 'selected'),
+            listeningAccess: isAdmin ? 'full' : (data.listeningAccess || 'selected'),
+            speakingAccess: isAdmin ? 'full' : (data.speakingAccess || 'limited'),
+            aiDailyLimit: isAdmin ? 999999 : (Number(data.aiDailyLimit) || 10),
+            speakingDailyLimit: isAdmin ? 999999 : (Number(data.speakingDailyLimit) || 5),
+            mockTestAccess: isAdmin ? 'full' : (data.mockTestAccess || 'limited'),
+            advancedAnalytics: isAdmin ? true : Boolean(data.advancedAnalytics),
+            learningPathLevel: isAdmin ? 'complete' : (data.learningPathLevel || 'basic'),
             saveProgress: Boolean(data.saveProgress),
             bookmarks: Boolean(data.bookmarks),
-            exports: Boolean(data.exports),
+            exports: isAdmin ? true : Boolean(data.exports),
             isGuest: Boolean(data.isGuest),
           };
 
@@ -108,7 +157,11 @@ export class EntitlementService {
       }
     }
 
-    // Default Fallback: Guest or Free Tier
+    // Default Fallback: Admin check, Guest or Free Tier
+    if (isSuperAdminEmail(userEmail)) {
+      return ADMIN_ENTITLEMENTS;
+    }
+
     const isGuestUser = !effectiveUserId || effectiveUserId.startsWith('guest');
     const fallbackEntitlements: UserEntitlements = {
       accountType: isGuestUser ? 'GUEST' : 'FREE',

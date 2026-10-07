@@ -31,7 +31,8 @@ export const UpgradePrompt: React.FC<UpgradePromptProps> = ({
   const { entitlements, isGuest } = useUser();
   const { setUpgradeModalOpen, setAuthModalOpen } = useApp();
 
-  // If user already meets or exceeds required plan, do not render prompt
+  // If user is Admin or meets/exceeds required plan, do not render prompt
+  if (entitlements.accountType === 'ADMIN') return null;
   const userPlan = entitlements.subscriptionPlan;
   if (userPlan === 'PREMIUM') return null;
   if (userPlan === 'PRO' && requiredPlan === 'PRO') return null;

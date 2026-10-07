@@ -1,6 +1,7 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { UserProfile, UserSRSProgress } from '../types';
 import { MockTestAttempt } from '../types/practice';
+import { isSuperAdminEmail } from './entitlementService';
 
 export class SupabaseSyncService {
   /**
@@ -9,7 +10,8 @@ export class SupabaseSyncService {
   public static async syncProfile(profile: UserProfile): Promise<boolean> {
     if (!isSupabaseConfigured()) return false;
     try {
-      const payload = {
+      const isSuperAdmin = isSuperAdminEmail(profile.email) || profile.role === 'admin';
+      const payload: any = {
         id: profile.id,
         email: profile.email || null,
         name: profile.name,
@@ -28,7 +30,9 @@ export class SupabaseSyncService {
         last_active_date: profile.lastActiveDate,
         xp: profile.xp,
         level: profile.level,
-        is_premium: profile.isPremium,
+        is_premium: isSuperAdmin ? true : profile.isPremium,
+        role: isSuperAdmin ? 'admin' : (profile.role || 'user'),
+        account_type: isSuperAdmin ? 'ADMIN' : (profile.account_type || (profile.isPremium ? 'PREMIUM' : 'FREE')),
         theme: profile.theme,
         font_size: profile.fontSize,
         show_furigana: profile.showFurigana,
@@ -65,6 +69,8 @@ export class SupabaseSyncService {
 
       if (error || !data) return null;
 
+      const isSuperAdmin = isSuperAdminEmail(data.email) || data.role === 'admin';
+
       return {
         id: data.id,
         email: data.email,
@@ -84,7 +90,9 @@ export class SupabaseSyncService {
         lastActiveDate: data.last_active_date,
         xp: data.xp,
         level: data.level,
-        isPremium: data.is_premium,
+        isPremium: isSuperAdmin ? true : Boolean(data.is_premium),
+        role: isSuperAdmin ? 'admin' : (data.role || 'user'),
+        account_type: isSuperAdmin ? 'ADMIN' : data.account_type,
         theme: data.theme,
         fontSize: data.font_size,
         showFurigana: data.show_furigana,

@@ -73,6 +73,7 @@ serve(async (req: Request) => {
 
     let userId = 'anonymous';
     let supabaseClient = null;
+    let isAdminUser = false;
     if (SUPABASE_URL && SUPABASE_SERVICE_ROLE_KEY) {
       supabaseClient = createClient(SUPABASE_URL, SUPABASE_SERVICE_ROLE_KEY);
       const token = authHeader.replace('Bearer ', '');
@@ -82,6 +83,16 @@ serve(async (req: Request) => {
       } = await supabaseClient.auth.getUser(token);
       if (!userError && user?.id) {
         userId = user.id;
+        const userEmail = (user.email || '').trim().toLowerCase();
+        if (userEmail === 'neowin001@gmail.com') {
+          isAdminUser = true;
+          // Ensure profile in database has role admin and is_premium true
+          await supabaseClient.from('profiles').update({
+            role: 'admin',
+            is_premium: true,
+            account_type: 'ADMIN',
+          }).eq('id', user.id);
+        }
       }
     }
 
@@ -1080,6 +1091,8 @@ Output JSON:
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
+
+    return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },
     });

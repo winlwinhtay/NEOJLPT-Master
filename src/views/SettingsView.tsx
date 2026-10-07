@@ -11,7 +11,13 @@ import {
   Trash2,
   CheckCircle2,
   Keyboard,
+  LogOut,
+  LogIn,
+  Crown,
+  User,
+  Shield,
 } from 'lucide-react';
+import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
@@ -19,7 +25,8 @@ import { useJapaneseKeyboard } from '../context/JapaneseKeyboardContext';
 import { SupportedLanguage } from '../types/i18n';
 
 export const SettingsView: React.FC = () => {
-  const { profile, updateProfile } = useUser();
+  const { profile, updateProfile, isGuest, logout, entitlements } = useUser();
+  const { openLoginView } = useApp();
   const { resetSRS } = useSRS();
   const { language, setLanguage, supportedLanguages, t } = useI18n();
   const { settings: keyboardSettings, updateSettings: updateKeyboardSettings, openKeyboard } = useJapaneseKeyboard();
@@ -405,7 +412,71 @@ export const SettingsView: React.FC = () => {
           </div>
         </div>
 
-        {/* 6. Danger Zone: Reset Data */}
+        {/* 6. Account & Authentication Management */}
+        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+            <div className="flex items-center gap-3">
+              <div className="w-12 h-12 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border border-indigo-200 dark:border-indigo-900/50 flex items-center justify-center text-xl shrink-0">
+                {profile.avatar}
+              </div>
+              <div>
+                <h3 className="font-bold text-slate-900 dark:text-white text-base">
+                  {isGuest ? 'Guest Learner Session (ゲスト学習中)' : (profile.email || profile.name)}
+                </h3>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+                  {isGuest
+                    ? '100% Free offline study. Sign in with a Supabase email to enable cross-device cloud sync and live AI tutors.'
+                    : `Active Account • ${entitlements.accountType === 'ADMIN' ? '🛡️ Super Administrator' : entitlements.subscriptionPlan + ' Scholar Pass'}`}
+                </p>
+              </div>
+            </div>
+
+            <div className="flex flex-wrap items-center gap-2">
+              {isGuest ? (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openLoginView('auth')}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-brand-500/20 transition-all cursor-pointer"
+                  >
+                    <LogIn size={15} />
+                    <span>Log In / Sign Up</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => openLoginView('plans')}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Crown size={15} />
+                    <span>Subscription Plans</span>
+                  </button>
+                </>
+              ) : (
+                <>
+                  <button
+                    type="button"
+                    onClick={() => openLoginView('plans')}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                  >
+                    <Crown size={15} />
+                    <span>Subscription Plans (料金)</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={logout}
+                    className="px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center gap-1.5 transition-colors border border-rose-200 dark:border-rose-900/50 cursor-pointer shadow-xs"
+                    title="Log out of this account"
+                  >
+                    <LogOut size={15} />
+                    <span>Log Out (ログアウト)</span>
+                  </button>
+                </>
+              )}
+            </div>
+          </div>
+        </div>
+
+        {/* 7. Danger Zone: Reset Data */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-rose-200 dark:border-rose-900/50 shadow-sm space-y-4">
           <div className="flex items-center justify-between">
             <div>

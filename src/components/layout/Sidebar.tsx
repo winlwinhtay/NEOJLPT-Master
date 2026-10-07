@@ -24,6 +24,7 @@ import {
   Keyboard,
   CreditCard,
   LogIn,
+  LogOut,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/I18nContext';
@@ -42,7 +43,7 @@ export const Sidebar: React.FC = () => {
     setAuthModalOpen,
     openLoginView,
   } = useApp();
-  const { profile, entitlements, isGuest } = useUser();
+  const { profile, entitlements, isGuest, logout } = useUser();
   const { t } = useI18n();
   const { getDueTodayCount } = useSRS();
 
@@ -133,28 +134,58 @@ export const Sidebar: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-1.5">
-            <button
-              type="button"
-              onClick={() => {
-                openLoginView('auth');
-                setMobileMenuOpen(false);
-              }}
-              className="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-brand-600 dark:text-brand-300 font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-            >
-              <LogIn size={14} />
-              <span>{isGuest ? 'Log In' : 'Account'}</span>
-            </button>
-            <button
-              type="button"
-              onClick={() => {
-                openLoginView('plans');
-                setMobileMenuOpen(false);
-              }}
-              className="py-2 px-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
-            >
-              <Crown size={14} />
-              <span>Plans (料金)</span>
-            </button>
+            {isGuest ? (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    openLoginView('auth');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-brand-600 dark:text-brand-300 font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <LogIn size={14} />
+                  <span>Log In</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    openLoginView('plans');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2 px-2.5 rounded-xl bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Crown size={14} />
+                  <span>Plans (料金)</span>
+                </button>
+              </>
+            ) : (
+              <>
+                <button
+                  type="button"
+                  onClick={() => {
+                    openLoginView('plans');
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2 px-2.5 rounded-xl bg-white dark:bg-slate-800 hover:bg-slate-50 dark:hover:bg-slate-750 text-indigo-600 dark:text-indigo-400 font-bold text-xs border border-slate-200 dark:border-slate-700 shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                >
+                  <Crown size={14} />
+                  <span>Plans (料金)</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    setMobileMenuOpen(false);
+                  }}
+                  className="py-2 px-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 font-bold text-xs border border-rose-200 dark:border-rose-900/50 shadow-2xs flex items-center justify-center gap-1.5 transition-all cursor-pointer"
+                  title="Sign out of account"
+                >
+                  <LogOut size={14} />
+                  <span>Log Out</span>
+                </button>
+              </>
+            )}
           </div>
         </div>
 
@@ -226,6 +257,20 @@ export const Sidebar: React.FC = () => {
                 </button>
               );
             })}
+
+            {!isGuest && (
+              <button
+                type="button"
+                onClick={() => {
+                  logout();
+                  setMobileMenuOpen(false);
+                }}
+                className="w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-semibold text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 transition-all cursor-pointer"
+              >
+                <LogOut size={20} />
+                <span>Log Out (ログアウト)</span>
+              </button>
+            )}
           </nav>
         </div>
       </div>
@@ -258,6 +303,17 @@ export const Sidebar: React.FC = () => {
           <p className="text-[11px] text-purple-600 dark:text-purple-300 font-medium">
             Full Unrestricted System Access
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              setMobileMenuOpen(false);
+            }}
+            className="mt-2.5 w-full py-1.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <LogOut size={13} />
+            <span>Log Out (ログアウト)</span>
+          </button>
         </div>
       ) : entitlements.subscriptionPlan === 'FREE' ? (
         <div className="mt-6 p-4 rounded-2xl bg-gradient-to-br from-amber-500/10 via-rose-500/10 to-indigo-500/10 border border-amber-500/20 text-center">
@@ -270,13 +326,28 @@ export const Sidebar: React.FC = () => {
           <p className="text-[11px] text-slate-500 dark:text-slate-400 mb-3">
             Full mock tests, AI speech tutor, and SRS memory intervals.
           </p>
-          <button
-            type="button"
-            onClick={() => setActiveView('login')}
-            className="w-full py-2 px-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
-          >
-            Subscription Plans
-          </button>
+          <div className="grid grid-cols-2 gap-1.5">
+            <button
+              type="button"
+              onClick={() => {
+                openLoginView('plans');
+                setMobileMenuOpen(false);
+              }}
+              className="py-1.5 px-2 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs rounded-xl shadow-xs transition-all cursor-pointer"
+            >
+              Plans
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                logout();
+                setMobileMenuOpen(false);
+              }}
+              className="py-1.5 px-2 border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold rounded-xl transition-colors cursor-pointer"
+            >
+              Log Out
+            </button>
+          </div>
         </div>
       ) : (
         <div className="mt-6 p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-800 text-center">
@@ -286,6 +357,17 @@ export const Sidebar: React.FC = () => {
           <p className="text-[11px] text-emerald-600 dark:text-emerald-400 font-medium">
             100% Ad-Free • Complete Access
           </p>
+          <button
+            type="button"
+            onClick={() => {
+              logout();
+              setMobileMenuOpen(false);
+            }}
+            className="mt-2.5 w-full py-1.5 px-3 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-semibold flex items-center justify-center gap-1.5 transition-colors cursor-pointer"
+          >
+            <LogOut size={13} />
+            <span>Log Out (ログアウト)</span>
+          </button>
         </div>
       )}
     </div>

@@ -317,13 +317,24 @@ export const Navbar: React.FC = () => {
               <span className="text-[10px] opacity-80 hidden sm:inline font-japanese">ログイン</span>
             </button>
           ) : (
-            <div className="relative">
+            <div className="flex items-center gap-2">
               <button
                 type="button"
-                onClick={() => setUserMenuOpen(!userMenuOpen)}
-                title={`Logged in as ${profile.email || profile.name}`}
-                className="flex items-center gap-2 p-1 pl-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-all cursor-pointer"
+                onClick={logout}
+                className="hidden lg:flex items-center gap-1.5 px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-900/40 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 text-xs font-bold transition-all cursor-pointer shadow-2xs"
+                title="Log out of current account"
               >
+                <LogOut size={13} />
+                <span>Log Out</span>
+              </button>
+
+              <div className="relative">
+                <button
+                  type="button"
+                  onClick={() => setUserMenuOpen(!userMenuOpen)}
+                  title={`Logged in as ${profile.email || profile.name}`}
+                  className="flex items-center gap-2 p-1 pl-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-all cursor-pointer"
+                >
                 <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 max-w-[100px] truncate hidden md:inline">
                   {profile.email || profile.name}
                 </span>
@@ -389,6 +400,7 @@ export const Navbar: React.FC = () => {
                   </div>
                 </div>
               )}
+            </div>
             </div>
           )}
         </div>

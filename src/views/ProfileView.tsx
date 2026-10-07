@@ -15,6 +15,7 @@ import {
   Clock,
   ArrowRight,
   LogIn,
+  LogOut,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -24,7 +25,7 @@ import { GiftRedeemModal } from '../components/common/GiftRedeemModal';
 
 export const ProfileView: React.FC = () => {
   const { setUpgradeModalOpen, setAuthModalOpen, openLoginView } = useApp();
-  const { profile, updateProfile, entitlements, isGuest } = useUser();
+  const { profile, updateProfile, entitlements, isGuest, logout } = useUser();
   const { t } = useI18n();
 
   const [name, setName] = useState(profile.name);
@@ -161,16 +162,29 @@ export const ProfileView: React.FC = () => {
                   <span>Subscription Plans (料金)</span>
                 </button>
               </div>
-            ) : entitlements.subscriptionPlan === 'FREE' && entitlements.accountType !== 'ADMIN' ? (
-              <button
-                type="button"
-                onClick={() => openLoginView('plans')}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
-              >
-                <Crown size={15} />
-                <span>Subscription Plans (料金)</span>
-              </button>
-            ) : null}
+            ) : (
+              <div className="flex flex-wrap items-center gap-2">
+                {entitlements.accountType !== 'ADMIN' && (
+                  <button
+                    type="button"
+                    onClick={() => openLoginView('plans')}
+                    className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
+                  >
+                    <Crown size={15} />
+                    <span>Subscription Plans (料金)</span>
+                  </button>
+                )}
+                <button
+                  type="button"
+                  onClick={logout}
+                  className="px-4 py-2.5 rounded-2xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 text-rose-600 dark:text-rose-400 font-bold text-xs flex items-center gap-1.5 transition-colors border border-rose-200 dark:border-rose-900/50 cursor-pointer shadow-xs"
+                  title="Sign out of your account"
+                >
+                  <LogOut size={15} />
+                  <span>Log Out (ログアウト)</span>
+                </button>
+              </div>
+            )}
           </div>
         </div>
 

@@ -21,6 +21,7 @@ import {
   Globe,
   UserCheck,
   Compass,
+  LogOut,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -373,14 +374,16 @@ export const LoginView: React.FC = () => {
 
             {/* Logged in indicator */}
             {!isGuest && (
-              <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 flex flex-col sm:flex-row sm:items-center justify-between gap-3 text-xs">
-                <div className="flex items-center gap-2">
-                  <UserCheck className="text-emerald-600 dark:text-emerald-400" size={18} />
+              <div className="p-5 rounded-3xl bg-gradient-to-r from-emerald-500/10 via-indigo-500/10 to-purple-500/10 border border-emerald-500/30 flex flex-col sm:flex-row sm:items-center justify-between gap-4 text-xs shadow-sm">
+                <div className="flex items-center gap-3">
+                  <div className="w-10 h-10 rounded-2xl bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 flex items-center justify-center text-lg shrink-0">
+                    <UserCheck size={20} />
+                  </div>
                   <div>
-                    <span className="text-slate-400">Signed in as: </span>
-                    <strong className="text-slate-900 dark:text-white">{profile.email || profile.name}</strong>
-                    <span className="ml-2 px-2 py-0.5 rounded bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 font-bold uppercase text-[10px]">
-                      {entitlements.accountType}
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">Currently Signed In</span>
+                    <strong className="text-sm font-black text-slate-900 dark:text-white block">{profile.email || profile.name}</strong>
+                    <span className="inline-block mt-0.5 px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-100 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300">
+                      {entitlements.accountType === 'ADMIN' ? '🛡️ SuperAdmin' : entitlements.subscriptionPlan + ' Plan'}
                     </span>
                   </div>
                 </div>
@@ -388,16 +391,18 @@ export const LoginView: React.FC = () => {
                   <button
                     type="button"
                     onClick={() => setActiveView('dashboard')}
-                    className="px-3 py-1.5 rounded-xl bg-brand-500 text-white font-bold text-xs"
+                    className="px-4 py-2.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-sm transition-all cursor-pointer"
                   >
                     Go to Dashboard
                   </button>
                   <button
                     type="button"
                     onClick={logout}
-                    className="px-3 py-1.5 rounded-xl border border-rose-200 dark:border-rose-800 text-rose-600 dark:text-rose-400 hover:bg-rose-50 text-xs font-bold"
+                    className="px-4 py-2.5 rounded-xl bg-rose-50 dark:bg-rose-950/40 hover:bg-rose-100 dark:hover:bg-rose-900/50 border border-rose-200 dark:border-rose-900/50 text-rose-600 dark:text-rose-400 text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-xs"
+                    title="Log out of this account"
                   >
-                    Log Out
+                    <LogOut size={15} />
+                    <span>Log Out (ログアウト)</span>
                   </button>
                 </div>
               </div>

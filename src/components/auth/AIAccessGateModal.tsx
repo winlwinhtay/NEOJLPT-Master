@@ -15,13 +15,13 @@ export const AIAccessGateModal: React.FC<AIAccessGateModalProps> = ({
   featureTitle = 'AI Feature Access',
   featureDescription = 'Chat with the AI tutor and receive live linguistic analysis.',
 }) => {
-  const { setAuthModalOpen } = useApp();
+  const { setActiveView } = useApp();
 
   if (!isOpen) return null;
 
   const handleOpenLogin = () => {
     onClose();
-    setAuthModalOpen(true);
+    setActiveView('login');
   };
 
   return (

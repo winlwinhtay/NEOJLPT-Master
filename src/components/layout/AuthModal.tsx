@@ -8,7 +8,7 @@ import { AuthService } from '../../services/authService';
 import { GuestMigrationService } from '../../services/guestMigrationService';
 
 export const AuthModal: React.FC = () => {
-  const { authModalOpen, setAuthModalOpen } = useApp();
+  const { authModalOpen, setAuthModalOpen, setActiveView } = useApp();
   const { profile, login, register, logout, isCloudSynced } = useUser();
 
   const [mode, setMode] = useState<'login' | 'register'>('login');
@@ -389,13 +389,23 @@ export const AuthModal: React.FC = () => {
           </form>
 
           {/* Alternate Guest login */}
-          <div className="pt-2 border-t border-slate-100 dark:border-slate-800">
+          <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-2">
             <button
               type="button"
               onClick={handleGuestLogin}
-              className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="w-full py-2.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             >
-              Continue as Guest
+              Continue as Guest (No Email Needed)
+            </button>
+            <button
+              type="button"
+              onClick={() => {
+                setAuthModalOpen(false);
+                setActiveView('login');
+              }}
+              className="w-full py-2 rounded-xl text-xs text-indigo-600 dark:text-indigo-400 font-semibold hover:underline flex items-center justify-center gap-1.5 cursor-pointer"
+            >
+              <span>View Full Login Page & Subscription Plans →</span>
             </button>
           </div>
 

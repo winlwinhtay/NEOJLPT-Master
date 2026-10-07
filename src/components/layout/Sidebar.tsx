@@ -22,6 +22,7 @@ import {
   Shield,
   X,
   Keyboard,
+  CreditCard,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useI18n } from '../../i18n/I18nContext';
@@ -85,6 +86,7 @@ export const Sidebar: React.FC = () => {
   ];
 
   const systemNavItems: { id: ViewType; label: string; icon: React.ReactNode }[] = [
+    { id: 'login', label: isGuest ? 'Sign In / Plans' : 'Account & Plans', icon: <CreditCard size={20} /> },
     { id: 'profile', label: t('nav.profile', 'Profile'), icon: <User size={20} /> },
     { id: 'settings', label: t('nav.settings', 'Settings'), icon: <Settings size={20} /> },
     { id: 'admin', label: t('nav.admin', 'Admin Studio'), icon: <ShieldAlert size={20} /> },
@@ -196,10 +198,10 @@ export const Sidebar: React.FC = () => {
           </p>
           <button
             type="button"
-            onClick={() => setAuthModalOpen(true)}
-            className="w-full py-2 px-3 bg-gradient-to-r from-brand-500 to-indigo-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+            onClick={() => setActiveView('login')}
+            className="w-full py-2 px-3 bg-gradient-to-r from-brand-500 to-indigo-600 hover:opacity-90 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
           >
-            Save Progress (Free)
+            Save Progress / View Plans
           </button>
         </div>
       ) : entitlements.accountType === 'ADMIN' ? (
@@ -224,10 +226,10 @@ export const Sidebar: React.FC = () => {
           </p>
           <button
             type="button"
-            onClick={() => setUpgradeModalOpen(true)}
-            className="w-full py-2 px-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all"
+            onClick={() => setActiveView('login')}
+            className="w-full py-2 px-3 bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all cursor-pointer"
           >
-            Upgrade to Pro
+            Subscription Plans
           </button>
         </div>
       ) : (

@@ -95,10 +95,10 @@ export const Navbar: React.FC = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setAuthModalOpen(true);
+                      setActiveView('login');
                     }}
                     className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200 dark:border-brand-800 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
-                    title="Click to create a free account and save your progress"
+                    title="Click to view subscription plans or create an account"
                   >
                     GUEST
                   </button>
@@ -291,8 +291,8 @@ export const Navbar: React.FC = () => {
           {profile.name === 'Guest Learner' ? (
             <button
               type="button"
-              onClick={() => setAuthModalOpen(true)}
-              className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5"
+              onClick={() => setActiveView('login')}
+              className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <span>Sign In</span>
             </button>

@@ -31,6 +31,7 @@ import { ProfileView } from './views/ProfileView';
 import { SettingsView } from './views/SettingsView';
 import { AdminView } from './views/AdminView';
 import { TypingPracticeView } from './views/TypingPracticeView';
+import { LoginView } from './views/LoginView';
 import { ActiveLearningSessionModal } from './components/activeLearning/ActiveLearningSessionModal';
 import { JapaneseVirtualKeyboard } from './components/keyboard/JapaneseVirtualKeyboard';
 
@@ -77,6 +78,8 @@ export const App: React.FC = () => {
         return <AdminView />;
       case 'typing-practice':
         return <TypingPracticeView />;
+      case 'login':
+        return <LoginView />;
       default:
         return <DashboardView />;
     }

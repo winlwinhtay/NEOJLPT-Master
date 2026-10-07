@@ -21,7 +21,8 @@ export type ViewType =
   | 'typing-practice'
   | 'profile'
   | 'settings'
-  | 'admin';
+  | 'admin'
+  | 'login';
 
 export type MasteryStatus = 'new' | 'learning' | 'review' | 'mastered';
 

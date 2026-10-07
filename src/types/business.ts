@@ -328,3 +328,172 @@ export interface BusinessUserProgress {
   scenarioCompletedIds: string[];
   certificates: BusinessCertificateRecord[];
 }
+
+// ----------------------------------------------------------------------------
+// Comprehensive Career & Interview Simulation Types
+// ----------------------------------------------------------------------------
+export type InterviewModeId =
+  | 'basic_entry'
+  | 'mid_career'
+  | 'tech_dx'
+  | 'sales_biz'
+  | 'management'
+  | 'stress_adaptability'
+  | 'reverse_question'
+  | 'casual_culture'
+  | 'case_study'
+  | 'final_executive';
+
+export interface InterviewModeInfo {
+  id: InterviewModeId;
+  titleJp: string;
+  titleEn: string;
+  targetAudience: string;
+  description: string;
+  focusSkills: string[];
+  questionsCount: number;
+}
+
+export interface InterviewQuestionExtended {
+  id: string;
+  modeId: InterviewModeId;
+  category: string;
+  questionJp: string;
+  questionReading?: string;
+  questionEn: string;
+  interviewerIntent: string;
+  starFramework: {
+    situation: string;
+    task: string;
+    action: string;
+    result: string;
+  };
+  modelAnswerJp: string;
+  modelAnswerReading?: string;
+  modelAnswerEn: string;
+  keyPhrases: string[];
+  commonPitfalls: string[];
+  jlptMinLevel: 'N3' | 'N2' | 'N1';
+}
+
+export interface InterviewEvaluationResult {
+  overallScore: number;
+  starScore: number;
+  keigoScore: number;
+  clarityScore: number;
+  intentAlignmentScore: number;
+  strengths: string[];
+  areasToImprove: string[];
+  polishedJapaneseVersion: string;
+  interviewerCommentary: string;
+}
+
+// ----------------------------------------------------------------------------
+// 4-Step Comparative Email Types
+// ----------------------------------------------------------------------------
+export interface EmailComparativeFourStep {
+  id: string;
+  category: string;
+  titleJp: string;
+  titleEn: string;
+  scenario: string;
+  audience: 'internal' | 'external' | 'executive';
+  urgency: 'normal' | 'urgent' | 'courtesy';
+  step1Bad: {
+    subject: string;
+    body: string;
+  };
+  step2WhyBad: {
+    reasons: string[];
+    criticalFlaws: string[];
+    politenessIssues: string[];
+  };
+  step3Improved: {
+    subject: string;
+    body: string;
+    improvementsMade: string[];
+  };
+  step4Professional: {
+    subject: string;
+    body: string;
+    executiveNuances: string[];
+    cushionWordsUsed: string[];
+  };
+  keyCushionPhrases: { phrase: string; meaning: string; usage: string }[];
+}
+
+// ----------------------------------------------------------------------------
+// Japanese Resume & CV Types (履歴書・職務経歴書)
+// ----------------------------------------------------------------------------
+export interface RirekishoRecord {
+  personalInfo: {
+    fullNameJp: string;
+    furigana: string;
+    birthDate: string;
+    gender?: string;
+    currentAddress: string;
+    addressFurigana: string;
+    email: string;
+    phone: string;
+  };
+  educationHistory: { year: number; month: number; description: string }[];
+  workHistory: { year: number; month: number; description: string }[];
+  certifications: { year: number; month: number; name: string }[];
+  motivationJp: string;
+  specialSkillsJp: string;
+  commuteHours: number;
+  dependentsCount: number;
+}
+
+export interface ShokumuKeirekishoProject {
+  id: string;
+  period: string;
+  projectName: string;
+  role: string;
+  teamSize: string;
+  description: string;
+  technologiesOrSkills: string[];
+  achievementsWithMetrics: string;
+}
+
+export interface ShokumuKeirekishoRecord {
+  executiveSummary: string;
+  coreCompetencies: string[];
+  projects: ShokumuKeirekishoProject[];
+  selfPR: string;
+}
+
+export interface ResumeWordingTransformation {
+  casualPhrase: string;
+  casualReading?: string;
+  issue: string;
+  polishedCorporatePhrase: string;
+  polishedReading?: string;
+  category: 'achievement' | 'leadership' | 'cooperation' | 'problem_solving' | 'motivation';
+  explanation: string;
+}
+
+// ----------------------------------------------------------------------------
+// Career Coaching & Readiness Scorecard
+// ----------------------------------------------------------------------------
+export interface CareerStepItem {
+  stepNumber: number;
+  titleJp: string;
+  titleEn: string;
+  summary: string;
+  actionItems: string[];
+  keyDeliverables: string[];
+  recommendedDuration: string;
+}
+
+export interface CorporateReadinessScore {
+  overallScore: number; // 0 - 100
+  keigoProficiency: number;
+  emailBusinessStandard: number;
+  horensoReporting: number;
+  interviewReadiness: number;
+  vocabularyMastery: number;
+  jlptEstimatedFit: 'N3 Business Entry' | 'N2 Practical Office' | 'N1 Executive/Consulting';
+  personalizedRecommendations: string[];
+}
+

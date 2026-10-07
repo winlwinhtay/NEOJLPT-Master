@@ -17,6 +17,9 @@ import {
   CheckCircle2,
   Sparkles,
   GraduationCap,
+  Compass,
+  FileCheck,
+  MessageSquare,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -34,6 +37,10 @@ import { BusinessCultureGuide } from '../components/business/BusinessCultureGuid
 import { BusinessInterviewStudio } from '../components/business/BusinessInterviewStudio';
 import { BusinessFinalExam } from '../components/business/BusinessFinalExam';
 import { BusinessCertificateModal } from '../components/business/BusinessCertificateModal';
+import { InterviewSimulator } from '../components/business/InterviewSimulator';
+import { ResumeCoachStudio } from '../components/business/ResumeCoachStudio';
+import { CareerCoachStudio } from '../components/business/CareerCoachStudio';
+import { HorensoStudio } from '../components/business/HorensoStudio';
 import { AudioButton } from '../components/common/AudioButton';
 import { getBusinessTabName } from '../data/translations/businessTranslations';
 import { getLocalizedBusinessVocabMeaning } from '../data/translations/businessContentI18n';
@@ -46,7 +53,16 @@ export const BusinessJapaneseView: React.FC = () => {
   // Navigation state
   const [activeCourseLevel, setActiveCourseLevel] = useState<BusinessCourseLevel>('foundation');
   const [activeStudioTab, setActiveStudioTab] = useState<
-    'curriculum' | 'keigo' | 'email' | 'scenarios' | 'culture' | 'interview' | 'vocabulary' | 'exam'
+    | 'curriculum'
+    | 'keigo'
+    | 'email'
+    | 'horenso'
+    | 'career_hub'
+    | 'resume_coach'
+    | 'interview_sim'
+    | 'culture'
+    | 'vocabulary'
+    | 'exam'
   >('curriculum');
 
   // Goal & Certificate Modal State
@@ -153,10 +169,12 @@ export const BusinessJapaneseView: React.FC = () => {
   }[] = [
     { id: 'curriculum', label: getBusinessTabName('curriculum', language), icon: <Layers size={16} /> },
     { id: 'keigo', label: getBusinessTabName('keigo', language), icon: <Award size={16} /> },
-    { id: 'email', label: getBusinessTabName('email', language), icon: <Mail size={16} /> },
-    { id: 'scenarios', label: getBusinessTabName('scenarios', language), icon: <PhoneCall size={16} /> },
+    { id: 'email', label: 'ビジネスメール (4段階比較)', icon: <Mail size={16} /> },
+    { id: 'horenso', label: '報連相・電話・会議', icon: <MessageSquare size={16} /> },
+    { id: 'career_hub', label: 'キャリア戦略・求人分析', icon: <Compass size={16} /> },
+    { id: 'resume_coach', label: '履歴書・職務経歴書', icon: <FileCheck size={16} /> },
+    { id: 'interview_sim', label: '面接シミュレーター', icon: <Users2 size={16} /> },
     { id: 'culture', label: getBusinessTabName('culture', language), icon: <Shield size={16} /> },
-    { id: 'interview', label: getBusinessTabName('interview', language), icon: <Users2 size={16} /> },
     { id: 'vocabulary', label: getBusinessTabName('vocabulary', language), icon: <BookA size={16} /> },
     { id: 'exam', label: getBusinessTabName('exam', language), icon: <GraduationCap size={16} /> },
   ];
@@ -255,24 +273,34 @@ export const BusinessJapaneseView: React.FC = () => {
       {activeStudioTab === 'keigo' && <BusinessKeigoStudio />}
 
       {/* ========================================================================= */}
-      {/* TAB 3: BUSINESS EMAIL STUDIO */}
+      {/* TAB 3: BUSINESS EMAIL STUDIO (4-Step Upgraded) */}
       {/* ========================================================================= */}
       {activeStudioTab === 'email' && <BusinessEmailStudio />}
 
       {/* ========================================================================= */}
-      {/* TAB 4: WORKPLACE SCENARIOS & TELEPHONE */}
+      {/* TAB 4: HORENSO, TELEPHONE & MEETING STUDIO */}
       {/* ========================================================================= */}
-      {activeStudioTab === 'scenarios' && <BusinessScenarioPlayer />}
+      {activeStudioTab === 'horenso' && <HorensoStudio />}
 
       {/* ========================================================================= */}
-      {/* TAB 5: WORKPLACE CULTURE & ETIQUETTE */}
+      {/* TAB 5: CAREER STRATEGY & JOB DESCRIPTION ANALYZER */}
+      {/* ========================================================================= */}
+      {activeStudioTab === 'career_hub' && <CareerCoachStudio />}
+
+      {/* ========================================================================= */}
+      {/* TAB 6: RIREKISHO & SHOKUMU KEIREKISHO COACH */}
+      {/* ========================================================================= */}
+      {activeStudioTab === 'resume_coach' && <ResumeCoachStudio />}
+
+      {/* ========================================================================= */}
+      {/* TAB 7: 10-MODE JOB INTERVIEW SIMULATOR */}
+      {/* ========================================================================= */}
+      {activeStudioTab === 'interview_sim' && <InterviewSimulator />}
+
+      {/* ========================================================================= */}
+      {/* TAB 8: WORKPLACE CULTURE & ETIQUETTE */}
       {/* ========================================================================= */}
       {activeStudioTab === 'culture' && <BusinessCultureGuide />}
-
-      {/* ========================================================================= */}
-      {/* TAB 6: JOB INTERVIEW & CAREER PREPARATION */}
-      {/* ========================================================================= */}
-      {activeStudioTab === 'interview' && <BusinessInterviewStudio />}
 
       {/* ========================================================================= */}
       {/* TAB 7: BUSINESS VOCABULARY GLOSSARY */}

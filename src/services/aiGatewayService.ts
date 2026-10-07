@@ -482,4 +482,186 @@ export class AIGatewayService {
       },
     ];
   }
+
+  /**
+   * Evaluate a Job Interview candidate answer using STAR Method and Corporate Japanese standards
+   */
+  public static async evaluateInterviewResponse(
+    questionJp: string,
+    questionEn: string,
+    candidateResponse: string,
+    modeId: string = 'basic_entry'
+  ): Promise<any> {
+    if (isSupabaseConfigured() && candidateResponse.trim().length >= 5) {
+      try {
+        const { data, error } = await supabase.functions.invoke('active-learning', {
+          body: {
+            action: 'interview-eval',
+            questionJp,
+            questionEn,
+            candidateResponse,
+            modeId,
+          },
+        });
+        if (!error && data?.overallScore !== undefined) {
+          return data;
+        }
+      } catch (e) {
+        console.warn('AIGateway: Interview eval error, using local fallback:', e);
+      }
+    }
+
+    // Local deterministic fallback
+    const length = candidateResponse.trim().length;
+    const hasNumbers = /\d+/.test(candidateResponse);
+    const hasPoliteForm = /いたします|存じます|参ります|申しあげます/.test(candidateResponse);
+    const hasCasualVerbs = /やりました|頑張りました|思うので/.test(candidateResponse);
+
+    let baseScore = 75;
+    if (length > 100) baseScore += 8;
+    if (hasNumbers) baseScore += 7;
+    if (hasPoliteForm) baseScore += 5;
+    if (hasCasualVerbs) baseScore -= 10;
+    baseScore = Math.max(50, Math.min(95, baseScore));
+
+    const polished = candidateResponse
+      .replace(/やりました/g, 'に従事いたしました')
+      .replace(/頑張りました/g, '尽力いたしました')
+      .replace(/思うので/g, 'と考えておりますので')
+      .replace(/作りました/g, 'を構築いたしました');
+
+    return {
+      overallScore: baseScore,
+      starScore: Math.min(100, baseScore + 2),
+      keigoScore: hasPoliteForm ? 88 : 74,
+      clarityScore: length > 80 ? 85 : 70,
+      intentAlignmentScore: 80,
+      strengths: [
+        '質問に対して自身の経験と問題意識を明確に伝えている点',
+        hasNumbers ? '定量的指標（数値）を用いて説得力を高めている点' : '前向きな挑戦意欲と熱意が感じられる点',
+      ],
+      areasToImprove: [
+        hasCasualVerbs
+          ? '「やりました」「頑張りました」等の口語を謙譲語・改まった表現へ格上げしましょう'
+          : 'STAR法（状況・課題・行動・成果）の「自発的な工夫と行動」をさらに具体化しましょう',
+        !hasNumbers ? '具体的な数字（期間、人数、達成率%など）を1点盛り込むと説得力が増します' : '結論ファースト（PREP法）の冒頭一言を強調しましょう',
+      ],
+      polishedJapaneseVersion: polished.startsWith('本日は') ? polished : `本日はお時間をいただき誠にありがとうございます。${polished}`,
+      interviewerCommentary:
+        '面接官の視点：熱意と誠実さが十分に伝わってまいります。さらに「自分が自発的に起こした行動」と「具体的な成果（数値）」を明確に対比させることで、より高い評価を得られます。',
+    };
+  }
+
+  /**
+   * Polish raw resume phrasing into high-impact Japanese corporate expressions
+   */
+  public static async coachResumePhrase(
+    rawPhrase: string,
+    targetRole: string = 'エンジニア / ビジネス職'
+  ): Promise<{ original: string; polished: string; advice: string; impactScore: number }> {
+    if (isSupabaseConfigured() && rawPhrase.trim().length >= 4) {
+      try {
+        const { data, error } = await supabase.functions.invoke('active-learning', {
+          body: {
+            action: 'resume-coach',
+            rawPhrase,
+            targetRole,
+          },
+        });
+        if (!error && data?.polished) {
+          return data;
+        }
+      } catch (e) {
+        console.warn('AIGateway: Resume coach error, using local fallback:', e);
+      }
+    }
+
+    // Local deterministic fallback
+    let polished = rawPhrase
+      .replace(/作りました/g, 'の設計および開発に従事いたしました')
+      .replace(/やりました/g, 'を担当し、推進いたしました')
+      .replace(/頑張りました/g, 'に尽力し、成果を創出いたしました')
+      .replace(/話しました/g, 'との緊密な連携と合意形成を図りました');
+
+    if (!polished.endsWith('。') && !polished.endsWith('いたしました')) {
+      polished += 'に従事いたしました。';
+    }
+
+    return {
+      original: rawPhrase,
+      polished,
+      advice:
+        '能動的な動詞（「主導」「推進」「構築」「寄与」）と、具体的な役割の範囲を明示することで、採用担当者の目に留まりやすくなります。',
+      impactScore: 86,
+    };
+  }
+
+  /**
+   * Review business email draft against 7-part Japanese standard and keigo rules
+   */
+  public static async reviewBusinessEmail(
+    draft: string,
+    category: string = 'business_inquiry',
+    audience: string = 'external'
+  ): Promise<{
+    overallScore: number;
+    politenessScore: number;
+    structureScore: number;
+    feedback: string;
+    suggestedImprovements: string[];
+    professionalRewrite: string;
+  }> {
+    if (isSupabaseConfigured() && draft.trim().length >= 10) {
+      try {
+        const { data, error } = await supabase.functions.invoke('active-learning', {
+          body: {
+            action: 'business-email-review',
+            draft,
+            category,
+            audience,
+          },
+        });
+        if (!error && data?.overallScore !== undefined) {
+          return data;
+        }
+      } catch (e) {
+        console.warn('AIGateway: Business email review error, using fallback:', e);
+      }
+    }
+
+    // Local deterministic rule-based evaluation
+    const hasSubject = /件名|【.*】/.test(draft);
+    const hasGreeting = /お世話になっております|拝啓|平素は/.test(draft);
+    const hasSignoff = /よろしくお願い申し上げます|よろしくお願いいたします/.test(draft);
+    const hasSignature = /TEL|〒|Email|株式会社|署名/.test(draft);
+    const hasCushion = /恐縮ですが|恐れ入りますが|幸いに存じます|ご教示/.test(draft);
+
+    let score = 70;
+    if (hasSubject) score += 6;
+    if (hasGreeting) score += 6;
+    if (hasSignoff) score += 6;
+    if (hasSignature) score += 6;
+    if (hasCushion) score += 6;
+
+    const improvements: string[] = [];
+    if (!hasSubject) improvements.push('件名に【用件】と会社名・氏名を明記すると相手が優先度を判断しやすくなります。');
+    if (!hasCushion) improvements.push('「お忙しいところ恐縮ですが」「幸甚に存じます」などのクッション言葉を添えましょう。');
+    if (!hasSignature) improvements.push('メール末尾に会社名・部署名・氏名・連絡先を記載した正式な署名ブロックを追加しましょう。');
+    if (improvements.length === 0) {
+      improvements.push('全体の改行と箇条書きを活用し、スマートフォンでの視認性をさらに向上させましょう。');
+    }
+
+    return {
+      overallScore: Math.min(95, score),
+      politenessScore: hasCushion ? 88 : 76,
+      structureScore: hasSubject && hasGreeting && hasSignoff ? 90 : 75,
+      feedback:
+        '日本のビジネスメールの標準的なマナーが適切に反映されています。クッション言葉の活用と箇条書きによる視認性の確保を意識することで、よりスマートで信頼感のあるメールになります。',
+      suggestedImprovements: improvements,
+      professionalRewrite: draft.includes('平素は')
+        ? draft
+        : `いつも大変お世話になっております。\n\n${draft}\n\nお忙しいところ誠に恐れ入りますが、何卒よろしくお願い申し上げます。`,
+    };
+  }
 }
+

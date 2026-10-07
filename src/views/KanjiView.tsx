@@ -21,6 +21,8 @@ import {
   GraduationCap,
   Play,
   RotateCcw,
+  GitCompare,
+  Network,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -32,6 +34,8 @@ import { KanjiCanvas } from '../components/kanji/KanjiCanvas';
 import { StrokeOrderPlayer } from '../components/kanji/StrokeOrderPlayer';
 import { KanjiQuickQuiz } from '../components/kanji/KanjiQuickQuiz';
 import { KanjiSchoolPrinciplesModal } from '../components/kanji/KanjiSchoolPrinciplesModal';
+import { KanjiConfusionStudio } from '../components/kanji/KanjiConfusionStudio';
+import { KanjiVocabularyNetwork } from '../components/kanji/KanjiVocabularyNetwork';
 import { AudioButton } from '../components/common/AudioButton';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { generate5ExampleSentences } from '../data/generators/kanjiGenerator';
@@ -45,8 +49,8 @@ export const KanjiView: React.FC = () => {
   const { srsItems, toggleFavorite, getItemProgress } = useSRS();
   const { t, language } = useI18n();
 
-  // Subcategory tabs: 'kanji' (Kanji Studio) vs 'radicals' (Radicals Studio)
-  const [activeTab, setActiveTab] = useState<'kanji' | 'radicals'>('kanji');
+  // Subcategory tabs: 'kanji' | 'radicals' | 'confusion' | 'network'
+  const [activeTab, setActiveTab] = useState<'kanji' | 'radicals' | 'confusion' | 'network'>('kanji');
 
   // Search & Filter for Kanji
   const [searchQuery, setSearchQuery] = useState('');
@@ -258,21 +262,33 @@ export const KanjiView: React.FC = () => {
             {t('kanji.badge')}
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3 mt-1">
-            <span>{activeTab === 'kanji' ? `${activeLevel} ${t('kanji.title')}` : t('kanji.tabRadicals', 'Radicals Studio (部首)')}</span>
+            <span>
+              {activeTab === 'kanji'
+                ? `${activeLevel} ${t('kanji.title')}`
+                : activeTab === 'radicals'
+                ? t('kanji.tabRadicals', 'Radicals Studio (部首)')
+                : activeTab === 'confusion'
+                ? '似ている漢字・混同対策スタジオ (Confusion Studio)'
+                : '5層語彙ネットワーク (Vocab Connection Network)'}
+            </span>
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             {activeTab === 'kanji'
               ? t('kanji.subtitle')
-              : 'Master the building blocks of Japanese characters: Important 69 core radicals and all 240 comprehensive radicals.'}
+              : activeTab === 'radicals'
+              ? 'Master the building blocks of Japanese characters: Important 69 core radicals and all 240 comprehensive radicals.'
+              : activeTab === 'confusion'
+              ? 'Side-by-side visual discrimination, radical role analysis, and contextual sentence quizzes for easily confused Kanji.'
+              : 'Explore how Kanji compounds connect into vocabulary, grammar patterns, living sentences, and reading comprehension.'}
           </p>
         </div>
 
         {/* Subcategory Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0 self-start md:self-auto">
+        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0 self-start md:self-auto overflow-x-auto scrollbar-none">
           <button
             type="button"
             onClick={() => setActiveTab('kanji')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === 'kanji'
                 ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -284,7 +300,7 @@ export const KanjiView: React.FC = () => {
           <button
             type="button"
             onClick={() => setActiveTab('radicals')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all ${
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
               activeTab === 'radicals'
                 ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
@@ -295,6 +311,30 @@ export const KanjiView: React.FC = () => {
             <span className="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold">
               240
             </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('confusion')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === 'confusion'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <GitCompare size={16} />
+            <span>似ている漢字 (Confusion Studio)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('network')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === 'network'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Network size={16} />
+            <span>語彙ネットワーク (Vocab Network)</span>
           </button>
         </div>
       </div>
@@ -552,11 +592,20 @@ export const KanjiView: React.FC = () => {
                 {/* Don't Confuse / Visual Traps */}
                 {activeEduDetail?.similarKanji && activeEduDetail.similarKanji.length > 0 && (
                   <div className="p-4 rounded-2xl bg-rose-50/60 dark:bg-rose-950/30 border border-rose-200/70 dark:border-rose-900/40 space-y-2.5">
-                    <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
-                      <AlertCircle size={16} />
-                      <h4 className="text-xs font-bold uppercase tracking-wider">
-                        似ている漢字に注意 (Don't Confuse / Visual Traps)
-                      </h4>
+                    <div className="flex items-center justify-between">
+                      <div className="flex items-center gap-2 text-rose-700 dark:text-rose-300">
+                        <AlertCircle size={16} />
+                        <h4 className="text-xs font-bold uppercase tracking-wider">
+                          似ている漢字に注意 (Don't Confuse / Visual Traps)
+                        </h4>
+                      </div>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('confusion')}
+                        className="text-[11px] font-bold text-rose-600 dark:text-rose-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <span>混同対策スタジオ ➔</span>
+                      </button>
                     </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {activeEduDetail.similarKanji.map((sim, sIdx) => {
@@ -603,9 +652,19 @@ export const KanjiView: React.FC = () => {
                 {/* Example Vocabulary Compounds */}
                 {activeKanji.exampleVocab && activeKanji.exampleVocab.length > 0 && (
                   <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                    <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
-                      {t('kanji.compounds')}
-                    </h4>
+                    <div className="flex items-center justify-between">
+                      <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
+                        {t('kanji.compounds')}
+                      </h4>
+                      <button
+                        type="button"
+                        onClick={() => setActiveTab('network')}
+                        className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 hover:underline flex items-center gap-1 cursor-pointer"
+                      >
+                        <Network size={13} />
+                        <span>5層語彙ネットワークで探究 ➔</span>
+                      </button>
+                    </div>
                     <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
                       {activeKanji.exampleVocab.map((item, idx) => (
                         <div
@@ -1143,6 +1202,26 @@ export const KanjiView: React.FC = () => {
               </div>
             </div>
           )}
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 3: SIMILAR & EASILY CONFUSED KANJI STUDIO */}
+      {/* ========================================================================= */}
+      {activeTab === 'confusion' && (
+        <div className="space-y-6 animate-fade-in">
+          <KanjiConfusionStudio />
+        </div>
+      )}
+
+      {/* ========================================================================= */}
+      {/* TAB 4: 5-TIER VOCABULARY CONNECTION NETWORK */}
+      {/* ========================================================================= */}
+      {activeTab === 'network' && activeKanji && (
+        <div className="space-y-6 animate-fade-in">
+          <KanjiVocabularyNetwork
+            kanji={activeKanji}
+          />
         </div>
       )}
 

@@ -14,6 +14,7 @@ import {
   Shield,
   Clock,
   ArrowRight,
+  LogIn,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -22,7 +23,7 @@ import { JLPTLevel } from '../types';
 import { GiftRedeemModal } from '../components/common/GiftRedeemModal';
 
 export const ProfileView: React.FC = () => {
-  const { setUpgradeModalOpen, setAuthModalOpen } = useApp();
+  const { setUpgradeModalOpen, setAuthModalOpen, openLoginView } = useApp();
   const { profile, updateProfile, entitlements, isGuest } = useUser();
   const { t } = useI18n();
 
@@ -142,21 +143,32 @@ export const ProfileView: React.FC = () => {
             )}
 
             {isGuest ? (
-              <button
-                type="button"
-                onClick={() => setAuthModalOpen(true)}
-                className="px-4 py-2.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all"
-              >
-                <span>Save Progress (Free Account)</span>
-              </button>
+              <div className="flex flex-wrap items-center gap-2">
+                <button
+                  type="button"
+                  onClick={() => openLoginView('auth')}
+                  className="px-4 py-2.5 rounded-2xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <LogIn size={15} />
+                  <span>Log In / Create Account</span>
+                </button>
+                <button
+                  type="button"
+                  onClick={() => openLoginView('plans')}
+                  className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:opacity-95 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm transition-all cursor-pointer"
+                >
+                  <Crown size={15} />
+                  <span>Subscription Plans (料金)</span>
+                </button>
+              </div>
             ) : entitlements.subscriptionPlan === 'FREE' && entitlements.accountType !== 'ADMIN' ? (
               <button
                 type="button"
-                onClick={() => setUpgradeModalOpen(true)}
-                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all"
+                onClick={() => openLoginView('plans')}
+                className="px-4 py-2.5 rounded-2xl bg-gradient-to-r from-amber-500 to-rose-500 hover:from-amber-600 hover:to-rose-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-md shadow-amber-500/20 transition-all cursor-pointer"
               >
                 <Crown size={15} />
-                <span>Upgrade to PRO / PREMIUM</span>
+                <span>Subscription Plans (料金)</span>
               </button>
             ) : null}
           </div>

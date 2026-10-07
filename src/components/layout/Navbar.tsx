@@ -12,6 +12,9 @@ import {
   Menu,
   Crown,
   Keyboard,
+  LogIn,
+  LogOut,
+  User,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
@@ -31,14 +34,16 @@ export const Navbar: React.FC = () => {
     setUpgradeModalOpen,
     setAuthModalOpen,
     setActiveView,
+    openLoginView,
   } = useApp();
 
-  const { profile, updateProfile, entitlements, isGuest } = useUser();
+  const { profile, updateProfile, entitlements, isGuest, logout } = useUser();
   const { language, setLanguage, supportedLanguages, t } = useI18n();
   const { isOpen: isKeyboardOpen, toggleKeyboard } = useJapaneseKeyboard();
 
   const [langMenuOpen, setLangMenuOpen] = useState(false);
   const [themeMenuOpen, setThemeMenuOpen] = useState(false);
+  const [userMenuOpen, setUserMenuOpen] = useState(false);
 
   const levelInfo = JLPT_LEVELS[activeLevel];
 
@@ -95,7 +100,7 @@ export const Navbar: React.FC = () => {
                     type="button"
                     onClick={(e) => {
                       e.stopPropagation();
-                      setActiveView('login');
+                      openLoginView('auth');
                     }}
                     className="px-1.5 py-0.5 rounded bg-brand-50 hover:bg-brand-100 text-brand-600 dark:bg-brand-950/40 dark:text-brand-300 border border-brand-200 dark:border-brand-800 text-[10px] font-bold uppercase tracking-wider transition-colors cursor-pointer"
                     title="Click to view subscription plans or create an account"
@@ -287,24 +292,104 @@ export const Navbar: React.FC = () => {
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
           </button>
 
-          {/* Profile Avatar / Sign In */}
-          {profile.name === 'Guest Learner' ? (
+          {/* Subscription Plans Quick Trigger */}
+          <button
+            type="button"
+            onClick={() => openLoginView('plans')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-indigo-500/10 hover:from-amber-500/20 hover:to-indigo-500/20 text-amber-700 dark:text-amber-300 border border-amber-300/40 dark:border-amber-600/40 font-bold text-xs shadow-2xs transition-all cursor-pointer"
+            title="View Subscription Plans & Pricing (料金プラン)"
+          >
+            <Crown size={14} className="text-amber-500" />
+            <span className="hidden sm:inline">Plans</span>
+            <span className="text-[10px] text-amber-600 dark:text-amber-400 font-japanese hidden md:inline">料金</span>
+          </button>
+
+          {/* Profile Avatar or Prominent Sign In */}
+          {isGuest ? (
             <button
               type="button"
-              onClick={() => setActiveView('login')}
-              className="px-3 py-1.5 rounded-xl bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs shadow-sm transition-all flex items-center gap-1.5 cursor-pointer"
+              onClick={() => openLoginView('auth')}
+              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm shadow-brand-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+              title="Sign in with Supabase email for AI features and sync"
             >
-              <span>Sign In</span>
+              <LogIn size={14} />
+              <span>Log In</span>
+              <span className="text-[10px] opacity-80 hidden sm:inline font-japanese">ログイン</span>
             </button>
           ) : (
-            <button
-              type="button"
-              onClick={() => setActiveView('profile')}
-              title={`Logged in as ${profile.name}`}
-              className="w-9 h-9 rounded-xl bg-slate-100 dark:bg-slate-800 border-2 border-slate-200 dark:border-slate-700 flex items-center justify-center text-lg hover:border-brand-500 transition-all overflow-hidden"
-            >
-              {profile.avatar}
-            </button>
+            <div className="relative">
+              <button
+                type="button"
+                onClick={() => setUserMenuOpen(!userMenuOpen)}
+                title={`Logged in as ${profile.email || profile.name}`}
+                className="flex items-center gap-2 p-1 pl-2 rounded-xl bg-slate-100 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 hover:border-brand-500 transition-all cursor-pointer"
+              >
+                <span className="text-xs font-semibold text-slate-700 dark:text-slate-300 max-w-[100px] truncate hidden md:inline">
+                  {profile.email || profile.name}
+                </span>
+                <div className="w-7 h-7 rounded-lg bg-white dark:bg-slate-700 flex items-center justify-center text-sm shadow-2xs">
+                  {profile.avatar}
+                </div>
+              </button>
+
+              {userMenuOpen && (
+                <div className="absolute right-0 mt-2 w-56 bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 py-2 z-50 animate-fade-in divide-y divide-slate-100 dark:divide-slate-800">
+                  <div className="px-4 py-2">
+                    <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Signed in as</p>
+                    <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{profile.email || profile.name}</p>
+                    <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
+                      {entitlements.accountType === 'ADMIN' ? '🛡️ SuperAdmin' : entitlements.subscriptionPlan + ' Plan'}
+                    </span>
+                  </div>
+
+                  <div className="py-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setActiveView('profile');
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                    >
+                      <User size={14} /> My Profile & Stats
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        openLoginView('plans');
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50/50 dark:hover:bg-indigo-950/30 flex items-center gap-2 font-bold cursor-pointer"
+                    >
+                      <Crown size={14} /> Subscription Plans (料金)
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        openLoginView('auth');
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-800 flex items-center gap-2 cursor-pointer"
+                    >
+                      <LogIn size={14} /> Switch Account / Re-login
+                    </button>
+                  </div>
+
+                  <div className="pt-1">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        logout();
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2 font-semibold cursor-pointer"
+                    >
+                      <LogOut size={14} /> Log Out (Switch to Guest)
+                    </button>
+                  </div>
+                </div>
+              )}
+            </div>
           )}
         </div>
       </div>

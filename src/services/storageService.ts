@@ -21,8 +21,8 @@ const KEYS = {
 };
 
 export const defaultProfile: UserProfile = {
-  id: 'user-default-1',
-  name: 'Takeshi Learner',
+  id: 'guest',
+  name: 'Guest Learner',
   avatar: '⛩️',
   targetLevel: 'N5',
   currentLevel: 'N5',
@@ -53,7 +53,12 @@ export class StorageService {
     try {
       const data = localStorage.getItem(KEYS.PROFILE);
       if (data) {
-        return { ...defaultProfile, ...JSON.parse(data) };
+        const parsed = JSON.parse(data);
+        if (parsed.name === 'Takeshi Learner' && (!parsed.email || parsed.email === 'guest@jlpt.study')) {
+          parsed.name = 'Guest Learner';
+          parsed.id = 'guest';
+        }
+        return { ...defaultProfile, ...parsed };
       }
     } catch (e) {
       console.error('Error loading profile', e);

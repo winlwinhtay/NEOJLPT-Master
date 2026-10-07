@@ -33,10 +33,32 @@ import { GiftRedeemModal } from '../components/common/GiftRedeemModal';
 import confetti from 'canvas-confetti';
 
 export const LoginView: React.FC = () => {
-  const { setActiveView, setUpgradeModalOpen } = useApp();
+  const { setActiveView, setUpgradeModalOpen, loginInitialTab, setLoginInitialTab } = useApp();
   const { profile, login, register, logout, isGuest, entitlements, updateProfile } = useUser();
 
-  const [activeTab, setActiveTab] = useState<'auth' | 'plans'>('auth');
+  const [activeTab, setActiveTab] = useState<'auth' | 'plans'>(() => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes('plan')) return 'plans';
+    }
+    return loginInitialTab || 'auth';
+  });
+
+  React.useEffect(() => {
+    if (loginInitialTab) {
+      setActiveTab(loginInitialTab);
+    }
+  }, [loginInitialTab]);
+
+  const handleTabSwitch = (tab: 'auth' | 'plans') => {
+    setActiveTab(tab);
+    setLoginInitialTab(tab);
+    if (typeof window !== 'undefined') {
+      try {
+        window.location.hash = tab === 'plans' ? '#plans' : '#login';
+      } catch (_) {}
+    }
+  };
   const [authMode, setAuthMode] = useState<'login' | 'register'>('login');
 
   // Form states
@@ -228,7 +250,7 @@ export const LoginView: React.FC = () => {
         <div className="inline-flex p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
           <button
             type="button"
-            onClick={() => setActiveTab('auth')}
+            onClick={() => handleTabSwitch('auth')}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'auth'
                 ? 'bg-white dark:bg-slate-900 text-brand-600 dark:text-brand-400 shadow-sm'
@@ -240,7 +262,7 @@ export const LoginView: React.FC = () => {
           </button>
           <button
             type="button"
-            onClick={() => setActiveTab('plans')}
+            onClick={() => handleTabSwitch('plans')}
             className={`flex items-center gap-2 px-6 py-2.5 rounded-xl text-xs sm:text-sm font-bold transition-all cursor-pointer ${
               activeTab === 'plans'
                 ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'

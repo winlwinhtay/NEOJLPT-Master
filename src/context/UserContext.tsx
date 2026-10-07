@@ -5,6 +5,7 @@ import { supabase, isSupabaseConfigured } from '../services/supabaseClient';
 import { SupabaseSyncService } from '../services/supabaseSyncService';
 import { UserEntitlements, BillingCycle } from '../types/monetization';
 import { EntitlementService, isSuperAdminEmail, ADMIN_ENTITLEMENTS } from '../services/entitlementService';
+import { AuthService } from '../services/authService';
 import { GuestMigrationService } from '../services/guestMigrationService';
 import confetti from 'canvas-confetti';
 
@@ -81,7 +82,7 @@ export const UserProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [entitlements, setEntitlements] = useState<UserEntitlements>(DEFAULT_GUEST_ENTITLEMENTS);
   const [guestSavePromptOpen, setGuestSavePromptOpen] = useState(false);
 
-  const isGuest = !profile.id || profile.id === 'guest' || profile.id.startsWith('guest') || profile.email === 'guest@jlpt.study';
+  const isGuest = !AuthService.isSupabaseEmailUser(profile);
 
   const refreshEntitlements = useCallback(async () => {
     if (isSuperAdminEmail(profile.email) || profile.role === 'admin') {

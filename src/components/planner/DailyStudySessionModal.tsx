@@ -20,6 +20,8 @@ import { useUser } from '../../context/UserContext';
 import { useSRS } from '../../context/SRSContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { TranslationToggleButton } from '../common/TranslationToggleButton';
+import { translateExampleSentence } from '../../data/translations/multilingualEngine';
+import { SupportedLanguage } from '../../types/i18n';
 
 interface DailyStudySessionModalProps {
   isOpen: boolean;
@@ -37,6 +39,8 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
   const { profile, addXP, logActivity } = useUser();
   const { rateItem } = useSRS();
   const { language } = useI18n();
+  const activeLang = ((profile.translationLanguage || language || 'en') as SupportedLanguage);
+  const isTransOn = profile.showTranslation !== false;
 
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [showVocabBack, setShowVocabBack] = useState(false);
@@ -157,17 +161,19 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
 
                       <div>
                         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-1">
-                          Grammatical Explanation
+                          {isTransOn && activeLang === 'my' ? 'သဒ္ဒါရှင်းလင်းချက် (Grammar Explanation)' : 'Grammatical Explanation'}
                         </span>
                         <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                          {currentTask.contentData.explanation}
+                          {isTransOn
+                            ? (currentTask.contentData.explanationsByLang?.[activeLang] || currentTask.contentData.explanation)
+                            : currentTask.contentData.explanation}
                         </p>
                       </div>
 
                       {currentTask.contentData.examples && currentTask.contentData.examples.length > 0 && (
                         <div className="space-y-2 pt-2">
                           <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                            Example Sentences:
+                            {isTransOn && activeLang === 'my' ? 'စံပြ ဝါကျလေ့လာရန်:' : 'Example Sentences:'}
                           </span>
                           {currentTask.contentData.examples.slice(0, 2).map((ex: any, idx: number) => (
                             <div
@@ -178,9 +184,13 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                                 <p className="font-japanese font-bold text-slate-900 dark:text-white">
                                   {ex.jp}
                                 </p>
-                                <p className="text-slate-400 text-[11px]">{ex.reading}</p>
-                                {profile.showTranslation !== false && (
-                                  <p className="text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                                <p className="text-slate-400 text-[11px] font-japanese">{ex.reading}</p>
+                                {isTransOn ? (
+                                  <p className="text-slate-600 dark:text-slate-300 mt-1">
+                                    {ex.translationsByLang?.[activeLang] || translateExampleSentence(ex.jp, ex.en, activeLang)}
+                                  </p>
+                                ) : (
+                                  <span className="text-[10px] text-slate-400 italic block mt-1">Translation hidden (Trans OFF)</span>
                                 )}
                               </div>
                               <AudioButton text={ex.jp} size="sm" />
@@ -200,22 +210,24 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                       <div className="grid grid-cols-2 gap-3 text-left text-xs">
                         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                           <span className="text-[10px] text-slate-400 font-bold block">Onyomi:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-bold text-slate-800 dark:text-slate-200 font-japanese">
                             {currentTask.contentData.onyomi?.join(', ') || '-'}
                           </span>
                         </div>
                         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700">
                           <span className="text-[10px] text-slate-400 font-bold block">Kunyomi:</span>
-                          <span className="font-bold text-slate-800 dark:text-slate-200">
+                          <span className="font-bold text-slate-800 dark:text-slate-200 font-japanese">
                             {currentTask.contentData.kunyomi?.join(', ') || '-'}
                           </span>
                         </div>
                       </div>
-                      {profile.showTranslation !== false ? (
+                      {isTransOn ? (
                         <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-left text-xs">
-                          <span className="text-[10px] text-slate-400 font-bold block">Meaning:</span>
+                          <span className="text-[10px] text-slate-400 font-bold block">
+                            {activeLang === 'my' ? 'အဓိပ္ပာယ်:' : 'Meaning:'}
+                          </span>
                           <span className="font-bold text-slate-900 dark:text-white text-sm">
-                            {currentTask.contentData.meaningsByLang?.[language] || currentTask.contentData.meaning}
+                            {currentTask.contentData.meaningsByLang?.[activeLang] || currentTask.contentData.meaning}
                           </span>
                         </div>
                       ) : (
@@ -232,7 +244,7 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                       <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 leading-relaxed font-japanese">
                         {currentTask.contentData.passagePlain || currentTask.contentData.passage}
                       </div>
-                      {profile.showTranslation !== false && (
+                      {isTransOn && (
                         <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
                           {currentTask.contentData.translationEn}
                         </p>
@@ -257,8 +269,10 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                                 <span className="font-japanese text-slate-900 dark:text-white">
                                   {line.text}
                                 </span>
-                                {profile.showTranslation !== false && (
-                                  <p className="text-[11px] text-slate-400">{line.translationEn}</p>
+                                {isTransOn && (
+                                  <p className="text-[11px] text-slate-400">
+                                    {translateExampleSentence(line.text, line.translationEn, activeLang)}
+                                  </p>
                                 )}
                               </div>
                               <AudioButton text={line.text} size="sm" />

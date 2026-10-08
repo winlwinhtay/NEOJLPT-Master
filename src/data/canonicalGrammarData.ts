@@ -6,7 +6,7 @@
 // ============================================================================
 
 import { GrammarItem } from '../types';
-import { getLocalizedGrammarContent } from './translations/multilingualEngine';
+import { getLocalizedGrammarContent, registerExampleSentence } from './translations/multilingualEngine';
 
 const RAW_CANONICAL_ITEMS: Omit<GrammarItem, 'meaningsByLang' | 'explanationsByLang'>[] = [
   {
@@ -5786,3 +5786,13 @@ export const CANONICAL_GRAMMAR: GrammarItem[] = RAW_CANONICAL_ITEMS.map((item) =
     explanationsByLang,
   };
 });
+
+// Auto-register all canonical grammar example sentences into the multilingual engine
+CANONICAL_GRAMMAR.forEach((g) => {
+  g.examples?.forEach((ex) => {
+    if (ex.translationsByLang) {
+      registerExampleSentence(ex.jp, ex.translationsByLang);
+    }
+  });
+});
+

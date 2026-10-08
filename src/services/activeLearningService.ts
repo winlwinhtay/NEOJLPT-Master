@@ -272,6 +272,8 @@ export class ActiveLearningService {
         if (cached) {
           const parsed: ActiveDailyPlan = JSON.parse(cached);
           if (parsed.planDate === today && parsed.userId === profile.userId) {
+            // Re-hydrate items to ensure fresh localized data from CANONICAL_GRAMMAR
+            parsed.items = this.hydratePlanItems(parsed.items, profile.currentLevel);
             return parsed;
           }
         }
@@ -397,21 +399,24 @@ export class ActiveLearningService {
       let subtitle = item.subtitle;
 
       if (item.contentType === 'grammar' || item.skill === 'grammar') {
-        const g = CANONICAL_GRAMMAR.find((x) => x.id === item.contentId);
+        const cleanPattern = (item.title || '').replace(/^Grammar:\s*/, '').replace(/^Grammar Focus:\s*/, '').trim();
+        const g = CANONICAL_GRAMMAR.find((x) => x.id === item.contentId || x.pattern === item.contentId || x.pattern === cleanPattern);
         if (g) {
           contentData = g;
           title = `Grammar: ${g.pattern}`;
           subtitle = g.meaning;
         }
       } else if (item.contentType === 'vocab' || item.skill === 'vocabulary') {
-        const v = VOCABULARY_DATA.find((x) => x.id === item.contentId);
+        const cleanWord = (item.title || '').replace(/^Vocab:\s*/, '').replace(/^Vocab Study:\s*/, '').trim();
+        const v = VOCABULARY_DATA.find((x) => x.id === item.contentId || x.word === item.contentId || x.word === cleanWord);
         if (v) {
           contentData = v;
           title = `Vocab: ${v.word}`;
           subtitle = `${v.hiragana} (${v.meaning})`;
         }
       } else if (item.contentType === 'kanji' || item.skill === 'kanji') {
-        const k = KANJI_DATA.find((x) => x.id === item.contentId);
+        const cleanKanji = (item.title || '').replace(/^Kanji:\s*/, '').replace(/^Kanji Study:\s*/, '').trim();
+        const k = KANJI_DATA.find((x) => x.id === item.contentId || x.kanji === item.contentId || x.kanji === cleanKanji);
         if (k) {
           contentData = k;
           title = `Kanji: ${k.kanji}`;

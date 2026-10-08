@@ -5,6 +5,8 @@ import { CANONICAL_GRAMMAR } from '../data/canonicalGrammarData';
 import { VOCABULARY_DATA } from '../data/vocabularySeed';
 import { KANJI_DATA } from '../data/kanjiSeed';
 import { CONFUSION_PAIRS_DATA } from '../data/confusionPairsData';
+import { translateExampleSentence } from '../data/translations/multilingualEngine';
+import { SupportedLanguage } from '../types/i18n';
 
 export interface ExplanationResponse {
   title: string;
@@ -99,7 +101,7 @@ export class AIGatewayService {
       }
 
       // 2. Local Deterministic Curriculum Fallback
-      return this.getLocalCurriculumExplanation(contentId, level);
+      return this.getLocalCurriculumExplanation(contentId, level, supportLanguage);
     })();
 
     this.inFlightExplanations.set(dedupKey, promise);
@@ -156,7 +158,7 @@ export class AIGatewayService {
       }
 
       // Fallback: Local Curriculum Practice Generator
-      return this.getLocalPracticeQuestions(contentId, level, count);
+      return this.getLocalPracticeQuestions(contentId, level, count, supportLanguage);
     })();
 
     this.inFlightPractice.set(dedupKey, promise);
@@ -361,21 +363,37 @@ export class AIGatewayService {
   // =========================================================================
   // LOCAL DETERMINISTIC CURRICULUM FALLBACKS (Zero-Latency, Always Available)
   // =========================================================================
-  private static getLocalCurriculumExplanation(contentId: string, level: JLPTLevel): ExplanationResponse {
+  private static getLocalCurriculumExplanation(
+    contentId: string,
+    level: JLPTLevel,
+    supportLanguage: string = 'en'
+  ): ExplanationResponse {
+    const isMy = supportLanguage === 'my';
+    const activeLang = supportLanguage as SupportedLanguage;
+
     // 1. Check Canonical Grammar
-    const grammar = CANONICAL_GRAMMAR.find((g) => g.id === contentId || g.pattern.includes(contentId));
+    const grammar = CANONICAL_GRAMMAR.find((g) => g.id === contentId || g.pattern === contentId || g.pattern.includes(contentId));
     if (grammar) {
+      const expl = (grammar.explanationsByLang as any)?.[supportLanguage] || grammar.explanation;
+      const meaning = (grammar.meaningsByLang as any)?.[supportLanguage] || grammar.meaning;
       return {
-        title: `Grammar Guide: ${grammar.pattern}`,
-        explanation: grammar.explanation,
+        title: isMy ? `သဒ္ဒါလမ်းညွှန်: ${grammar.pattern}` : `Grammar Guide: ${grammar.pattern}`,
+        explanation: expl,
         structure: grammar.structure,
         examples: grammar.examples.map((ex) => ({
           jp: ex.jp,
           reading: ex.reading,
-          meaning: ex.en,
+          meaning:
+            (ex.translationsByLang as any)?.[supportLanguage] ||
+            translateExampleSentence(ex.jp, ex.en, activeLang) ||
+            ex.en,
         })),
-        commonMistakes: 'Pay careful attention to verb conjugations preceding this pattern.',
-        studyTip: 'Review daily for 3 days to cement pattern recognition.',
+        commonMistakes: isMy
+          ? 'ဤသဒ္ဒါပုံစံရှေ့တွင် ကပ်လိုက်ရမည့် ကြိယာပုံစံ (verb conjugation) ပြောင်းလဲပုံကို အထူးဂရုပြုပါ။'
+          : 'Pay careful attention to verb conjugations preceding this pattern.',
+        studyTip: isMy
+          ? 'မှတ်ဉာဏ်ထဲတွင် စွဲမြဲသွားစေရန် ၃ ရက်ဆက်တိုက် နေ့စဉ် ပြန်လှန်လေ့ကျင့်ပါ။'
+          : 'Review daily for 3 days to cement pattern recognition.',
         _source: 'deterministic_fallback',
       };
     }
@@ -384,13 +402,13 @@ export class AIGatewayService {
     const conf = CONFUSION_PAIRS_DATA.find((c) => c.id === contentId);
     if (conf) {
       return {
-        title: `Confusion Contrast: ${conf.title}`,
+        title: isMy ? `ခွဲခြားလေ့လာခြင်း: ${conf.title}` : `Confusion Contrast: ${conf.title}`,
         explanation: conf.differenceExplanation,
         structure: conf.contrastRule,
         examples: conf.examplesA.map((ex) => ({
           jp: ex.jp,
           reading: ex.reading,
-          meaning: ex.en,
+          meaning: translateExampleSentence(ex.jp, ex.en, activeLang),
         })),
         commonMistakes: `Mistaking ${conf.conceptA} for ${conf.conceptB}.`,
         studyTip: conf.contrastRule,
@@ -401,18 +419,21 @@ export class AIGatewayService {
     // 3. Check Kanji
     const kanji = KANJI_DATA.find((k) => k.id === contentId || k.kanji === contentId);
     if (kanji) {
+      const meaning = (kanji.meaningsByLang as any)?.[supportLanguage] || kanji.meaning;
       return {
-        title: `Kanji Guide: ${kanji.kanji} (${kanji.meaning})`,
-        explanation: `JLPT ${level} Kanji meaning "${kanji.meaning}". Onyomi: ${kanji.onyomi.join(', ')} | Kunyomi: ${kanji.kunyomi.join(', ')}.`,
+        title: isMy ? `ကန်ဂျီလမ်းညွှန်: ${kanji.kanji} (${meaning})` : `Kanji Guide: ${kanji.kanji} (${meaning})`,
+        explanation: isMy
+          ? `JLPT ${level} အဆင့် ကန်ဂျီဖြစ်ပြီး အဓိပ္ပာယ်မှာ "${meaning}" ဖြစ်သည်။ Onyomi: ${kanji.onyomi.join(', ')} | Kunyomi: ${kanji.kunyomi.join(', ')}.`
+          : `JLPT ${level} Kanji meaning "${kanji.meaning}". Onyomi: ${kanji.onyomi.join(', ')} | Kunyomi: ${kanji.kunyomi.join(', ')}.`,
         structure: `Radicals: ${kanji.radicals?.join(', ') || 'N/A'} • Strokes: ${kanji.strokeCount}`,
         examples: [
           {
             jp: `${kanji.kanji} (${kanji.kunyomi[0] || kanji.onyomi[0] || ''})`,
             reading: kanji.kunyomi[0] || kanji.onyomi[0] || '',
-            meaning: kanji.meaning,
+            meaning,
           },
         ],
-        studyTip: 'Practice stroke order to internalize radical proportions.',
+        studyTip: isMy ? 'ရေးဆွဲပုံအစဉ် (stroke order) အတိုင်း လေ့ကျင့်ရေးသားပါ။' : 'Practice stroke order to internalize radical proportions.',
         _source: 'deterministic_fallback',
       };
     }
@@ -420,34 +441,41 @@ export class AIGatewayService {
     // 4. Check Vocabulary
     const vocab = VOCABULARY_DATA.find((v) => v.id === contentId || v.word === contentId);
     if (vocab) {
+      const meaning = (vocab.meaningsByLang as any)?.[supportLanguage] || vocab.meaning;
       return {
-        title: `Vocabulary Tip: ${vocab.word} (${vocab.hiragana})`,
-        explanation: `Meaning: ${vocab.meaning}. Part of speech: ${vocab.partOfSpeech || 'Noun'}. JLPT ${level} core word.`,
+        title: isMy ? `ဝေါဟာရလမ်းညွှန်: ${vocab.word} (${vocab.hiragana})` : `Vocabulary Tip: ${vocab.word} (${vocab.hiragana})`,
+        explanation: isMy
+          ? `အဓိပ္ပာယ်: ${meaning}။ ဝါစင်္ဂ: ${vocab.partOfSpeech || 'နာမ်'}။ JLPT ${level} အဓိကဝေါဟာရ။`
+          : `Meaning: ${vocab.meaning}. Part of speech: ${vocab.partOfSpeech || 'Noun'}. JLPT ${level} core word.`,
         structure: `${vocab.word} (${vocab.hiragana})`,
         examples: [
           {
             jp: vocab.exampleJp || `${vocab.word}を使います。`,
             reading: vocab.exampleReading || `${vocab.hiragana}をつかいます。`,
-            meaning: vocab.exampleEn || `Using ${vocab.word}.`,
+            meaning: translateExampleSentence(vocab.exampleJp || `${vocab.word}を使います。`, vocab.exampleEn || `Using ${vocab.word}.`, activeLang),
           },
         ],
-        studyTip: 'Use in a sentence today to reinforce retention.',
+        studyTip: isMy ? 'မှတ်ဉာဏ်ခိုင်မာစေရန် ယနေ့ ဝါကျဖွဲ့လေ့ကျင့်ကြည့်ပါ။' : 'Use in a sentence today to reinforce retention.',
         _source: 'deterministic_fallback',
       };
     }
 
     // Generic Fallback
     return {
-      title: `Curriculum Guide for ${level}`,
-      explanation: `Mastering this Japanese pattern requires understanding structural placement and conversational formality.`,
+      title: isMy ? `JLPT ${level} သင်ရိုးညွှန်းတမ်း လမ်းညွှန်` : `Curriculum Guide for ${level}`,
+      explanation: isMy
+        ? 'ဤဂျပန်ဘာသာ သဒ္ဒါပုံစံကို တတ်ကျွမ်းရန် ဝါကျတည်ဆောက်ပုံနှင့် အခြေအနေအလိုက် ယဉ်ကျေးမှုအဆင့်အတန်းကို နားလည်ရန် လိုအပ်ပါသည်။'
+        : `Mastering this Japanese pattern requires understanding structural placement and conversational formality.`,
       examples: [
         {
           jp: '毎日日本語を勉強しています。',
           reading: 'まいにち にほんごを べんきょうしています。',
-          meaning: 'I study Japanese every single day.',
+          meaning: isMy ? 'နေ့တိုင်း ဂျပန်စာ လေ့လာနေပါသည်။' : 'I study Japanese every single day.',
         },
       ],
-      studyTip: 'Spaced repetition transfers concepts into active memory.',
+      studyTip: isMy
+        ? 'Spaced Repetition စနစ်ဖြင့် ပြန်လှန်လေ့ကျင့်ခြင်းသည် မှတ်ဉာဏ်ကို ရေရှည်ခိုင်မာစေသည်။'
+        : 'Spaced repetition transfers concepts into active memory.',
       _source: 'deterministic_fallback',
     };
   }
@@ -455,17 +483,24 @@ export class AIGatewayService {
   private static getLocalPracticeQuestions(
     contentId: string,
     level: JLPTLevel,
-    count: number
+    count: number,
+    supportLanguage: string = 'en'
   ): PracticeQuestionItem[] {
-    const grammar = CANONICAL_GRAMMAR.find((g) => g.id === contentId);
+    const isMy = supportLanguage === 'my';
+    const grammar = CANONICAL_GRAMMAR.find((g) => g.id === contentId || g.pattern === contentId || g.pattern.includes(contentId));
     if (grammar && grammar.examples && grammar.examples.length > 0) {
+      const gMeaning = (grammar.meaningsByLang as any)?.[supportLanguage] || grammar.meaning;
       return grammar.examples.slice(0, count).map((ex, idx) => ({
         id: `q-fallback-${idx}`,
-        prompt: `Complete the sentence: ${ex.jp.replace(grammar.pattern, '【　？　】')}`,
+        prompt: isMy
+          ? `ဝါကျကို ပြီးပြည့်စုံအောင် ဖြည့်ပါ: ${ex.jp.replace(grammar.pattern, '【　？　】')}`
+          : `Complete the sentence: ${ex.jp.replace(grammar.pattern, '【　？　】')}`,
         options: [grammar.pattern, '〜ないで', '〜ながら', '〜そうだ'],
         correctIndex: 0,
         correctAnswer: grammar.pattern,
-        explanation: `The sentence requires 「${grammar.pattern}」 (${grammar.meaning}).`,
+        explanation: isMy
+          ? `ဤဝါကျတွင် 「${grammar.pattern}」 (${gMeaning}) လိုအပ်ပါသည်။`
+          : `The sentence requires 「${grammar.pattern}」 (${grammar.meaning}).`,
         _source: 'curriculum_fallback',
       }));
     }
@@ -473,11 +508,15 @@ export class AIGatewayService {
     return [
       {
         id: 'q-fallback-gen',
-        prompt: `Choose the correct form to complete the sentence for JLPT ${level}:`,
+        prompt: isMy
+          ? `JLPT ${level} အတွက် ဝါကျကို ပြီးပြည့်စုံစေမည့် မှန်ကန်သော ပုံစံကို ရွေးချယ်ပါ:`
+          : `Choose the correct form to complete the sentence for JLPT ${level}:`,
         options: ['適切な表現', '違和感のある表現', '間違い', '不完全'],
         correctIndex: 0,
         correctAnswer: '適切な表現',
-        explanation: 'Select the natural Japanese grammatical structure for this context.',
+        explanation: isMy
+          ? 'ဤအခြေအနေအတွက် သဘာဝကျသော ဂျပန်သဒ္ဒါတည်ဆောက်ပုံကို ရွေးချယ်ပါ။'
+          : 'Select the natural Japanese grammatical structure for this context.',
         _source: 'curriculum_fallback',
       },
     ];

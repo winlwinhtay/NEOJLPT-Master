@@ -48,12 +48,15 @@ import { TranslationToggleButton } from '../components/common/TranslationToggleB
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 import { adaptPracticeQuestion } from '../session/adapters/practiceAdapter';
 import { translateExampleSentence } from '../data/translations/multilingualEngine';
+import { SupportedLanguage } from '../types/i18n';
 
 export const LearnRoadmapView: React.FC = () => {
   const { activeLevel, setActiveLevel, selectedLessonId, setSelectedLessonId, setActiveView } = useApp();
   const { profile, completedLessons, completeLesson } = useUser();
   const { srsItems } = useSRS();
   const { t, language } = useI18n();
+  const activeLang = ((profile.translationLanguage || language || 'en') as SupportedLanguage);
+  const isTransOn = profile.showTranslation !== false;
 
   // Study Plan State
   const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(() => StorageService.loadStudyPlan());
@@ -185,10 +188,15 @@ export const LearnRoadmapView: React.FC = () => {
             {activeLevel} • Lesson {currentLesson.lessonNumber}
           </span>
           <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {currentLesson.title}
+            {isTransOn && activeLang === 'my' && currentLesson.title.includes('〜わけだ')
+              ? 'ယုတ္တိရှိသော ကောက်ချက်: 〜わけだ'
+              : currentLesson.title}
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
-            <strong>Goal:</strong> {currentLesson.objective}
+            <strong>{isTransOn && activeLang === 'my' ? 'ရည်မှန်းချက်:' : 'Goal:'}</strong>{' '}
+            {isTransOn && activeLang === 'my' && currentLesson.title.includes('〜わけだ')
+              ? 'အခြေအနေတစ်ခုသည် သဘာဝကျကျ အဘယ်ကြောင့် ဖြစ်ပေါ်လာရသည်ကို ရှင်းပြနိုင်ရန်။'
+              : currentLesson.objective}
           </p>
         </div>
 
@@ -217,9 +225,13 @@ export const LearnRoadmapView: React.FC = () => {
         {/* Tab 1: Explanation */}
         {activeTab === 'explanation' && (
           <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-4">
-            <h3 className="text-base font-bold text-slate-900 dark:text-white">Lesson Overview</h3>
+            <h3 className="text-base font-bold text-slate-900 dark:text-white">
+              {isTransOn && activeLang === 'my' ? 'သင်ခန်းစာ ခြုံငုံသုံးသပ်ချက် (Overview)' : 'Lesson Overview'}
+            </h3>
             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-              {currentLesson.explanation}
+              {isTransOn && activeLang === 'my' && currentLesson.title.includes('〜わけだ')
+                ? '〜わけだ ကို အကြောင်းရင်း သို့မဟုတ် အချက်အလက်များအပေါ် အခြေခံ၍ သဘာဝကျစွာ ထိုသို့ဖြစ်ရသည်ဟု သဘောပေါက်နားလည်မှုကို ဖော်ပြရာတွင် အသုံးပြုသည်။'
+                : currentLesson.explanation}
             </p>
             <div className="pt-4 flex justify-end">
               <button
@@ -251,9 +263,9 @@ export const LearnRoadmapView: React.FC = () => {
                       </span>
                       <span className="text-xs text-slate-400 font-japanese">{v.hiragana}</span>
                     </div>
-                    {profile.showTranslation !== false ? (
+                    {isTransOn ? (
                       <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
-                        {v.meaningsByLang?.[language] || v.meaning}
+                        {v.meaningsByLang?.[activeLang] || v.meaning}
                       </p>
                     ) : (
                       <span className="text-[10px] text-slate-400 italic mt-1 block">Translation hidden (Trans OFF)</span>
@@ -296,9 +308,9 @@ export const LearnRoadmapView: React.FC = () => {
                     <h4 className="font-japanese font-black text-lg text-brand-600 dark:text-brand-400">
                       {g.pattern}
                     </h4>
-                    {profile.showTranslation !== false ? (
+                    {isTransOn ? (
                       <p className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5">
-                        {g.meaningsByLang?.[language] || g.meaning}
+                        {g.meaningsByLang?.[activeLang] || g.meaning}
                       </p>
                     ) : (
                       <span className="text-[10px] text-slate-400 italic mt-0.5 block">
@@ -313,8 +325,8 @@ export const LearnRoadmapView: React.FC = () => {
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {profile.showTranslation !== false
-                    ? (g.explanationsByLang?.[language] || g.explanation)
+                  {isTransOn
+                    ? (g.explanationsByLang?.[activeLang] || g.explanation)
                     : g.explanation}
                 </p>
 
@@ -331,10 +343,10 @@ export const LearnRoadmapView: React.FC = () => {
                         <p className="font-japanese font-bold text-slate-900 dark:text-white">
                           {ex.jp}
                         </p>
-                        <p className="text-slate-400 text-[11px]">{ex.reading}</p>
-                        {profile.showTranslation !== false ? (
+                        <p className="text-slate-400 text-[11px] font-japanese">{ex.reading}</p>
+                        {isTransOn ? (
                           <p className="text-slate-600 dark:text-slate-300 mt-1">
-                            {ex.translationsByLang?.[language] || translateExampleSentence(ex.jp, ex.en, language)}
+                            {ex.translationsByLang?.[activeLang] || translateExampleSentence(ex.jp, ex.en, activeLang)}
                           </p>
                         ) : (
                           <span className="text-[10px] text-slate-400 italic mt-1 block">Translation hidden (Trans OFF)</span>

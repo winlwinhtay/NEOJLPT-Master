@@ -236,7 +236,89 @@ export const EXAMPLE_SENTENCE_MULTILINGUAL_MAP: Record<string, Partial<Record<Su
     ar: 'لا داعي للمجيء غدًا.',
     tl: 'Hindi mo kailangang pumunta bukas.',
   },
+  '彼は日本に十年住んでいる。だから日本語が上手なわけだ。': {
+    en: 'He lived in Japan for 10 years. That is why his Japanese is so fluent.',
+    ja: '彼は日本に十年住んでいる。だから日本語が上手なわけだ。',
+    my: 'သူက ဂျပန်မှာ ၁၀ နှစ်နေခဲ့တယ်၊ ဒါကြောင့် ဂျပန်စာ တော်တာ သဘာဝကျတာပေါ့။',
+    th: 'เขาอาศัยอยู่ที่ญี่ปุ่นมา 10 ปี มิน่าล่ะภาษาญี่ปุ่นถึงเก่งขนาดนี้',
+    zh: '他在日本住了十年。难怪日语那么流利。',
+    ko: '그는 일본에 10년 살았다. 그래서 일본어를 잘하는 것이다.',
+    es: 'Vivió en Japón durante 10 años. Por eso su japonés es tan fluido.',
+    fr: 'Il a vécu au Japon pendant 10 ans. C\'est pour cela que son japonais est si fluide.',
+    vi: 'Anh ấy sống ở Nhật 10 năm rồi. Thảo nào tiếng Nhật lưu loát thế.',
+    id: 'Dia tinggal di Jepang selama 10 tahun. Pantas saja bahasa Jepangnya sangat lancar.',
+  },
+  'ご飯を食べている最中に、電話がかかってきました。': {
+    en: 'Right in the middle of eating a meal, the phone rang.',
+    ja: 'ご飯を食べている最中に、電話がかかってきました。',
+    my: 'ထမင်းစားနေဆဲ အလယ်ခေါင်တွင် ဖုန်းလာခဲ့သည်။',
+    th: 'กำลังกินข้าวอยู่แท้ๆ จู่ๆ ก็มีโทรศัพท์เข้ามา',
+    zh: '正吃着饭的时候，电话打进来了。',
+    ko: '밥을 먹고 있는 도중에 전화가 걸려 왔습니다.',
+    es: 'En pleno momento de estar comiendo, sonó el teléfono.',
+    fr: 'En plein milieu du repas, le téléphone a sonné.',
+    vi: 'Ngay giữa lúc đang ăn cơm thì có điện thoại gọi đến.',
+    id: 'Tepat di tengah-tengah sedang makan, telepon berdering.',
+  },
+  '授業の最中に、強い雨が降り始めました。': {
+    en: 'Right in the middle of class, it suddenly started raining heavily.',
+    ja: '授業の最中に、強い雨が降り始めました。',
+    my: 'စာသင်နေဆဲ အလယ်ခေါင်တွင် မိုးသည်းထန်စွာ ရွာသွန်းလာခဲ့သည်။',
+    th: 'ในระหว่างที่กำลังเรียนอยู่ จู่ๆ ฝนก็เริ่มตกหนัก',
+    zh: '正在上课的时候，下起了大雨。',
+    ko: '수업 도중에 거센 비가 내리기 시작했습니다.',
+    es: 'En plena clase, empezó a llover fuertemente.',
+    fr: 'En plein milieu du cours, il s\'est mis à pleuvoir fort.',
+    vi: 'Ngay giữa giờ học, trời bắt đầu đổ mưa lớn.',
+    id: 'Tepat di tengah pelajaran, hujan deras mulai turun.',
+  },
+  '重要な会議の最中に、突然停電が起きた。': {
+    en: 'Right in the middle of an important meeting, there was a sudden power outage.',
+    ja: '重要な会議の最中に、突然停電が起きた。',
+    my: 'အရေးကြီးသော အစည်းအဝေး ပြုလုပ်နေစဉ် အလယ်ခေါင်တွင် ရုတ်တရက် မီးပျက်သွားခဲ့သည်။',
+    th: 'ในระหว่างการประชุมสำคัญ จู่ๆ ไฟก็ดับ',
+    zh: '在重要会议进行途中，突然发生了停电。',
+    ko: '중요한 회의 도중에 갑자기 정전이 일어났다.',
+    es: 'En medio de una reunión importante, hubo un corte de luz repentino.',
+    fr: 'En plein milieu d\'une réunion importante, une coupure de courant a eu lieu.',
+    vi: 'Ngay giữa cuộc họp quan trọng, bất ngờ bị cúp điện.',
+    id: 'Tepat di tengah rapat penting, tiba-tiba listrik padam.',
+  },
+  '私は学生です。': {
+    en: 'I am a student.',
+    ja: '私は学生です。',
+    my: 'ကျွန်တော်က ကျောင်းသားဖြစ်ပါတယ်။',
+    th: 'ฉันเป็นนักเรียน',
+    zh: '我是学生。',
+    ko: '저는 학생입니다.',
+  },
+  'これは本です。': {
+    en: 'This is a book.',
+    ja: 'これは本です。',
+    my: 'ဒါက စာအုပ်ဖြစ်ပါတယ်။',
+    th: 'นี่คือหนังสือ',
+    zh: '这是书。',
+    ko: '이것은 책입니다.',
+  },
+  '象は鼻が長いです。': {
+    en: 'As for elephants, their trunks are long.',
+    ja: '象は鼻が長いです。',
+    my: 'ဆင်သည် နှာမောင်း ရှည်လျားပါသည်။',
+  },
+  '雨が降っています。': {
+    en: 'It is raining.',
+    ja: '雨が降っています。',
+    my: 'မိုးရွာနေပါသည်။',
+  },
 };
+
+export function registerExampleSentence(jp: string, translations: Partial<Record<SupportedLanguage, string>>) {
+  const clean = jp.trim();
+  if (!EXAMPLE_SENTENCE_MULTILINGUAL_MAP[clean]) {
+    EXAMPLE_SENTENCE_MULTILINGUAL_MAP[clean] = {};
+  }
+  Object.assign(EXAMPLE_SENTENCE_MULTILINGUAL_MAP[clean], translations);
+}
 
 export function translateExampleSentence(jp: string, en: string, lang: SupportedLanguage): string {
   if (lang === 'en') return en;
@@ -244,6 +326,13 @@ export function translateExampleSentence(jp: string, en: string, lang: Supported
   const cleanJp = jp.trim();
   if (EXAMPLE_SENTENCE_MULTILINGUAL_MAP[cleanJp] && EXAMPLE_SENTENCE_MULTILINGUAL_MAP[cleanJp][lang]) {
     return EXAMPLE_SENTENCE_MULTILINGUAL_MAP[cleanJp][lang]!;
+  }
+  // Try punctuation-stripped match
+  const strippedJp = cleanJp.replace(/[。？！\s]/g, '');
+  for (const [k, v] of Object.entries(EXAMPLE_SENTENCE_MULTILINGUAL_MAP)) {
+    if (k.replace(/[。？！\s]/g, '') === strippedJp && v[lang]) {
+      return v[lang]!;
+    }
   }
   return en;
 }

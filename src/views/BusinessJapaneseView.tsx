@@ -24,12 +24,13 @@ import {
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
-import { BusinessCourseLevel, BusinessGoal, BusinessCertificateRecord } from '../types/business';
+import { BusinessCourseLevel, BusinessGoal, BusinessCertificateRecord, BusinessLesson } from '../types/business';
 import { BUSINESS_COURSES, INDUSTRY_TRACKS } from '../data/business/businessCurriculumData';
 import { BUSINESS_VOCABULARY } from '../data/business/businessVocabularyData';
 import { BusinessHeader } from '../components/business/BusinessHeader';
 import { BusinessGoalModal } from '../components/business/BusinessGoalModal';
 import { BusinessUnitCard } from '../components/business/BusinessUnitCard';
+import { BusinessLessonModal } from '../components/business/BusinessLessonModal';
 import { BusinessKeigoStudio } from '../components/business/BusinessKeigoStudio';
 import { BusinessEmailStudio } from '../components/business/BusinessEmailStudio';
 import { BusinessScenarioPlayer } from '../components/business/BusinessScenarioPlayer';
@@ -95,6 +96,9 @@ export const BusinessJapaneseView: React.FC = () => {
     }
   );
 
+  // Selected Lesson for Interactive Study Modal
+  const [selectedLessonForStudy, setSelectedLessonForStudy] = useState<BusinessLesson | null>(null);
+
   // Vocabulary Glossary Search & Domain Filter
   const [vocabSearch, setVocabSearch] = useState('');
   const [selectedDomain, setSelectedDomain] = useState<string>('all');
@@ -145,6 +149,27 @@ export const BusinessJapaneseView: React.FC = () => {
     );
     return completedLessonIds.filter((id) => levelLessonIds.has(id)).length;
   }, [currentCourse, completedLessonIds]);
+
+  const allLessonsInLevel = useMemo(() => {
+    return currentCourse.units.flatMap((u) => u.lessons);
+  }, [currentCourse]);
+
+  const currentLessonIndex = useMemo(() => {
+    if (!selectedLessonForStudy) return -1;
+    return allLessonsInLevel.findIndex((l) => l.id === selectedLessonForStudy.id);
+  }, [allLessonsInLevel, selectedLessonForStudy]);
+
+  const handleSelectNextLesson = () => {
+    if (currentLessonIndex >= 0 && currentLessonIndex + 1 < allLessonsInLevel.length) {
+      setSelectedLessonForStudy(allLessonsInLevel[currentLessonIndex + 1]);
+    }
+  };
+
+  const handleSelectPrevLesson = () => {
+    if (currentLessonIndex > 0) {
+      setSelectedLessonForStudy(allLessonsInLevel[currentLessonIndex - 1]);
+    }
+  };
 
   // Filtered Vocabulary Glossary
   const filteredVocab = useMemo(() => {
@@ -227,6 +252,7 @@ export const BusinessJapaneseView: React.FC = () => {
                 unit={unit}
                 completedLessonIds={completedLessonIds}
                 onToggleCompleteLesson={handleToggleLessonComplete}
+                onSelectPractice={(lesson) => setSelectedLessonForStudy(lesson)}
               />
             ))}
           </div>
@@ -451,6 +477,28 @@ export const BusinessJapaneseView: React.FC = () => {
           certificate={certificateRecord}
         />
       )}
+
+      {/* Interactive Business Lesson Study Modal */}
+      <BusinessLessonModal
+        lesson={selectedLessonForStudy}
+        isOpen={Boolean(selectedLessonForStudy)}
+        onClose={() => setSelectedLessonForStudy(null)}
+        isCompleted={
+          selectedLessonForStudy
+            ? completedLessonIds.includes(selectedLessonForStudy.id)
+            : false
+        }
+        onToggleComplete={handleToggleLessonComplete}
+        onSelectNextLesson={handleSelectNextLesson}
+        onSelectPrevLesson={handleSelectPrevLesson}
+        hasNextLesson={
+          currentLessonIndex >= 0 && currentLessonIndex + 1 < allLessonsInLevel.length
+        }
+        hasPrevLesson={currentLessonIndex > 0}
+        onOpenStudioTab={(tabId) => {
+          setActiveStudioTab(tabId as any);
+        }}
+      />
     </div>
   );
 };

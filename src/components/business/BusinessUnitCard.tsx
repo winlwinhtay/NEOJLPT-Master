@@ -117,7 +117,10 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                         {isCompleted && <CheckCircle2 size={16} />}
                       </button>
 
-                      <div>
+                      <div
+                        onClick={() => onSelectPractice && onSelectPractice(lesson)}
+                        className="cursor-pointer group flex-1"
+                      >
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] uppercase font-bold text-slate-400 font-mono">
                             Lesson {lesson.lessonNumber}
@@ -126,18 +129,27 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                             {lesson.prerequisiteJpLevel}
                           </span>
                         </div>
-                        <h4 className="text-sm font-bold font-japanese text-slate-900 dark:text-white">
+                        <h4 className="text-sm font-bold font-japanese text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                           {lesson.titleJp}
                         </h4>
                         <div className="text-xs text-slate-500">{lesson.titleEn}</div>
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-center">
-                      <span className="text-[11px] text-slate-400 flex items-center gap-1">
+                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                      <span className="text-[11px] text-slate-400 flex items-center gap-1 mr-1">
                         <Clock size={12} />
                         <span>{lesson.estimatedMinutes}m</span>
                       </span>
+
+                      <button
+                        type="button"
+                        onClick={() => onSelectPractice && onSelectPractice(lesson)}
+                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-indigo-200 dark:shadow-none transition-all cursor-pointer"
+                      >
+                        <BookOpen size={13} />
+                        <span>Study Lesson (学習)</span>
+                      </button>
                     </div>
                   </div>
 

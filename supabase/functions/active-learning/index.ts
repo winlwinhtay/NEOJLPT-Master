@@ -1092,6 +1092,132 @@ Output JSON:
       });
     }
 
+    // =========================================================================
+    // ROUTE 10: INTERACTIVE AI CONVERSATION (Back-and-forth Q&A with Cost Optimization)
+    // =========================================================================
+    if (action === 'ai-conversation') {
+      const {
+        userText = '',
+        topic = 'restaurant',
+        level = 'N5',
+        sessionHistory = [],
+      } = body;
+
+      if (!userText.trim()) {
+        return new Response(JSON.stringify({ error: 'userText is required' }), {
+          status: 400,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        });
+      }
+
+      // Cost Optimization: Prune history to last 4 turns to keep tokens low (~200 tokens)
+      const prunedHistory = (sessionHistory || []).slice(-4).map((m: any) => ({
+        speaker: m.sender === 'user' ? 'Learner' : 'AI Native Japanese Speaker',
+        text: m.textJp,
+      }));
+
+      const historyStr = prunedHistory
+        .map((h: any) => `${h.speaker}: ${h.text}`)
+        .join('\n');
+
+      if (!GEMINI_API_KEY) {
+        return new Response(
+          JSON.stringify({
+            _source: 'fallback',
+            textJp: 'かしこまりました。他に何かお手伝いできることはございますか？',
+            reading: 'かしこまりました。ほかになにか おてつだいできることは ございますか？',
+            textEn: 'Certainly. Is there anything else I can assist you with?',
+            textMy: 'သဘောပေါက်ပါပြီခင်ဗျာ။ အခြား ကူညီပေးနိုင်တာများ ရှိပါသေးသလား။',
+            feedback: {
+              grammarMistakes: [],
+              vocabularySuggestions: ['かしこまりました (Certainly / Understood - polite)'],
+              naturalJapaneseAlternatives: [],
+            },
+            suggestedReplies: ['いいえ、大丈夫です。', 'メニューをもう一度見せてください。'],
+          }),
+          { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+        );
+      }
+
+      const prompt = `You are a native Japanese conversational partner and tutor in an interactive roleplay practice scenario for JLPT learners.
+Topic: "${topic}"
+Learner JLPT Level: "${level}"
+
+Recent conversation turns:
+${historyStr || '(Conversation just started)'}
+
+Learner's latest utterance:
+"${userText}"
+
+CRITICAL INSTRUCTIONS:
+1. DIRECTLY ANSWER what the learner asked or said in a realistic, contextual, polite manner for the "${topic}" scenario. If they asked for a price ("いくら", "何円"), state an exact realistic price. If they asked where something is ("どこ"), provide directions. If they ordered an item, confirm the order and price.
+2. KEEP THE CONVERSATION GOING: Always ask ONE relevant, natural follow-up question so the learner can reply (interactive Q&A).
+3. Level-tailored Japanese: Use JLPT ${level} appropriate grammar and vocabulary (clear polite desu/masu for N5/N4; natural polite/keigo for N3/N2/N1).
+4. Provide the complete kana reading in Hiragana/Katakana.
+5. Provide a natural English translation.
+6. Provide a natural Burmese (Myanmar language) translation in Myanmar script.
+7. If the learner made any grammar, particle, or vocabulary mistakes in their utterance, point it out gently under feedback. If no mistake, give a natural alternative phrasing.
+8. Provide 2 short, natural Japanese reply options (in Kanji/Kana) that the learner could say next.
+
+Output STRICT JSON:
+{
+  "textJp": "Japanese reply sentence(s)",
+  "reading": "Full kana reading of textJp",
+  "textEn": "Natural English translation",
+  "textMy": "Natural Burmese translation in Myanmar unicode",
+  "feedback": {
+    "grammarMistakes": ["Clear explanation if learner made any grammatical error"],
+    "vocabularySuggestions": ["Key word or phrase from this reply and its meaning"],
+    "naturalJapaneseAlternatives": ["More natural way the learner could have phrased their message"]
+  },
+  "suggestedReplies": ["short Japanese reply 1", "short Japanese reply 2"]
+}`;
+
+      const geminiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent?key=${GEMINI_API_KEY}`;
+      const aiResponse = await fetch(geminiUrl, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          contents: [{ role: 'user', parts: [{ text: prompt }] }],
+          generationConfig: {
+            temperature: 0.7,
+            maxOutputTokens: 350,
+            responseMimeType: 'application/json',
+          },
+        }),
+      });
+
+      const aiResult = await aiResponse.json();
+      const rawText = aiResult.candidates?.[0]?.content?.parts?.[0]?.text;
+      let parsed: any = {};
+      try {
+        parsed = JSON.parse(rawText || '{}');
+      } catch (err) {
+        console.error('Failed to parse Gemini conversation JSON:', rawText);
+      }
+
+      if (supabaseClient) {
+        supabaseClient.rpc('record_ai_metric', {
+          p_date: today,
+          p_model: GEMINI_MODEL,
+          p_feature: 'ai_conversation',
+          p_input_tokens: aiResult.usageMetadata?.promptTokenCount || 200,
+          p_output_tokens: aiResult.usageMetadata?.candidatesTokenCount || 100,
+          p_estimated_cost_usd:
+            (aiResult.usageMetadata?.promptTokenCount || 200) * INPUT_COST_PER_TOKEN +
+            (aiResult.usageMetadata?.candidatesTokenCount || 100) * OUTPUT_COST_PER_TOKEN,
+        }).then(() => {});
+      }
+
+      return new Response(
+        JSON.stringify({
+          ...parsed,
+          _source: 'gemini_ai',
+        }),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } }
+      );
+    }
+
     return new Response(JSON.stringify({ error: `Unknown action: ${action}` }), {
       status: 400,
       headers: { ...corsHeaders, 'Content-Type': 'application/json' },

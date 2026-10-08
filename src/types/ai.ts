@@ -19,15 +19,18 @@ export interface AIMessage {
   sender: 'user' | 'ai' | 'system';
   textJp: string;
   textEn?: string;
+  textMy?: string;
   reading?: string;
   audioUrl?: string;
   timestamp: string;
+  apiSource?: 'edge_gemini' | 'direct_gemini' | 'smart_contextual';
   feedback?: {
     grammarMistakes?: string[];
     vocabularySuggestions?: string[];
     naturalJapaneseAlternatives?: string[];
     pronunciationTips?: string[];
   };
+  suggestedReplies?: string[];
 }
 
 export interface ConversationSession {

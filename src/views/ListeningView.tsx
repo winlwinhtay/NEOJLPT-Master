@@ -6,6 +6,7 @@ import {
   RotateCcw,
   Volume2,
   CheckCircle2,
+  AlertCircle,
   BookOpen,
   Sparkles,
   ChevronRight,
@@ -17,10 +18,11 @@ import { useI18n } from '../i18n/I18nContext';
 import { LISTENING_DATA } from '../data/listeningData';
 import { speechService } from '../services/speechService';
 import { ListeningLesson } from '../types';
+import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 
 export const ListeningView: React.FC = () => {
   const { activeLevel } = useApp();
-  const { logActivity } = useUser();
+  const { logActivity, addXP } = useUser();
   const { t } = useI18n();
 
   const levelListeningList = LISTENING_DATA.filter((l) => l.level === activeLevel);
@@ -74,8 +76,29 @@ export const ListeningView: React.FC = () => {
   };
 
   const handleSubmit = () => {
+    if (selectedOption === null || isAnswered) return;
     setIsAnswered(true);
-    setShowTranscript(true); // Automatically reveal transcript after answering
+    setShowTranscript(true);
+
+    const isCorrect = selectedOption === selectedLesson.correctIndex;
+    if (isCorrect) {
+      addXP(25, 'Listening drill completed');
+    } else {
+      SessionPersistenceService.recordMistake(
+        {
+          id: selectedLesson.id,
+          type: 'listening',
+          prompt: selectedLesson.questionJp,
+          options: selectedLesson.options,
+          correctAnswer: selectedLesson.correctIndex,
+          explanation: selectedLesson.explanation,
+          category: 'listening',
+          level: selectedLesson.level,
+        },
+        selectedLesson.options[selectedOption] || '',
+        selectedLesson.options[selectedLesson.correctIndex] || ''
+      );
+    }
     logActivity('listening', 1);
   };
 
@@ -302,17 +325,34 @@ export const ListeningView: React.FC = () => {
               {t('common.submit')}
             </button>
           ) : (
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-              <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm">
-                <CheckCircle2 size={20} className="text-emerald-500" />
-                Listening exercise complete! +25 XP
+            <div className={`flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl border ${
+              selectedOption === selectedLesson.correctIndex
+                ? 'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-200 dark:border-emerald-800'
+                : 'bg-rose-50 dark:bg-rose-950/40 border-rose-200 dark:border-rose-800'
+            }`}>
+              <div className={`flex items-center gap-2 font-bold text-sm ${
+                selectedOption === selectedLesson.correctIndex
+                  ? 'text-emerald-800 dark:text-emerald-300'
+                  : 'text-rose-800 dark:text-rose-300'
+              }`}>
+                {selectedOption === selectedLesson.correctIndex ? (
+                  <>
+                    <CheckCircle2 size={20} className="text-emerald-500" />
+                    Correct! +25 XP
+                  </>
+                ) : (
+                  <>
+                    <AlertCircle size={20} className="text-rose-500" />
+                    Incorrect — review transcript and explanation below.
+                  </>
+                )}
               </div>
               <button
                 onClick={() => {
                   const nextIdx = (levelListeningList.findIndex((l) => l.id === selectedLesson.id) + 1) % levelListeningList.length;
                   handleNextLesson(levelListeningList[nextIdx]);
                 }}
-                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm"
+                className="px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer self-end sm:self-auto"
               >
                 Next Listening Drill
               </button>

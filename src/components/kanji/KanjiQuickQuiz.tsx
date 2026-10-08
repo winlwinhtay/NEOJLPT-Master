@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useMemo } from 'react';
 import {
   HelpCircle,
   CheckCircle2,
@@ -10,7 +10,8 @@ import {
 } from 'lucide-react';
 import { KanjiItem } from '../../types';
 import { KanjiQuizQuestion } from '../../types/kanjiStroke';
-import confetti from 'canvas-confetti';
+import { adaptKanjiQuizQuestions } from '../../session/adapters/kanjiAdapter';
+import { useLearningSession } from '../../session/hooks/useLearningSession';
 
 interface KanjiQuickQuizProps {
   kanji: KanjiItem;
@@ -24,15 +25,13 @@ export const KanjiQuickQuiz: React.FC<KanjiQuickQuizProps> = ({
   onClose,
 }) => {
   // Deterministically generate 5 authentic non-AI quiz questions from the Kanji's data
-  const questions: KanjiQuizQuestion[] = useMemo(() => {
+  const rawQuestions: KanjiQuizQuestion[] = useMemo(() => {
     const vocab = kanji.exampleVocab?.[0] || {
       word: `${kanji.kanji}字`,
       reading: 'じ',
       meaning: kanji.meaning,
     };
     const vocab2 = kanji.exampleVocab?.[1] || vocab;
-
-    const primaryReading = kanji.onyomi?.[0] || kanji.kunyomi?.[0] || '';
     const stroke = kanji.strokeCount;
 
     return [
@@ -104,107 +103,102 @@ export const KanjiQuickQuiz: React.FC<KanjiQuickQuizProps> = ({
     ];
   }, [kanji]);
 
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
-  const [showExplanation, setShowExplanation] = useState(false);
-  const [isFinished, setIsFinished] = useState(false);
+  const sessionQuestions = useMemo(() => {
+    return adaptKanjiQuizQuestions(rawQuestions);
+  }, [rawQuestions]);
 
-  const currentQ = questions[currentIndex];
-  const totalQuestions = questions.length;
-  const userChoice = currentQ ? selectedAnswers[currentQ.id] : undefined;
+  const {
+    currentQuestion,
+    currentIndex,
+    totalQuestions,
+    isAnswered,
+    isCompleted,
+    isSubmitting,
+    isAdvancing,
+    selectedAnswer,
+    currentAnswerRecord,
+    correctCount,
+    accuracyPercentage,
+    selectAnswer,
+    submitAnswer,
+    nextQuestion,
+    restartSession,
+    result,
+  } = useLearningSession({
+    sessionId: `kanji-${kanji.id}`,
+    mode: 'mastery',
+    questions: sessionQuestions,
+    instantFeedback: true,
+    autoSubmitOnSelect: false,
+    xpPerCorrect: 15,
+    completionBonusXP: 25,
+    activityCategory: 'kanji',
+    onComplete: (res) => {
+      onQuizComplete?.(res.accuracyPercentage);
+    },
+  });
 
   const handleSelectOption = (idx: number) => {
-    if (userChoice !== undefined) return;
-    const nextAnswers = { ...selectedAnswers, [currentQ.id]: idx };
-    setSelectedAnswers(nextAnswers);
-    setShowExplanation(true);
+    if (isAnswered || isSubmitting) return;
+    selectAnswer(idx);
+    submitAnswer();
   };
 
-  const handleNext = () => {
-    setShowExplanation(false);
-    if (currentIndex + 1 < totalQuestions) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      setIsFinished(true);
-      const correctCount = questions.filter(
-        (q) => selectedAnswers[q.id] === q.correctAnswer
-      ).length;
-      const scorePct = Math.round((correctCount / totalQuestions) * 100);
-      if (scorePct >= 80) {
-        try {
-          confetti({ particleCount: 50, spread: 60, origin: { y: 0.6 } });
-        } catch (e) {}
-      }
-      onQuizComplete?.(scorePct);
-    }
-  };
-
-  const handleRestart = () => {
-    setCurrentIndex(0);
-    setSelectedAnswers({});
-    setShowExplanation(false);
-    setIsFinished(false);
-  };
-
-  // Calculate final score
-  const correctCount = questions.filter(
-    (q) => selectedAnswers[q.id] === q.correctAnswer
-  ).length;
-  const scorePercent = Math.round((correctCount / totalQuestions) * 100);
-  const isPassed = scorePercent >= 80;
+  const isPassed = accuracyPercentage >= 80;
 
   return (
     <div className="p-6 rounded-3xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/80 space-y-6">
       {/* Header */}
       <div className="flex items-center justify-between border-b border-slate-200/60 dark:border-slate-700/60 pb-3">
         <div className="flex items-center gap-2">
-          <div className="w-8 h-8 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-400 flex items-center justify-center">
+          <div className="w-8 h-8 rounded-xl bg-brand-500/10 dark:bg-brand-500/20 text-brand-600 dark:text-brand-400 flex items-center justify-center">
             <HelpCircle size={18} />
           </div>
           <div>
-            <h4 className="font-bold text-slate-900 dark:text-white text-sm">
-              Quick Mastery Quiz: 「{kanji.kanji}」
+            <h4 className="text-sm font-black text-slate-900 dark:text-white">
+              {kanji.kanji} Quick Mastery Quiz
             </h4>
-            <p className="text-[11px] text-slate-400">
-              5 Questions • Test your reading, meaning, recognition, and stroke count
+            <p className="text-[11px] text-slate-500 dark:text-slate-400">
+              5 questions testing meaning, reading, strokes, and context
             </p>
           </div>
         </div>
 
-        {!isFinished && (
-          <span className="text-xs font-bold text-brand-600 dark:text-brand-400">
+        {!isCompleted && (
+          <span className="text-xs font-bold text-slate-400">
             {currentIndex + 1} of {totalQuestions}
           </span>
         )}
       </div>
 
-      {!isFinished ? (
-        <div className="space-y-5">
-          {/* Question Card */}
-          <div className="space-y-3">
-            <span className="text-[10px] font-bold uppercase tracking-wider text-slate-400">
-              Question {currentIndex + 1}: {currentQ.type.toUpperCase()}
+      {!isCompleted ? (
+        <div className="space-y-4 animate-fade-in">
+          {/* Question Text */}
+          <div className="p-4 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200/80 dark:border-slate-700/80">
+            <span className="text-[10px] font-black text-brand-600 dark:text-brand-400 uppercase tracking-wider block mb-1">
+              Question {currentIndex + 1}
             </span>
-            <h5 className="text-base font-bold text-slate-900 dark:text-white leading-relaxed">
-              {currentQ.question}
-            </h5>
+            <div className="text-base font-bold text-slate-900 dark:text-white leading-relaxed">
+              {currentQuestion.prompt}
+            </div>
           </div>
 
-          {/* 4 Choices */}
+          {/* Options Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
-            {currentQ.options.map((option, optIdx) => {
-              const isSelected = userChoice === optIdx;
-              const isCorrect = optIdx === currentQ.correctAnswer;
-              let btnStyle =
-                'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-700 text-slate-800 dark:text-slate-100 hover:border-brand-400';
+            {currentQuestion.options.map((opt, optIdx) => {
+              const isSelected = selectedAnswer === optIdx;
+              const isCorrectAnswer = optIdx === currentQuestion.correctAnswer;
 
-              if (userChoice !== undefined) {
-                if (isCorrect) {
+              let btnStyle =
+                'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:border-brand-500';
+
+              if (isAnswered) {
+                if (isCorrectAnswer) {
                   btnStyle =
-                    'bg-emerald-50 dark:bg-emerald-950/40 border-emerald-400 text-emerald-800 dark:text-emerald-300 font-bold';
-                } else if (isSelected && !isCorrect) {
+                    'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold';
+                } else if (isSelected && !currentAnswerRecord?.isCorrect) {
                   btnStyle =
-                    'bg-rose-50 dark:bg-rose-950/40 border-rose-400 text-rose-800 dark:text-rose-300';
+                    'border-rose-500 bg-rose-50 dark:bg-rose-950/40 text-rose-700 dark:text-rose-300 font-bold';
                 }
               }
 
@@ -212,16 +206,19 @@ export const KanjiQuickQuiz: React.FC<KanjiQuickQuizProps> = ({
                 <button
                   key={optIdx}
                   type="button"
+                  disabled={isAnswered || isSubmitting}
                   onClick={() => handleSelectOption(optIdx)}
-                  disabled={userChoice !== undefined}
-                  className={`p-3.5 rounded-2xl border text-xs text-left transition-all flex items-center justify-between cursor-pointer ${btnStyle}`}
+                  className={`p-3.5 rounded-2xl border text-xs sm:text-sm text-left transition-all flex items-center justify-between cursor-pointer disabled:cursor-default ${btnStyle}`}
                 >
-                  <span>{option}</span>
-                  {userChoice !== undefined && isCorrect && (
-                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0" />
+                  <span>
+                    <span className="font-bold mr-2 text-slate-400">{optIdx + 1}.</span>
+                    {opt}
+                  </span>
+                  {isAnswered && isCorrectAnswer && (
+                    <CheckCircle2 size={16} className="text-emerald-500 shrink-0 ml-1" />
                   )}
-                  {userChoice !== undefined && isSelected && !isCorrect && (
-                    <XCircle size={16} className="text-rose-500 shrink-0" />
+                  {isAnswered && isSelected && !currentAnswerRecord?.isCorrect && (
+                    <XCircle size={16} className="text-rose-500 shrink-0 ml-1" />
                   )}
                 </button>
               );
@@ -229,20 +226,21 @@ export const KanjiQuickQuiz: React.FC<KanjiQuickQuizProps> = ({
           </div>
 
           {/* Explanation & Next */}
-          {showExplanation && (
+          {isAnswered && (
             <div className="p-3.5 rounded-2xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-xs space-y-2 animate-fade-in">
               <div className="font-bold text-slate-900 dark:text-white flex items-center gap-1.5">
                 <Sparkles size={14} className="text-brand-500" />
                 Explanation:
               </div>
               <p className="text-slate-600 dark:text-slate-300 leading-relaxed">
-                {currentQ.explanation}
+                {currentQuestion.explanation}
               </p>
               <div className="pt-2 text-right">
                 <button
                   type="button"
-                  onClick={handleNext}
-                  className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1 cursor-pointer"
+                  disabled={isAdvancing}
+                  onClick={nextQuestion}
+                  className="px-4 py-2 bg-brand-500 hover:bg-brand-600 text-white font-bold text-xs rounded-xl shadow-sm transition-all inline-flex items-center gap-1 cursor-pointer disabled:opacity-50"
                 >
                   <span>{currentIndex + 1 < totalQuestions ? 'Next Question' : 'View Results'}</span>
                   <ArrowRight size={14} />
@@ -269,7 +267,7 @@ export const KanjiQuickQuiz: React.FC<KanjiQuickQuizProps> = ({
               Lesson Quiz Result
             </span>
             <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-              Score: {scorePercent}% ({correctCount}/{totalQuestions} Correct)
+              Score: {accuracyPercentage}% ({correctCount}/{totalQuestions} Correct)
             </h3>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 max-w-sm mx-auto">
               {isPassed
@@ -294,7 +292,7 @@ export const KanjiQuickQuiz: React.FC<KanjiQuickQuizProps> = ({
           <div className="flex justify-center gap-3 pt-2">
             <button
               type="button"
-              onClick={handleRestart}
+              onClick={restartSession}
               className="px-4 py-2.5 rounded-xl bg-slate-100 dark:bg-slate-700 hover:bg-slate-200 text-slate-700 dark:text-slate-200 font-bold text-xs transition-colors flex items-center gap-1.5 cursor-pointer"
             >
               <RotateCcw size={14} />

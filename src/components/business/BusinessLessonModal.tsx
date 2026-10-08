@@ -28,6 +28,8 @@ import {
   EyeOff,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
+import { SessionPersistenceService } from '../../session/persistence/SessionPersistenceService';
+import { adaptBusinessLessonQuizItem } from '../../session/adapters/businessAdapter';
 import { BusinessLesson } from '../../types/business';
 import {
   getBusinessLessonDetail,
@@ -134,21 +136,38 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
   };
 
   const handleSelectQuizOption = (questionId: string, optionIndex: number) => {
+    if (quizSubmitted) return;
     setSelectedQuizAnswers((prev) => ({ ...prev, [questionId]: optionIndex }));
   };
 
   const handleCheckQuiz = () => {
+    if (quizSubmitted) return;
     setQuizSubmitted(true);
-    // Award bonus XP if all correct
-    const allCorrect = detail.quiz.every(
-      (q) => selectedQuizAnswers[q.id] === q.correctAnswer
-    );
-    if (allCorrect) {
+
+    let allCorrect = true;
+    detail.quiz.forEach((q) => {
+      const isCor = selectedQuizAnswers[q.id] === q.correctAnswer;
+      if (!isCor) {
+        allCorrect = false;
+        SessionPersistenceService.recordMistake(
+          adaptBusinessLessonQuizItem(q),
+          selectedQuizAnswers[q.id] !== undefined ? q.options[selectedQuizAnswers[q.id]] : '(No answer)',
+          q.options[q.correctAnswer] || String(q.correctAnswer)
+        );
+      }
+    });
+
+    if (allCorrect && detail.quiz.length > 0) {
       addXP(25, 'Perfect Business Etiquette Quiz Score!');
       try {
         confetti({ particleCount: 50, spread: 50 });
       } catch (e) {}
     }
+  };
+
+  const handleRetakeQuiz = () => {
+    setSelectedQuizAnswers({});
+    setQuizSubmitted(false);
   };
 
   const tabs: { id: typeof activeTab; label: string; icon: React.ReactNode }[] = [
@@ -671,7 +690,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                 })}
               </div>
 
-              {!quizSubmitted && (
+              {!quizSubmitted ? (
                 <div className="pt-2">
                   <button
                     type="button"
@@ -680,6 +699,17 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
                   >
                     Submit Answers & Check Etiquette
+                  </button>
+                </div>
+              ) : (
+                <div className="pt-2 flex justify-end">
+                  <button
+                    type="button"
+                    onClick={handleRetakeQuiz}
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                  >
+                    <RotateCcw size={14} />
+                    Retake Quiz
                   </button>
                 </div>
               )}

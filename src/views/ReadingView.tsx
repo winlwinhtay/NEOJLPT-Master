@@ -6,6 +6,8 @@ import {
   Languages,
   Volume2,
   CheckCircle2,
+  AlertCircle,
+  RotateCcw,
   Sparkles,
   ChevronRight,
   BookOpen,
@@ -17,10 +19,11 @@ import { READING_DATA } from '../data/readingData';
 import { RubyText } from '../components/common/RubyText';
 import { AudioButton } from '../components/common/AudioButton';
 import { ReadingLesson } from '../types';
+import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 
 export const ReadingView: React.FC = () => {
   const { activeLevel } = useApp();
-  const { profile, logActivity } = useUser();
+  const { profile, logActivity, addXP } = useUser();
   const { t } = useI18n();
 
   const levelReadings = READING_DATA.filter((r) => r.level === activeLevel);
@@ -39,7 +42,35 @@ export const ReadingView: React.FC = () => {
   };
 
   const handleSubmit = () => {
+    if (isSubmitted) return;
     setIsSubmitted(true);
+
+    let correctCount = 0;
+    selectedReading.questions.forEach((q) => {
+      const userChoice = userAnswers[q.id];
+      if (userChoice === q.correctIndex) {
+        correctCount++;
+      } else {
+        SessionPersistenceService.recordMistake(
+          {
+            id: q.id,
+            type: 'reading',
+            prompt: q.questionJp,
+            options: q.options,
+            correctAnswer: q.correctIndex,
+            explanation: q.explanation,
+            category: 'reading',
+            level: selectedReading.level,
+          },
+          userChoice !== undefined ? q.options[userChoice] : '(No answer)',
+          q.options[q.correctIndex] || String(q.correctIndex)
+        );
+      }
+    });
+
+    if (correctCount > 0) {
+      addXP(correctCount * 15, 'Reading practice score');
+    }
     logActivity('reading', 1);
   };
 
@@ -250,19 +281,45 @@ export const ReadingView: React.FC = () => {
               {t('common.submit')}
             </button>
           ) : (
-            <div className="flex items-center justify-between p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
-              <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm">
-                <CheckCircle2 size={20} className="text-emerald-500" />
-                Reading practice recorded! +30 XP
+            <div className="space-y-3">
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 p-4 rounded-2xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800">
+                <div className="flex items-center gap-2 text-emerald-800 dark:text-emerald-300 font-bold text-sm">
+                  <CheckCircle2 size={20} className="text-emerald-500 shrink-0" />
+                  <span>
+                    Reading practice submitted: {selectedReading.questions.filter((q) => userAnswers[q.id] === q.correctIndex).length} of {selectedReading.questions.length} correct
+                  </span>
+                </div>
+                <div className="flex items-center gap-2 self-end sm:self-auto">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setUserAnswers({});
+                      setIsSubmitted(false);
+                      setShowTranslation(false);
+                    }}
+                    className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-1"
+                  >
+                    <RotateCcw size={14} /> Retry
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setShowTranslation((prev) => !prev)}
+                    className="px-3 py-2 bg-amber-100 hover:bg-amber-200 dark:bg-amber-950 dark:hover:bg-amber-900 text-amber-800 dark:text-amber-200 font-bold text-xs rounded-xl shadow-xs cursor-pointer"
+                  >
+                    {showTranslation ? 'Hide Translation' : 'View Translation'}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const nextIdx = (levelReadings.findIndex((r) => r.id === selectedReading.id) + 1) % levelReadings.length;
+                      handleNextPassage(levelReadings[nextIdx]);
+                    }}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
+                  >
+                    Next Passage
+                  </button>
+                </div>
               </div>
-              <button
-                onClick={() => {
-                  setShowTranslation(true);
-                }}
-                className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm"
-              >
-                View Full Translation
-              </button>
             </div>
           )}
         </div>

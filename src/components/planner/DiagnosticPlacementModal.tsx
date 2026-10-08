@@ -45,6 +45,7 @@ export const DiagnosticPlacementModal: React.FC<DiagnosticPlacementModalProps> =
   const [currentIndex, setCurrentIndex] = useState(0);
   const [answers, setAnswers] = useState<Record<string, number>>({});
   const [isFinished, setIsFinished] = useState(false);
+  const [evaluation, setEvaluation] = useState<ReturnType<typeof StudyPlannerService.evaluateDiagnosticTest> | null>(null);
 
   if (!isOpen) return null;
 
@@ -53,7 +54,7 @@ export const DiagnosticPlacementModal: React.FC<DiagnosticPlacementModalProps> =
   const progressPercent = Math.round(((currentIndex + 1) / totalQuestions) * 100);
 
   const handleSelectOption = (optionIndex: number) => {
-    if (!currentQ) return;
+    if (!currentQ || isFinished) return;
     const nextAnswers = { ...answers, [currentQ.id]: optionIndex };
     setAnswers(nextAnswers);
 
@@ -61,12 +62,10 @@ export const DiagnosticPlacementModal: React.FC<DiagnosticPlacementModalProps> =
       setCurrentIndex((prev) => prev + 1);
     } else {
       setIsFinished(true);
+      const evalResult = StudyPlannerService.evaluateDiagnosticTest(nextAnswers, questions);
+      setEvaluation(evalResult);
     }
   };
-
-  const evaluation = isFinished
-    ? StudyPlannerService.evaluateDiagnosticTest(answers, questions)
-    : null;
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/80 backdrop-blur-sm animate-fade-in">

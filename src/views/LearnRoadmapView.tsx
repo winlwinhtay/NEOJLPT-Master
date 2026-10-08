@@ -23,6 +23,7 @@ import {
   BarChart3,
   Flame,
   Zap,
+  RotateCcw,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -44,6 +45,8 @@ import { DailyStudySessionModal } from '../components/planner/DailyStudySessionM
 import { UpgradePrompt } from '../components/common/UpgradePrompt';
 import { AdBanner } from '../components/common/AdBanner';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
+import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
+import { adaptPracticeQuestion } from '../session/adapters/practiceAdapter';
 
 export const LearnRoadmapView: React.FC = () => {
   const { activeLevel, setActiveLevel, selectedLessonId, setSelectedLessonId, setActiveView } = useApp();
@@ -128,8 +131,26 @@ export const LearnRoadmapView: React.FC = () => {
     };
 
     const handleFinishQuiz = () => {
+      if (quizSubmitted) return;
       setQuizSubmitted(true);
+
+      quizQuestions.forEach((q) => {
+        const userChoice = quizAnswers[q.id];
+        if (userChoice !== q.correctAnswer) {
+          SessionPersistenceService.recordMistake(
+            adaptPracticeQuestion(q),
+            userChoice !== undefined ? q.options[userChoice] : '(No answer)',
+            q.options[q.correctAnswer as number] || String(q.correctAnswer)
+          );
+        }
+      });
+
       completeLesson(currentLesson!.id, currentLesson!.xpReward || 50);
+    };
+
+    const handleRetryQuiz = () => {
+      setQuizAnswers({});
+      setQuizSubmitted(false);
     };
 
     return (
@@ -410,12 +431,20 @@ export const LearnRoadmapView: React.FC = () => {
                   <CheckCircle2 size={20} className="text-emerald-500" />
                   Great job! You earned {currentLesson.xpReward} XP!
                 </div>
-                <button
-                  onClick={() => setSelectedLessonId(null)}
-                  className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
-                >
-                  Return to Study Plan
-                </button>
+                <div className="flex items-center gap-2">
+                  <button
+                    onClick={handleRetryQuiz}
+                    className="px-3 py-2 bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl shadow-xs hover:bg-slate-50 dark:hover:bg-slate-700 cursor-pointer flex items-center gap-1"
+                  >
+                    <RotateCcw size={14} /> Retry Quiz
+                  </button>
+                  <button
+                    onClick={() => setSelectedLessonId(null)}
+                    className="px-4 py-2 bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs rounded-xl shadow-sm cursor-pointer"
+                  >
+                    Return to Study Plan
+                  </button>
+                </div>
               </div>
             )}
           </div>

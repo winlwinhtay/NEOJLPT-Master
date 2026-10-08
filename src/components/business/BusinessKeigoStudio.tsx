@@ -21,6 +21,8 @@ import { BUSINESS_KEIGO_VERBS, CUSHION_PHRASES, KEIGO_CONFUSION_EXERCISES } from
 import { AudioButton } from '../common/AudioButton';
 import { useI18n } from '../../i18n/I18nContext';
 import { getKeigoVerbTranslation, getCushionWordTranslation } from '../../data/translations/businessTranslations';
+import { adaptKeigoConfusionExercises } from '../../session/adapters/businessAdapter';
+import { useLearningSession } from '../../session/hooks/useLearningSession';
 
 export const BusinessKeigoStudio: React.FC = () => {
   const { language } = useI18n();
@@ -28,10 +30,37 @@ export const BusinessKeigoStudio: React.FC = () => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVerbId, setSelectedVerbId] = useState<string>(BUSINESS_KEIGO_VERBS[0].id);
 
-  // Confusion Trainer State
-  const [currentExerciseIdx, setCurrentExerciseIdx] = useState(0);
-  const [selectedAnswers, setSelectedAnswers] = useState<Record<string, number>>({});
-  const [showExplanation, setShowExplanation] = useState(false);
+  // Confusion Trainer Session Engine
+  const keigoQuestions = React.useMemo(() => {
+    return adaptKeigoConfusionExercises(KEIGO_CONFUSION_EXERCISES);
+  }, []);
+
+  const {
+    currentQuestion: currentExerciseQ,
+    currentIndex: currentExerciseIdx,
+    totalQuestions: totalExercises,
+    isAnswered,
+    isCompleted,
+    isSubmitting,
+    isAdvancing,
+    selectedAnswer,
+    currentAnswerRecord,
+    correctCount,
+    accuracyPercentage,
+    selectAnswer,
+    submitAnswer,
+    nextQuestion: handleNextExercise,
+    restartSession: handleRestartExercises,
+  } = useLearningSession({
+    sessionId: 'business-keigo-trainer',
+    mode: 'drill',
+    questions: keigoQuestions,
+    instantFeedback: true,
+    autoSubmitOnSelect: false,
+    xpPerCorrect: 15,
+    completionBonusXP: 30,
+    activityCategory: 'business',
+  });
 
   const filteredVerbs = BUSINESS_KEIGO_VERBS.filter(
     (v) =>
@@ -43,24 +72,13 @@ export const BusinessKeigoStudio: React.FC = () => {
 
   const selectedVerb =
     BUSINESS_KEIGO_VERBS.find((v) => v.id === selectedVerbId) || BUSINESS_KEIGO_VERBS[0];
-
-  const currentExercise = KEIGO_CONFUSION_EXERCISES[currentExerciseIdx];
-  const userChoice = selectedAnswers[currentExercise.id];
-  const isAnswered = userChoice !== undefined;
+  const currentExercise = KEIGO_CONFUSION_EXERCISES[currentExerciseIdx] || KEIGO_CONFUSION_EXERCISES[0];
+  const userChoice = selectedAnswer;
 
   const handleSelectOption = (idx: number) => {
-    if (isAnswered) return;
-    setSelectedAnswers({ ...selectedAnswers, [currentExercise.id]: idx });
-    setShowExplanation(true);
-  };
-
-  const handleNextExercise = () => {
-    setShowExplanation(false);
-    if (currentExerciseIdx + 1 < KEIGO_CONFUSION_EXERCISES.length) {
-      setCurrentExerciseIdx((prev) => prev + 1);
-    } else {
-      setCurrentExerciseIdx(0);
-    }
+    if (isAnswered || isSubmitting) return;
+    selectAnswer(idx);
+    submitAnswer();
   };
 
   return (
@@ -314,103 +332,133 @@ export const BusinessKeigoStudio: React.FC = () => {
       {/* ========================================================================= */}
       {/* TAB 2: KEIGO CONFUSION TRAINER */}
       {/* ========================================================================= */}
-      {activeTab === 'confusion' && currentExercise && (
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6 max-w-3xl mx-auto">
-          <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
-            <div className="flex items-center gap-2">
-              <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold font-mono">
-                Case {currentExerciseIdx + 1} of {KEIGO_CONFUSION_EXERCISES.length}
-              </span>
-              <span className="text-xs text-slate-400 font-semibold">
-                {currentExercise.situation}
-              </span>
+      {activeTab === 'confusion' && (
+        isCompleted ? (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-5 max-w-xl mx-auto animate-fade-in">
+            <div className="w-16 h-16 rounded-full bg-emerald-100 dark:bg-emerald-950/80 text-emerald-600 flex items-center justify-center mx-auto shadow-md">
+              <Award size={32} />
             </div>
-          </div>
-
-          <div className="space-y-2">
-            <h3 className="text-base sm:text-lg font-black font-japanese text-slate-900 dark:text-white leading-relaxed">
-              {currentExercise.prompt}
-            </h3>
-            <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
-              <span>話者（自分）: <strong>{currentExercise.speaker}</strong></span>
-              <span>対象（相手）: <strong>{currentExercise.targetPerson}</strong></span>
+            <div>
+              <span className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">
+                Keigo Confusion Trainer Complete
+              </span>
+              <h3 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                Score: {accuracyPercentage}% ({correctCount}/{totalExercises} Correct)
+              </h3>
+              <p className="text-xs text-slate-500 mt-1">
+                {accuracyPercentage >= 80
+                  ? 'Excellent mastery of Uchi vs. Soto and Sonkeigo vs. Kenjougo rules!'
+                  : 'Review the actor relationship rules and retake the trainer to strengthen your Keigo intuition.'}
+              </p>
             </div>
+            <button
+              type="button"
+              onClick={handleRestartExercises}
+              className="px-5 py-2.5 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs inline-flex items-center gap-1.5 shadow-sm cursor-pointer"
+            >
+              <RotateCcw size={14} />
+              <span>Retake Drill</span>
+            </button>
           </div>
-
-          <div className="space-y-2.5">
-            {currentExercise.options.map((opt, idx) => {
-              const isSelected = userChoice === idx;
-              const isCorrect = idx === currentExercise.correctIndex;
-
-              let style =
-                'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-indigo-300';
-              if (isAnswered) {
-                if (isCorrect) {
-                  style = 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100';
-                } else if (isSelected) {
-                  style = 'border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100';
-                } else {
-                  style = 'opacity-50 border-slate-200 dark:border-slate-800';
-                }
-              }
-
-              return (
-                <button
-                  key={idx}
-                  type="button"
-                  disabled={isAnswered}
-                  onClick={() => handleSelectOption(idx)}
-                  className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer space-y-1 ${style}`}
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="font-japanese font-bold text-sm leading-relaxed">
-                      {opt.text}
-                    </span>
-                    {isAnswered && (
-                      <span className="text-xs font-bold">
-                        {isCorrect ? (
-                          <CheckCircle2 size={18} className="text-emerald-500" />
-                        ) : isSelected ? (
-                          <XCircle size={18} className="text-rose-500" />
-                        ) : null}
-                      </span>
-                    )}
-                  </div>
-                  {isAnswered && isSelected && (
-                    <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
-                      {opt.explanation}
-                    </p>
-                  )}
-                </button>
-              );
-            })}
-          </div>
-
-          {isAnswered && (
-            <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
-              <div className="text-xs font-bold text-slate-500">
-                {userChoice === currentExercise.correctIndex ? (
-                  <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
-                    <CheckCircle2 size={15} /> 正解！ Excellent!
-                  </span>
-                ) : (
-                  <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
-                    <XCircle size={15} /> 不正解です。確認しましょう。
-                  </span>
-                )}
+        ) : (
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6 max-w-3xl mx-auto">
+            <div className="flex items-center justify-between border-b border-slate-100 dark:border-slate-800 pb-4">
+              <div className="flex items-center gap-2">
+                <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold font-mono">
+                  Case {currentExerciseIdx + 1} of {totalExercises}
+                </span>
+                <span className="text-xs text-slate-400 font-semibold">
+                  {currentExercise.situation}
+                </span>
               </div>
-
-              <button
-                type="button"
-                onClick={handleNextExercise}
-                className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer"
-              >
-                <span>Next Case</span>
-                <ArrowRight size={14} />
-              </button>
             </div>
-          )}
-        </div>
+
+            <div className="space-y-2">
+              <h3 className="text-base sm:text-lg font-black font-japanese text-slate-900 dark:text-white leading-relaxed">
+                {currentExercise.prompt}
+              </h3>
+              <div className="flex items-center gap-4 text-xs text-slate-500 font-medium">
+                <span>話者（自分）: <strong>{currentExercise.speaker}</strong></span>
+                <span>対象（相手）: <strong>{currentExercise.targetPerson}</strong></span>
+              </div>
+            </div>
+
+            <div className="space-y-2.5">
+              {currentExercise.options.map((opt, idx) => {
+                const isSelected = userChoice === idx;
+                const isCorrect = idx === currentExercise.correctIndex;
+
+                let style =
+                  'border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-800/50 hover:border-indigo-300';
+                if (isAnswered) {
+                  if (isCorrect) {
+                    style = 'border-emerald-500 bg-emerald-50/70 dark:bg-emerald-950/40 text-emerald-900 dark:text-emerald-100';
+                  } else if (isSelected) {
+                    style = 'border-rose-500 bg-rose-50/70 dark:bg-rose-950/40 text-rose-900 dark:text-rose-100';
+                  } else {
+                    style = 'opacity-50 border-slate-200 dark:border-slate-800';
+                  }
+                }
+
+                return (
+                  <button
+                    key={idx}
+                    type="button"
+                    disabled={isAnswered || isSubmitting}
+                    onClick={() => handleSelectOption(idx)}
+                    className={`w-full text-left p-4 rounded-2xl border transition-all cursor-pointer space-y-1 ${style}`}
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="font-japanese font-bold text-sm leading-relaxed">
+                        {opt.text}
+                      </span>
+                      {isAnswered && (
+                        <span className="text-xs font-bold">
+                          {isCorrect ? (
+                            <CheckCircle2 size={18} className="text-emerald-500" />
+                          ) : isSelected ? (
+                            <XCircle size={18} className="text-rose-500" />
+                          ) : null}
+                        </span>
+                      )}
+                    </div>
+                    {isAnswered && isSelected && (
+                      <p className="text-[11px] text-slate-600 dark:text-slate-300 mt-1 leading-relaxed">
+                        {opt.explanation}
+                      </p>
+                    )}
+                  </button>
+                );
+              })}
+            </div>
+
+            {isAnswered && (
+              <div className="flex items-center justify-between pt-4 border-t border-slate-100 dark:border-slate-800">
+                <div className="text-xs font-bold text-slate-500">
+                  {userChoice === currentExercise.correctIndex ? (
+                    <span className="text-emerald-600 dark:text-emerald-400 font-bold flex items-center gap-1">
+                      <CheckCircle2 size={15} /> 正解！ Excellent!
+                    </span>
+                  ) : (
+                    <span className="text-rose-600 dark:text-rose-400 font-bold flex items-center gap-1">
+                      <XCircle size={15} /> 不正解です。確認しましょう。
+                    </span>
+                  )}
+                </div>
+
+                <button
+                  type="button"
+                  disabled={isAdvancing}
+                  onClick={handleNextExercise}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm cursor-pointer disabled:opacity-50"
+                >
+                  <span>{currentExerciseIdx + 1 < totalExercises ? 'Next Case' : 'Complete Drill'}</span>
+                  <ArrowRight size={14} />
+                </button>
+              </div>
+            )}
+          </div>
+        )
       )}
 
       {/* ========================================================================= */}

@@ -1,45 +1,34 @@
 import React, { useState, useMemo } from 'react';
 import {
-  CheckSquare,
   Sparkles,
   RotateCcw,
   CheckCircle2,
   AlertCircle,
-  HelpCircle,
   ArrowRight,
-  Bookmark,
-  Volume2,
   Flag,
   Layers,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
-import { useUser } from '../context/UserContext';
 import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
 import { PRACTICE_QUESTIONS } from '../data/practiceData';
-import { AudioButton } from '../components/common/AudioButton';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
-import { StorageService } from '../services/storageService';
 import { PracticeQuestion } from '../types/practice';
+import { adaptPracticeQuestions } from '../session/adapters/practiceAdapter';
+import { useLearningSession } from '../session/hooks/useLearningSession';
+import { SessionResultModal } from '../session/components/SessionResultModal';
 
 export const PracticeView: React.FC = () => {
   const { activeLevel } = useApp();
-  const { logActivity, addXP } = useUser();
   const { rateItem } = useSRS();
-  const { t, language } = useI18n();
+  const { t } = useI18n();
 
   const [activeCategory, setActiveCategory] = useState<string>('all');
-  const [currentIndex, setCurrentIndex] = useState(0);
-
-  // User input states
-  const [selectedOption, setSelectedOption] = useState<number | null>(null);
-  const [orderedTokens, setOrderedTokens] = useState<number[]>([]);
-  const [isAnswered, setIsAnswered] = useState(false);
-  const [scoreStats, setScoreStats] = useState({ correct: 0, total: 0 });
   const [srsAdded, setSrsAdded] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
 
-  const questions = useMemo(() => {
+  // Filter raw practice questions based on activeLevel and activeCategory
+  const rawQuestions = useMemo(() => {
     return PRACTICE_QUESTIONS.filter((q) => {
       if (q.level !== activeLevel) return false;
       if (activeCategory !== 'all' && q.category !== activeCategory) return false;
@@ -47,105 +36,69 @@ export const PracticeView: React.FC = () => {
     });
   }, [activeLevel, activeCategory]);
 
-  const currentQ: PracticeQuestion | undefined = questions[currentIndex] || questions[0];
+  // Convert to normalized SessionQuestion[]
+  const sessionQuestions = useMemo(() => {
+    return adaptPracticeQuestions(rawQuestions);
+  }, [rawQuestions]);
+
+  // Initialize Shared Session Engine
+  const {
+    currentQuestion,
+    currentIndex,
+    totalQuestions,
+    isAnswered,
+    isCompleted,
+    isSubmitting,
+    isAdvancing,
+    selectedAnswer,
+    currentAnswerRecord,
+    correctCount,
+    answeredCount,
+    accuracyPercentage,
+    selectAnswer,
+    submitAnswer,
+    nextQuestion,
+    restartSession,
+    result,
+  } = useLearningSession({
+    sessionId: `practice-${activeLevel}-${activeCategory}`,
+    mode: 'practice',
+    questions: sessionQuestions,
+    instantFeedback: true,
+    xpPerCorrect: 15,
+    completionBonusXP: 30,
+    activityCategory: 'practice',
+  });
 
   const handleFilterCategory = (cat: string) => {
     setActiveCategory(cat);
-    setCurrentIndex(0);
-    setIsAnswered(false);
-    setSelectedOption(null);
-    setOrderedTokens([]);
     setSrsAdded(false);
   };
 
   const handleAddToSRS = () => {
-    if (!currentQ) return;
-    const itemType = currentQ.category === 'kanji' ? 'kanji' : currentQ.category === 'grammar' ? 'grammar' : 'vocab';
-    rateItem(currentQ.id, itemType, currentQ.level, 'again');
+    if (!currentQuestion) return;
+    const cat = currentQuestion.category;
+    const itemType = cat === 'kanji' ? 'kanji' : cat === 'grammar' ? 'grammar' : 'vocab';
+    rateItem(currentQuestion.id, itemType, currentQuestion.level || activeLevel, 'again');
     setSrsAdded(true);
   };
 
-  const handleSelectOption = (idx: number) => {
-    if (isAnswered) return;
-    setSelectedOption(idx);
-  };
+  const isSentenceOrder = currentQuestion.type === 'sentence_order';
+  const orderedTokens: number[] = Array.isArray(selectedAnswer) ? selectedAnswer : [];
 
   const handleSelectToken = (tokenIndex: number) => {
     if (isAnswered) return;
     if (!orderedTokens.includes(tokenIndex)) {
-      setOrderedTokens((prev) => [...prev, tokenIndex]);
+      selectAnswer([...orderedTokens, tokenIndex]);
     }
   };
 
   const handleRemoveToken = (position: number) => {
     if (isAnswered) return;
-    setOrderedTokens((prev) => prev.filter((_, idx) => idx !== position));
+    selectAnswer(orderedTokens.filter((_, idx) => idx !== position));
   };
 
-  const handleCheckAnswer = () => {
-    if (!currentQ || isAnswered) return;
-    setIsAnswered(true);
-
-    let isCorrect = false;
-    if (currentQ.type === 'sentence_order') {
-      const correctArr = currentQ.correctAnswer as number[];
-      isCorrect = JSON.stringify(orderedTokens) === JSON.stringify(correctArr);
-    } else {
-      isCorrect = selectedOption === currentQ.correctAnswer;
-    }
-
-    setScoreStats((prev) => ({
-      correct: prev.correct + (isCorrect ? 1 : 0),
-      total: prev.total + 1,
-    }));
-
-    if (isCorrect) {
-      addXP(15, 'Correct Practice Answer');
-    } else {
-      // Save to recent mistakes
-      StorageService.addMistake({
-        id: currentQ.id,
-        question: currentQ.promptJp,
-        yourAnswer:
-          currentQ.type === 'sentence_order'
-            ? orderedTokens.map((i) => currentQ.options[i]).join(' ')
-            : currentQ.options[selectedOption || 0] || '',
-        correctAnswer:
-          currentQ.type === 'sentence_order'
-            ? (currentQ.correctAnswer as number[]).map((i) => currentQ.options[i]).join(' ')
-            : currentQ.options[currentQ.correctAnswer as number] || '',
-        explanation: currentQ.explanation,
-        category: currentQ.category,
-      });
-    }
-
-    logActivity('practice', 1);
-  };
-
-  const handleNextQuestion = () => {
-    setSelectedOption(null);
-    setOrderedTokens([]);
-    setIsAnswered(false);
-    setSrsAdded(false);
-    if (currentIndex < questions.length - 1) {
-      setCurrentIndex((prev) => prev + 1);
-    } else {
-      setCurrentIndex(0);
-    }
-  };
-
-  if (!currentQ) {
-    return (
-      <div className="p-8 text-center text-slate-400">
-        <p>No practice questions found for {activeLevel}.</p>
-      </div>
-    );
-  }
-
-  const isSentenceOrder = currentQ.type === 'sentence_order';
-  const isCorrect = isSentenceOrder
-    ? JSON.stringify(orderedTokens) === JSON.stringify(currentQ.correctAnswer)
-    : selectedOption === currentQ.correctAnswer;
+  const isCorrect = currentAnswerRecord ? currentAnswerRecord.isCorrect : false;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6 animate-fade-in">
@@ -159,10 +112,8 @@ export const PracticeView: React.FC = () => {
             {activeLevel} {t('practice.title')}
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Question {currentIndex + 1} of {questions.length} • {t('dashboard.practiceAccuracy')}:{' '}
-            {scoreStats.total > 0
-              ? `${Math.round((scoreStats.correct / scoreStats.total) * 100)}%`
-              : '—'}
+            Question {currentIndex + 1} of {totalQuestions} • {t('dashboard.practiceAccuracy')}:{' '}
+            {answeredCount > 0 ? `${accuracyPercentage}% (${correctCount}/${answeredCount})` : '—'}
           </p>
         </div>
 
@@ -173,7 +124,7 @@ export const PracticeView: React.FC = () => {
               <button
                 key={cat}
                 onClick={() => handleFilterCategory(cat)}
-                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 capitalize ${
+                className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 capitalize cursor-pointer ${
                   activeCategory === cat
                     ? 'bg-brand-500 text-white shadow-sm'
                     : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
@@ -198,11 +149,11 @@ export const PracticeView: React.FC = () => {
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div className="flex items-center gap-2">
             <span className="px-3 py-1 rounded-full bg-brand-50 dark:bg-brand-950 text-brand-600 dark:text-brand-400 text-xs font-black uppercase">
-              {currentQ.category.replace('_', ' ')}
+              {(currentQuestion.category || 'Practice').replace('_', ' ')}
             </span>
-            {currentQ.relatedGrammarId && (
+            {currentQuestion.metadata?.relatedGrammarId && (
               <span className="px-2.5 py-0.5 rounded-full bg-indigo-50 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold flex items-center gap-1">
-                <Sparkles size={10} /> {currentQ.relatedGrammarId}
+                <Sparkles size={10} /> {currentQuestion.metadata.relatedGrammarId}
               </span>
             )}
           </div>
@@ -217,7 +168,7 @@ export const PracticeView: React.FC = () => {
               <span>Report</span>
             </button>
             <span className="text-xs text-slate-400 font-medium">
-              Question {currentIndex + 1} / {questions.length}
+              Question {currentIndex + 1} / {totalQuestions}
             </span>
           </div>
         </div>
@@ -225,11 +176,11 @@ export const PracticeView: React.FC = () => {
         {/* Prompt */}
         <div className="space-y-2">
           <div className="text-xl sm:text-2xl font-bold font-japanese text-slate-900 dark:text-white leading-relaxed">
-            {currentQ.promptJp}
+            {currentQuestion.prompt}
           </div>
-          {currentQ.promptEn && (
+          {currentQuestion.promptSub && (
             <div className="text-xs text-slate-500 dark:text-slate-400 italic">
-              {currentQ.promptEn}
+              {currentQuestion.promptSub}
             </div>
           )}
         </div>
@@ -249,9 +200,9 @@ export const PracticeView: React.FC = () => {
                   type="button"
                   onClick={() => handleRemoveToken(pos)}
                   disabled={isAnswered}
-                  className="px-3.5 py-2 rounded-xl bg-brand-500 text-white font-japanese font-bold text-sm shadow-sm flex items-center gap-1.5 group"
+                  className="px-3.5 py-2 rounded-xl bg-brand-500 text-white font-japanese font-bold text-sm shadow-sm flex items-center gap-1.5 group cursor-pointer disabled:cursor-default"
                 >
-                  <span>{currentQ.options[optIdx]}</span>
+                  <span>{currentQuestion.options[optIdx]}</span>
                   {!isAnswered && (
                     <span className="text-xs opacity-70 group-hover:opacity-100">✕</span>
                   )}
@@ -260,7 +211,7 @@ export const PracticeView: React.FC = () => {
             </div>
 
             <div className="flex flex-wrap items-center gap-2.5 pt-2">
-              {currentQ.options.map((opt, optIdx) => {
+              {currentQuestion.options.map((opt, optIdx) => {
                 const isSelected = orderedTokens.includes(optIdx);
                 return (
                   <button
@@ -268,9 +219,9 @@ export const PracticeView: React.FC = () => {
                     type="button"
                     disabled={isSelected || isAnswered}
                     onClick={() => handleSelectToken(optIdx)}
-                    className={`px-4 py-2.5 rounded-2xl border text-sm font-japanese font-bold transition-all ${
+                    className={`px-4 py-2.5 rounded-2xl border text-sm font-japanese font-bold transition-all cursor-pointer ${
                       isSelected
-                        ? 'opacity-30 border-dashed border-slate-300 dark:border-slate-700 bg-transparent'
+                        ? 'opacity-30 border-dashed border-slate-300 dark:border-slate-700 bg-transparent cursor-default'
                         : 'bg-white dark:bg-slate-800 border-slate-200 dark:border-slate-700 text-slate-900 dark:text-white hover:border-brand-500 hover:scale-105 shadow-sm'
                     }`}
                   >
@@ -283,13 +234,13 @@ export const PracticeView: React.FC = () => {
         ) : (
           /* Multiple Choice Options */
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pt-2">
-            {currentQ.options.map((opt, optIdx) => {
-              const isSelected = selectedOption === optIdx;
+            {currentQuestion.options.map((opt, optIdx) => {
+              const isSelected = selectedAnswer === optIdx;
               let style =
                 'border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-200 hover:border-brand-500';
 
               if (isAnswered) {
-                if (optIdx === currentQ.correctAnswer) {
+                if (optIdx === currentQuestion.correctAnswer) {
                   style =
                     'border-emerald-500 bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold';
                 } else if (isSelected && !isCorrect) {
@@ -305,8 +256,9 @@ export const PracticeView: React.FC = () => {
                 <button
                   key={optIdx}
                   type="button"
-                  onClick={() => handleSelectOption(optIdx)}
-                  className={`p-4 rounded-2xl border text-xs sm:text-sm text-left transition-all ${style}`}
+                  disabled={isAnswered || isSubmitting}
+                  onClick={() => selectAnswer(optIdx)}
+                  className={`p-4 rounded-2xl border text-xs sm:text-sm text-left transition-all cursor-pointer disabled:cursor-default ${style}`}
                 >
                   <span className="font-bold mr-2 text-slate-400">{optIdx + 1}.</span>
                   {opt}
@@ -337,7 +289,7 @@ export const PracticeView: React.FC = () => {
               )}
             </div>
             <p className="leading-relaxed text-slate-700 dark:text-slate-300">
-              <strong>{t('common.explanation')}:</strong> {currentQ.explanation}
+              <strong>{t('common.explanation')}:</strong> {currentQuestion.explanation}
             </p>
 
             {!isCorrect && (
@@ -356,39 +308,60 @@ export const PracticeView: React.FC = () => {
           </div>
         )}
 
-        {/* Actions */}
+        {/* Progression Action Buttons */}
         {!isAnswered ? (
           <button
             type="button"
-            onClick={handleCheckAnswer}
+            onClick={submitAnswer}
             disabled={
-              isSentenceOrder
-                ? orderedTokens.length !== currentQ.options.length
-                : selectedOption === null
+              isSubmitting ||
+              (isSentenceOrder
+                ? orderedTokens.length !== currentQuestion.options.length
+                : selectedAnswer === null)
             }
-            className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-white font-black text-sm rounded-2xl shadow-lg shadow-brand-500/25 transition-all"
+            className="w-full py-3.5 bg-brand-500 hover:bg-brand-600 disabled:opacity-40 text-white font-black text-sm rounded-2xl shadow-lg shadow-brand-500/25 transition-all cursor-pointer disabled:cursor-not-allowed"
           >
-            {t('practice.checkAnswer')}
+            {isSubmitting ? 'Evaluating...' : t('practice.checkAnswer')}
           </button>
         ) : (
           <button
             type="button"
-            onClick={handleNextQuestion}
-            className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2"
+            onClick={nextQuestion}
+            disabled={isAdvancing}
+            className="w-full py-3.5 bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-black text-sm rounded-2xl shadow-lg transition-all flex items-center justify-center gap-2 cursor-pointer disabled:opacity-60"
           >
-            {t('practice.nextQuestion')} <ArrowRight size={18} />
+            {currentIndex >= totalQuestions - 1 ? (
+              <>Finish Session & View Results <ArrowRight size={18} /></>
+            ) : (
+              <>{t('practice.nextQuestion')} <ArrowRight size={18} /></>
+            )}
           </button>
         )}
       </div>
 
-      {isReporting && currentQ && (
+      {/* Session Result Modal */}
+      <SessionResultModal
+        isOpen={isCompleted}
+        result={result}
+        onRetry={() => {
+          restartSession();
+          setSrsAdded(false);
+        }}
+        onClose={() => {
+          restartSession();
+          setSrsAdded(false);
+        }}
+        title={`${activeLevel} Practice Session Complete`}
+      />
+
+      {isReporting && currentQuestion && (
         <ReportIssueModal
           isOpen={isReporting}
           onClose={() => setIsReporting(false)}
-          contentId={currentQ.id}
+          contentId={currentQuestion.id}
           module="questions"
-          level={currentQ.level}
-          currentText={currentQ.promptJp}
+          level={currentQuestion.level || activeLevel}
+          currentText={currentQuestion.prompt}
         />
       )}
     </div>

@@ -43,6 +43,7 @@ import { DiagnosticPlacementModal } from '../components/planner/DiagnosticPlacem
 import { DailyStudySessionModal } from '../components/planner/DailyStudySessionModal';
 import { UpgradePrompt } from '../components/common/UpgradePrompt';
 import { AdBanner } from '../components/common/AdBanner';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 
 export const LearnRoadmapView: React.FC = () => {
   const { activeLevel, setActiveLevel, selectedLessonId, setSelectedLessonId, setActiveView } = useApp();
@@ -146,11 +147,14 @@ export const LearnRoadmapView: React.FC = () => {
             <ArrowLeft size={16} /> Back to Study Plan
           </button>
 
-          {isCompleted && (
-            <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-800">
-              <CheckCircle2 size={14} /> Lesson Completed (+{currentLesson.xpReward} XP)
-            </span>
-          )}
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+            {isCompleted && (
+              <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-800">
+                <CheckCircle2 size={14} /> Lesson Completed (+{currentLesson.xpReward} XP)
+              </span>
+            )}
+          </div>
         </div>
 
         {/* Lesson Header Card */}
@@ -225,7 +229,11 @@ export const LearnRoadmapView: React.FC = () => {
                       </span>
                       <span className="text-xs text-slate-400 font-japanese">{v.hiragana}</span>
                     </div>
-                    <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{v.meaning}</p>
+                    {profile.showTranslation !== false ? (
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{v.meaning}</p>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 italic mt-1 block">Translation hidden (Trans OFF)</span>
+                    )}
                   </div>
                   <AudioButton text={v.word} size="sm" />
                 </div>
@@ -292,7 +300,9 @@ export const LearnRoadmapView: React.FC = () => {
                           {ex.jp}
                         </p>
                         <p className="text-slate-400 text-[11px]">{ex.reading}</p>
-                        <p className="text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                        {profile.showTranslation !== false && (
+                          <p className="text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                        )}
                       </div>
                       <AudioButton text={ex.jp} size="sm" />
                     </div>

@@ -42,6 +42,8 @@ export const defaultProfile: UserProfile = {
   theme: 'light',
   fontSize: 'medium',
   showFurigana: true,
+  showTranslation: true,
+  translationLanguage: 'en',
   speechSpeed: 1.0,
   audioAutoPlay: true,
   soundEffects: true,

@@ -12,6 +12,8 @@ import {
   AlertTriangle,
   Lightbulb,
   MessageSquare,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -22,6 +24,7 @@ import { JapaneseInput } from '../components/keyboard/JapaneseInput';
 import { AuthService } from '../services/authService';
 import { AIAccessGateModal } from '../components/auth/AIAccessGateModal';
 import { AIConversationTopic, AIMessage } from '../types/ai';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 
 export const AIConversationView: React.FC = () => {
   const { activeLevel } = useApp();
@@ -35,6 +38,11 @@ export const AIConversationView: React.FC = () => {
   const [isBotTyping, setIsBotTyping] = useState(false);
   const [summaryReport, setSummaryReport] = useState<any | null>(null);
   const [aiGateModalOpen, setAiGateModalOpen] = useState(false);
+  const [revealedChatTranslations, setRevealedChatTranslations] = useState<Record<string, boolean>>({});
+
+  const toggleMessageReveal = (id: string) => {
+    setRevealedChatTranslations((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
 
@@ -189,18 +197,8 @@ export const AIConversationView: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
-          {/* Japanese-Only Mode Switch */}
-          <button
-            onClick={() => setJapaneseOnly(!japaneseOnly)}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-all ${
-              japaneseOnly
-                ? 'bg-brand-500 text-white border-brand-500 shadow-sm'
-                : 'bg-white dark:bg-slate-900 text-slate-600 dark:text-slate-300 border-slate-200 dark:border-slate-800'
-            }`}
-          >
-            <Languages size={14} />
-            {japaneseOnly ? 'Japanese Only ON' : 'Show Translations'}
-          </button>
+          {/* Translation Toggle with Optional Language Selector */}
+          <TranslationToggleButton />
         </div>
       </div>
 
@@ -272,10 +270,21 @@ export const AIConversationView: React.FC = () => {
                     <p className="text-xs text-slate-400 font-japanese">{m.reading}</p>
                   )}
 
-                  {!isUser && !japaneseOnly && m.textEn && (
+                  {!isUser && (profile.showTranslation !== false || revealedChatTranslations[m.id]) && m.textEn && (
                     <p className="text-xs text-slate-600 dark:text-slate-300 pt-1 border-t border-slate-200/50 dark:border-slate-700/50">
                       {m.textEn}
                     </p>
+                  )}
+
+                  {!isUser && profile.showTranslation === false && !revealedChatTranslations[m.id] && m.textEn && (
+                    <button
+                      type="button"
+                      onClick={() => toggleMessageReveal(m.id)}
+                      className="text-[10px] text-indigo-500 dark:text-indigo-400 hover:underline flex items-center gap-1 font-bold pt-1 cursor-pointer"
+                    >
+                      <Eye size={11} />
+                      <span>Translate message</span>
+                    </button>
                   )}
 
                   {/* Real-time linguistic feedback for user errors */}

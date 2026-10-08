@@ -22,6 +22,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useJapaneseKeyboard } from '../../context/JapaneseKeyboardContext';
 import { JLPT_LEVELS } from '../../data/jlptLevels';
 import { SupportedLanguage } from '../../types/i18n';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const Navbar: React.FC = () => {
   const {
@@ -280,6 +281,9 @@ export const Navbar: React.FC = () => {
             <span className="font-japanese text-[11px] font-bold">振</span>
             <span className="text-[10px] tracking-wider uppercase">{profile.showFurigana ? 'Furi ON' : 'Furi OFF'}</span>
           </button>
+
+          {/* Global Translation Quick Toggle */}
+          <TranslationToggleButton size="sm" className="hidden sm:inline-flex" />
 
           {/* Notifications Trigger */}
           <button

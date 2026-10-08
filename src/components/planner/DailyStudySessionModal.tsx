@@ -18,6 +18,7 @@ import { DailyStudyPlan, DailyStudyTask } from '../../types/studyPlan';
 import { AudioButton } from '../common/AudioButton';
 import { useUser } from '../../context/UserContext';
 import { useSRS } from '../../context/SRSContext';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 interface DailyStudySessionModalProps {
   isOpen: boolean;
@@ -32,7 +33,7 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
   dailyPlan,
   onTaskCompleted,
 }) => {
-  const { addXP, logActivity } = useUser();
+  const { profile, addXP, logActivity } = useUser();
   const { rateItem } = useSRS();
 
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
@@ -102,12 +103,15 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Task Content Runner */}
@@ -173,7 +177,9 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                                   {ex.jp}
                                 </p>
                                 <p className="text-slate-400 text-[11px]">{ex.reading}</p>
-                                <p className="text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                                {profile.showTranslation !== false && (
+                                  <p className="text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                                )}
                               </div>
                               <AudioButton text={ex.jp} size="sm" />
                             </div>

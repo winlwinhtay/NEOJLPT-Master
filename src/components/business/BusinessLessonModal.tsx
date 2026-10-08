@@ -24,6 +24,8 @@ import {
   AlertCircle,
   Keyboard,
   RotateCcw,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { BusinessLesson } from '../../types/business';
@@ -34,6 +36,7 @@ import {
 import { AudioButton } from '../common/AudioButton';
 import { useUser } from '../../context/UserContext';
 import { useJapaneseKeyboard } from '../../context/JapaneseKeyboardContext';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 interface BusinessLessonModalProps {
   lesson: BusinessLesson | null;
@@ -60,12 +63,19 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
   hasPrevLesson,
   onOpenStudioTab,
 }) => {
-  const { addXP, logActivity } = useUser();
+  const { profile, addXP, logActivity } = useUser();
   const { openKeyboard, registerActiveInput } = useJapaneseKeyboard();
 
   const [activeTab, setActiveTab] = useState<
     'overview' | 'dialogue' | 'vocab' | 'grammar' | 'quiz' | 'typing'
   >('overview');
+
+  // Translation Reveal Overrides (when translation is turned off)
+  const [revealedItems, setRevealedItems] = useState<Record<string, boolean>>({});
+
+  const toggleReveal = (id: string) => {
+    setRevealedItems((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
 
   // Quiz State
   const [selectedQuizAnswers, setSelectedQuizAnswers] = useState<Record<string, number>>({});
@@ -191,6 +201,8 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
           </div>
 
           <div className="flex items-center gap-2 shrink-0">
+            <TranslationToggleButton size="sm" />
+
             <button
               type="button"
               onClick={handleCompleteLessonWithReward}
@@ -366,16 +378,34 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                       </p>
                     </div>
 
-                    <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 space-y-1 text-xs">
-                      <p className="text-slate-700 dark:text-slate-300">
-                        <strong>EN:</strong> {line.english}
-                      </p>
-                      {line.myanmar && (
-                        <p className="text-slate-600 dark:text-slate-400">
-                          <strong>MY:</strong> {line.myanmar}
-                        </p>
-                      )}
-                    </div>
+                    {profile.showTranslation !== false || revealedItems[line.id] ? (
+                      <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 space-y-1 text-xs">
+                        {line.english && (
+                          <p className="text-slate-700 dark:text-slate-300">
+                            <span className="font-bold text-[10px] uppercase text-indigo-500 mr-1.5">EN</span>
+                            {line.english}
+                          </p>
+                        )}
+                        {line.myanmar && (
+                          <p className="text-slate-600 dark:text-slate-400">
+                            <span className="font-bold text-[10px] uppercase text-indigo-500 mr-1.5">MY</span>
+                            {line.myanmar}
+                          </p>
+                        )}
+                      </div>
+                    ) : (
+                      <div className="pt-1.5 flex items-center justify-between text-[11px]">
+                        <span className="text-slate-400 italic">Translation hidden for immersion</span>
+                        <button
+                          type="button"
+                          onClick={() => toggleReveal(line.id)}
+                          className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 cursor-pointer hover:underline"
+                        >
+                          <Eye size={12} />
+                          <span>Peek Translation</span>
+                        </button>
+                      </div>
+                    )}
 
                     {line.note && (
                       <div className="p-2.5 rounded-xl bg-amber-50/70 dark:bg-amber-950/20 text-[11px] text-amber-900 dark:text-amber-300 flex items-start gap-1.5 border border-amber-200/60 dark:border-amber-900/40">
@@ -411,15 +441,28 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     </div>
 
                     <div className="text-xs space-y-1">
-                      <p className="font-bold text-slate-800 dark:text-slate-200">
-                        {v.meaningEn}
-                      </p>
-                      {v.meaningMy && (
-                        <p className="text-slate-500 dark:text-slate-400">{v.meaningMy}</p>
+                      {profile.showTranslation !== false || revealedItems[`vocab-${idx}`] ? (
+                        <>
+                          <p className="font-bold text-slate-800 dark:text-slate-200">
+                            {v.meaningEn}
+                          </p>
+                          {v.meaningMy && (
+                            <p className="text-slate-500 dark:text-slate-400">{v.meaningMy}</p>
+                          )}
+                          <p className="text-[11px] text-slate-600 dark:text-slate-400 italic">
+                            💡 {v.nuance}
+                          </p>
+                        </>
+                      ) : (
+                        <button
+                          type="button"
+                          onClick={() => toggleReveal(`vocab-${idx}`)}
+                          className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline cursor-pointer py-1"
+                        >
+                          <Eye size={12} />
+                          <span>Reveal Meaning (Active Recall)</span>
+                        </button>
                       )}
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 italic">
-                        💡 {v.nuance}
-                      </p>
                     </div>
 
                     {v.exampleSentence && (
@@ -454,17 +497,30 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                   </div>
 
                   <div className="text-xs space-y-1 text-slate-700 dark:text-slate-300">
-                    <p>
-                      <strong>Meaning:</strong> {g.meaningEn}
-                    </p>
-                    {g.meaningMy && (
-                      <p className="text-slate-500 dark:text-slate-400">
-                        <strong>MY:</strong> {g.meaningMy}
-                      </p>
+                    {profile.showTranslation !== false || revealedItems[`grammar-${idx}`] ? (
+                      <>
+                        <p>
+                          <strong>Meaning:</strong> {g.meaningEn}
+                        </p>
+                        {g.meaningMy && (
+                          <p className="text-slate-500 dark:text-slate-400">
+                            <strong>MY:</strong> {g.meaningMy}
+                          </p>
+                        )}
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400">
+                          Rule: {g.usageRule}
+                        </p>
+                      </>
+                    ) : (
+                      <button
+                        type="button"
+                        onClick={() => toggleReveal(`grammar-${idx}`)}
+                        className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline cursor-pointer py-1"
+                      >
+                        <Eye size={12} />
+                        <span>Reveal Grammar Meaning</span>
+                      </button>
                     )}
-                    <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                      Rule: {g.usageRule}
-                    </p>
                   </div>
 
                   {g.comparison && (

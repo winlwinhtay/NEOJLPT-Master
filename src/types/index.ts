@@ -49,6 +49,8 @@ export interface UserProfile {
   theme: 'light' | 'dark' | 'sakura' | 'bamboo';
   fontSize: 'small' | 'medium' | 'large';
   showFurigana: boolean;
+  showTranslation: boolean;
+  translationLanguage?: SupportedLanguage;
   speechSpeed: number; // 0.75, 1.0, 1.25, 1.5
   audioAutoPlay: boolean;
   soundEffects: boolean;

@@ -7,6 +7,7 @@ import { AudioButton } from '../common/AudioButton';
 import { JapaneseInput } from '../keyboard/JapaneseInput';
 import { AuthService } from '../../services/authService';
 import { AIAccessGateModal } from '../auth/AIAccessGateModal';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const AITutorModal: React.FC = () => {
   const { aiTutorOpen, setAiTutorOpen, activeLevel } = useApp();
@@ -79,12 +80,15 @@ export const AITutorModal: React.FC = () => {
               </p>
             </div>
           </div>
-          <button
-            onClick={() => setAiTutorOpen(false)}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+            <button
+              onClick={() => setAiTutorOpen(false)}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 cursor-pointer"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Content Body */}
@@ -149,7 +153,11 @@ export const AITutorModal: React.FC = () => {
                           {ex.jp}
                         </p>
                         <p className="text-xs text-slate-400 font-japanese mt-0.5">{ex.reading}</p>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                        {profile.showTranslation !== false ? (
+                          <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic mt-1 block">Translation hidden (Trans OFF)</span>
+                        )}
                       </div>
                       <AudioButton text={ex.jp} size="sm" />
                     </div>

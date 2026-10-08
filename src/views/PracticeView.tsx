@@ -12,7 +12,7 @@ import { useApp } from '../context/AppContext';
 import { useSRS } from '../context/SRSContext';
 import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
-import { PRACTICE_QUESTIONS } from '../data/practiceData';
+import { ContentService } from '../services/content';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { PracticeQuestion } from '../types/practice';
@@ -30,13 +30,9 @@ export const PracticeView: React.FC = () => {
   const [srsAdded, setSrsAdded] = useState(false);
   const [isReporting, setIsReporting] = useState(false);
 
-  // Filter raw practice questions based on activeLevel and activeCategory
+  // Filter raw practice questions based on activeLevel and activeCategory via ContentService
   const rawQuestions = useMemo(() => {
-    return PRACTICE_QUESTIONS.filter((q) => {
-      if (q.level !== activeLevel) return false;
-      if (activeCategory !== 'all' && q.category !== activeCategory) return false;
-      return true;
-    });
+    return ContentService.questions.filterQuestions({ level: activeLevel, category: activeCategory }).items;
   }, [activeLevel, activeCategory]);
 
   // Convert to normalized SessionQuestion[]

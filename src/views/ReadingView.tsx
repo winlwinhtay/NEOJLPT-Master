@@ -15,7 +15,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
-import { READING_DATA } from '../data/readingData';
+import { ContentService } from '../services/content';
 import { RubyText } from '../components/common/RubyText';
 import { AudioButton } from '../components/common/AudioButton';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
@@ -27,9 +27,9 @@ export const ReadingView: React.FC = () => {
   const { profile, logActivity, addXP } = useUser();
   const { t, language } = useI18n();
 
-  const levelReadings = READING_DATA.filter((r) => r.level === activeLevel);
+  const levelReadings = ContentService.reading.getReadingsByLevel(activeLevel);
   const [selectedReading, setSelectedReading] = useState<ReadingLesson>(
-    levelReadings[0] || READING_DATA[0]
+    levelReadings[0] || ContentService.reading.getReadingsByLevel('N5')[0]
   );
 
   const [showFurigana, setShowFurigana] = useState(true);

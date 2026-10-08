@@ -28,7 +28,7 @@ import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
-import { KANJI_DATA } from '../data/kanjiData';
+import { ContentService } from '../services/content';
 import { RADICALS_DATA, CORE_69_RADICALS, ALL_240_RADICALS } from '../data/radicalsData';
 import { KanjiCanvas } from '../components/kanji/KanjiCanvas';
 import { StrokeOrderPlayer } from '../components/kanji/StrokeOrderPlayer';
@@ -52,6 +52,9 @@ export const KanjiView: React.FC = () => {
   const { t, language } = useI18n();
   const activeLang: SupportedLanguage = (profile.translationLanguage || language || 'en') as SupportedLanguage;
   const isTransOn = profile.showTranslation !== false;
+
+  // Retrieve validated Kanji catalog from ContentService
+  const KANJI_DATA = useMemo(() => ContentService.kanji.filterKanji({}).items, []);
 
   // Subcategory tabs: 'kanji' | 'radicals' | 'confusion' | 'network'
   const [activeTab, setActiveTab] = useState<'kanji' | 'radicals' | 'confusion' | 'network'>('kanji');

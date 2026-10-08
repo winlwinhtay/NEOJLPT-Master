@@ -19,7 +19,7 @@ import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
-import { MOCK_TESTS } from '../data/mockTestData';
+import { ContentService } from '../services/content';
 import { AudioButton } from '../components/common/AudioButton';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { StorageService } from '../services/storageService';
@@ -34,7 +34,7 @@ export const MockTestView: React.FC = () => {
   const { t } = useI18n();
 
   const testKey = `mock-${activeLevel.toLowerCase()}-01`;
-  const mockTest = MOCK_TESTS[testKey] || MOCK_TESTS['mock-n5-01'];
+  const mockTest = ContentService.questions.getMockTest(testKey) || ContentService.questions.getMockTest('mock-n5-01')!;
 
   // Test state
   const [isStarted, setIsStarted] = useState(false);

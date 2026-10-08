@@ -17,7 +17,7 @@ import { useApp } from '../context/AppContext';
 import { useSRS } from '../context/SRSContext';
 import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
-import { VOCABULARY_DATA } from '../data/vocabularyData';
+import { ContentService } from '../services/content';
 import { AudioButton } from '../components/common/AudioButton';
 import { RubyText } from '../components/common/RubyText';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
@@ -48,9 +48,9 @@ export const VocabularyView: React.FC = () => {
   const [currentPage, setCurrentPage] = useState(1);
   const PAGE_SIZE = 50;
 
-  // Filter words by active level, query, and SRS status
+  // Filter words by active level, query, and SRS status via ContentService
   const filteredVocab = useMemo(() => {
-    return VOCABULARY_DATA.filter((v) => {
+    return ContentService.vocabulary.searchVocabulary('', activeLevel).filter((v) => {
       if (v.level !== activeLevel) return false;
 
       // Query filter

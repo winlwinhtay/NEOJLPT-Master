@@ -15,7 +15,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
-import { LISTENING_DATA } from '../data/listeningData';
+import { ContentService } from '../services/content';
 import { speechService } from '../services/speechService';
 import { ListeningLesson } from '../types';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
@@ -26,9 +26,9 @@ export const ListeningView: React.FC = () => {
   const { logActivity, addXP, profile } = useUser();
   const { t, language } = useI18n();
 
-  const levelListeningList = LISTENING_DATA.filter((l) => l.level === activeLevel);
+  const levelListeningList = ContentService.listening.getListeningByLevel(activeLevel);
   const [selectedLesson, setSelectedLesson] = useState<ListeningLesson>(
-    levelListeningList[0] || LISTENING_DATA[0]
+    levelListeningList[0] || ContentService.listening.getListeningByLevel('N5')[0]
   );
 
   const [isPlaying, setIsPlaying] = useState(false);

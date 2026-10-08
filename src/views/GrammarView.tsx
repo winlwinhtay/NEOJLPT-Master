@@ -14,7 +14,7 @@ import {
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
-import { GRAMMAR_DATA } from '../data/grammarData';
+import { ContentService } from '../services/content';
 import { AudioButton } from '../components/common/AudioButton';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { GrammarItem } from '../types';
@@ -27,6 +27,9 @@ export const GrammarView: React.FC = () => {
   const { t, language } = useI18n();
   const activeLang: SupportedLanguage = (profile.translationLanguage || language || 'en') as SupportedLanguage;
   const isTransOn = profile.showTranslation !== false;
+
+  // Retrieve canonical Grammar catalog from ContentService
+  const GRAMMAR_DATA = useMemo(() => ContentService.grammar.filterGrammar({}).items, []);
 
   const [searchQuery, setSearchQuery] = useState('');
   const [comparisonMode, setComparisonMode] = useState(false);

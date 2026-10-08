@@ -571,7 +571,7 @@ const RAW_CANONICAL_ITEMS: Omit<GrammarItem, 'meaningsByLang' | 'explanationsByL
   },
   {
     "id": "g-n5-017",
-    "pattern": "〜ています (進行・状態)",
+    "pattern": "〜ている / 〜ています",
     "meaning": "Is doing (-ing) / Resulting state",
     "structure": "[Verb Te-form] + います",
     "explanation": "Describes an action currently in progress, or an enduring state resulting from a past action.",
@@ -2123,6 +2123,41 @@ const RAW_CANONICAL_ITEMS: Omit<GrammarItem, 'meaningsByLang' | 'explanationsByL
           "en": "I will return here by 5 o'clock.",
           "ja": "五時までにここに戻ります。",
           "my": "၅ နာရီမတိုင်မီ ဒီနေရာကို ပြန်လာပါမယ်။"
+        }
+      }
+    ],
+    "unitId": "n4-u8"
+  },
+  {
+    "id": "g-n4-041",
+    "pattern": "〜ようになる",
+    "meaning": "Come to / Become able to (Gradual change in state)",
+    "structure": "[Verb Dictionary / Potential form] + ようになる",
+    "explanation": "Expresses a gradual change in habit or ability over time, shifting from an inability to an ability, or forming a new habit.",
+    "formalLevel": "standard",
+    "level": "N4",
+    "difficulty": 2,
+    "examples": [
+      {
+        "jp": "日本語の新聞が読めるようになりました。",
+        "reading": "にほんごの しんぶんが よめるように なりました。",
+        "en": "I have become able to read Japanese newspapers.",
+        "highlight": "読めるようになりました",
+        "translationsByLang": {
+          "en": "I have become able to read Japanese newspapers.",
+          "ja": "日本語の新聞が読めるようになりました。",
+          "my": "ဂျပန်သတင်းစာကို ဖတ်တတ်လာခဲ့ပါပြီ။"
+        }
+      },
+      {
+        "jp": "刺身が食べられるようになりました。",
+        "reading": "さしみが たべられるように なりました。",
+        "en": "I came to be able to eat sashimi.",
+        "highlight": "食べられるようになりました",
+        "translationsByLang": {
+          "en": "I came to be able to eat sashimi.",
+          "ja": "刺身が食べられるようになりました。",
+          "my": "ငါးအစိမ်းကို စားတတ်လာပါပြီ။"
         }
       }
     ],

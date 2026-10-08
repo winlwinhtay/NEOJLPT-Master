@@ -23,10 +23,7 @@ import {
   Clock,
   DollarSign,
 } from 'lucide-react';
-import { VOCABULARY_DATA } from '../data/vocabularyData';
-import { KANJI_DATA } from '../data/kanjiData';
-import { GRAMMAR_DATA } from '../data/grammarData';
-import { READING_DATA } from '../data/readingData';
+import { ContentService, CurriculumExampleSentence } from '../services/content';
 import { JLPTLevel, VocabularyItem, KanjiItem, GrammarItem, ReadingLesson } from '../types';
 import { CurriculumPlannerConfig } from '../types/studyPlan';
 import { StudyPlannerService, DEFAULT_CURRICULUM_CONFIG } from '../services/studyPlannerService';
@@ -34,7 +31,7 @@ import { StorageService } from '../services/storageService';
 import { AdminActiveLearningPanel } from '../components/admin/AdminActiveLearningPanel';
 import { AdminMonetizationPanel } from '../components/admin/AdminMonetizationPanel';
 
-type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'planner' | 'review' | 'ai-active' | 'monetization';
+type AdminTab = 'vocab' | 'kanji' | 'grammar' | 'reading' | 'sentences' | 'planner' | 'review' | 'ai-active' | 'monetization';
 
 
 export interface JapaneseReviewItem {
@@ -147,9 +144,15 @@ export const AdminView: React.FC = () => {
   const [activeTab, setActiveTab] = useState<AdminTab>('vocab');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedLevel, setSelectedLevel] = useState<JLPTLevel | 'ALL'>('ALL');
+  const [qualityFilter, setQualityFilter] = useState<string>('ALL');
+  const [sourceFilter, setSourceFilter] = useState<string>('ALL');
 
-  // Local state copy for vocabulary
-  const [vocabList, setVocabList] = useState(VOCABULARY_DATA);
+  // Datasets resolved from ContentService
+  const [vocabList, setVocabList] = useState<VocabularyItem[]>(() => ContentService.vocabulary.filterVocabulary({}).items);
+  const KANJI_DATA = useMemo(() => ContentService.kanji.filterKanji({}).items, []);
+  const GRAMMAR_DATA = useMemo(() => ContentService.grammar.filterGrammar({}).items, []);
+  const READING_DATA = useMemo(() => ContentService.reading.filterReadings({}).items, []);
+  const [sentenceList, setSentenceList] = useState<CurriculumExampleSentence[]>(() => ContentService.sentences.getAllSentences());
 
   // Add / Edit Modal state for Vocab
   const [isModalOpen, setIsModalOpen] = useState(false);
@@ -337,6 +340,25 @@ export const AdminView: React.FC = () => {
     });
   }, [selectedLevel, searchQuery]);
 
+  // Filtered Reusable Sentences
+  const filteredSentences = useMemo(() => {
+    return sentenceList.filter((s) => {
+      if (selectedLevel !== 'ALL' && s.jlptLevel !== selectedLevel) return false;
+      if (qualityFilter !== 'ALL' && s.qualityStatus !== qualityFilter) return false;
+      if (sourceFilter !== 'ALL' && s.contentSource !== sourceFilter) return false;
+      if (searchQuery.trim()) {
+        const q = searchQuery.toLowerCase();
+        return (
+          s.japanese.toLowerCase().includes(q) ||
+          s.reading.toLowerCase().includes(q) ||
+          s.translationEn.toLowerCase().includes(q) ||
+          (s.translationsByLang?.my && s.translationsByLang.my.includes(q))
+        );
+      }
+      return true;
+    });
+  }, [sentenceList, selectedLevel, qualityFilter, sourceFilter, searchQuery]);
+
   // Current active list length for pagination
   const currentListLength = useMemo(() => {
     switch (activeTab) {
@@ -348,10 +370,12 @@ export const AdminView: React.FC = () => {
         return filteredGrammar.length;
       case 'reading':
         return filteredReading.length;
+      case 'sentences':
+        return filteredSentences.length;
       default:
         return 0;
     }
-  }, [activeTab, filteredVocab.length, filteredKanji.length, filteredGrammar.length, filteredReading.length]);
+  }, [activeTab, filteredVocab.length, filteredKanji.length, filteredGrammar.length, filteredReading.length, filteredSentences.length]);
 
   const totalAdminPages = Math.ceil(currentListLength / ADMIN_PAGE_SIZE) || 1;
 
@@ -374,6 +398,22 @@ export const AdminView: React.FC = () => {
     const start = (adminPage - 1) * ADMIN_PAGE_SIZE;
     return filteredReading.slice(start, start + ADMIN_PAGE_SIZE);
   }, [filteredReading, adminPage]);
+
+  const paginatedSentences = useMemo(() => {
+    const start = (adminPage - 1) * ADMIN_PAGE_SIZE;
+    return filteredSentences.slice(start, start + ADMIN_PAGE_SIZE);
+  }, [filteredSentences, adminPage]);
+
+  const handleToggleSentencePublish = (id: string) => {
+    setSentenceList((prev) =>
+      prev.map((s) => {
+        if (s.id !== id) return s;
+        const nextStatus = s.qualityStatus === 'published' ? 'needs_review' : 'published';
+        return { ...s, qualityStatus: nextStatus };
+      })
+    );
+    showToast(`Sentence ${id} quality status updated.`);
+  };
 
   // Reset pagination on tab change or filter
   const handleTabChange = (tab: AdminTab) => {
@@ -507,7 +547,7 @@ export const AdminView: React.FC = () => {
       )}
 
       {/* Dataset Metric Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-8 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3 sm:gap-4">
         <button
           onClick={() => handleTabChange('vocab')}
           className={`p-4 sm:p-5 text-left rounded-2xl border transition-all ${
@@ -573,6 +613,23 @@ export const AdminView: React.FC = () => {
           </div>
           <div className="text-xl sm:text-2xl font-black text-amber-600 dark:text-amber-400 mt-1">
             {READING_DATA.length}
+          </div>
+        </button>
+
+        <button
+          onClick={() => handleTabChange('sentences')}
+          className={`p-4 sm:p-5 text-left rounded-2xl border transition-all ${
+            activeTab === 'sentences'
+              ? 'bg-teal-50 dark:bg-teal-950/40 border-teal-300 dark:border-teal-700 shadow-sm ring-2 ring-teal-500/20'
+              : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 hover:border-teal-200'
+          }`}
+        >
+          <div className="flex items-center justify-between">
+            <span className="text-[10px] font-bold text-slate-400 uppercase">Sentences</span>
+            <Sparkles size={14} className="text-teal-500" />
+          </div>
+          <div className="text-xl sm:text-2xl font-black text-teal-600 dark:text-teal-400 mt-1">
+            {sentenceList.length}
           </div>
         </button>
 
@@ -1453,19 +1510,52 @@ export const AdminView: React.FC = () => {
               ))}
             </div>
 
-            {/* Search */}
-            <div className="relative w-full sm:w-64">
-              <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
-              <input
-                type="text"
-                value={searchQuery}
+            {/* Quality & Source Filters */}
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              <select
+                value={qualityFilter}
                 onChange={(e) => {
-                  setSearchQuery(e.target.value);
+                  setQualityFilter(e.target.value);
                   setAdminPage(1);
                 }}
-                placeholder={`Search ${activeTab}...`}
-                className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-brand-500"
-              />
+                className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
+              >
+                <option value="ALL">Status: All</option>
+                <option value="published">Published</option>
+                <option value="validated">Validated</option>
+                <option value="needs_review">Needs Review</option>
+                <option value="draft">Draft</option>
+              </select>
+
+              <select
+                value={sourceFilter}
+                onChange={(e) => {
+                  setSourceFilter(e.target.value);
+                  setAdminPage(1);
+                }}
+                className="px-2.5 py-1.5 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-xs font-bold text-slate-700 dark:text-slate-200 outline-none"
+              >
+                <option value="ALL">Source: All</option>
+                <option value="verified_reference">Verified Reference</option>
+                <option value="expert_reviewed">Expert Reviewed</option>
+                <option value="ai_generated">AI Generated</option>
+                <option value="legacy">Legacy</option>
+              </select>
+
+              {/* Search */}
+              <div className="relative w-full sm:w-56">
+                <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => {
+                    setSearchQuery(e.target.value);
+                    setAdminPage(1);
+                  }}
+                  placeholder={`Search ${activeTab}...`}
+                  className="w-full pl-9 pr-3 py-1.5 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-brand-500"
+                />
+              </div>
             </div>
           </div>
 
@@ -1651,6 +1741,72 @@ export const AdminView: React.FC = () => {
                         </td>
                         <td className="p-4 font-japanese text-slate-600 dark:text-slate-300 max-w-sm truncate">
                           {r.passagePlain.slice(0, 70)}...
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+
+              {activeTab === 'sentences' && (
+                <table className="w-full text-left text-xs">
+                  <thead className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-100 dark:border-slate-800 text-slate-400 uppercase font-bold">
+                    <tr>
+                      <th className="p-4">Japanese Sentence</th>
+                      <th className="p-4">Reading</th>
+                      <th className="p-4">English & Multilingual</th>
+                      <th className="p-4">Level</th>
+                      <th className="p-4">Source</th>
+                      <th className="p-4">Quality Score</th>
+                      <th className="p-4 text-right">Status / Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody className="divide-y divide-slate-100 dark:divide-slate-800">
+                    {paginatedSentences.map((s: CurriculumExampleSentence) => (
+                      <tr
+                        key={s.id}
+                        className="hover:bg-slate-50 dark:hover:bg-slate-800/40 transition-colors"
+                      >
+                        <td className="p-4 font-bold font-japanese text-sm text-slate-900 dark:text-white max-w-sm">
+                          {s.japanese}
+                        </td>
+                        <td className="p-4 font-japanese text-slate-500 max-w-xs">
+                          {s.reading}
+                        </td>
+                        <td className="p-4 max-w-sm space-y-1">
+                          <div className="font-medium text-slate-900 dark:text-slate-100">{s.translationEn}</div>
+                          {s.translationsByLang?.my && (
+                            <div className="text-[11px] text-brand-600 dark:text-brand-400 font-myanmar">
+                              🇲🇲 {s.translationsByLang.my}
+                            </div>
+                          )}
+                        </td>
+                        <td className="p-4">
+                          <span className="px-2 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 font-bold">
+                            {s.jlptLevel}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="px-2 py-0.5 rounded-md bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 font-bold text-[10px]">
+                            {s.contentSource}
+                          </span>
+                        </td>
+                        <td className="p-4">
+                          <span className="px-2 py-0.5 rounded-md bg-emerald-50 dark:bg-emerald-950/40 text-emerald-700 dark:text-emerald-300 font-bold text-[10px]">
+                            {s.qualityScore}%
+                          </span>
+                        </td>
+                        <td className="p-4 text-right">
+                          <button
+                            onClick={() => handleToggleSentencePublish(s.id)}
+                            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all ${
+                              s.qualityStatus === 'published'
+                                ? 'bg-emerald-500 text-white hover:bg-emerald-600'
+                                : 'bg-amber-500 text-white hover:bg-amber-600'
+                            }`}
+                          >
+                            {s.qualityStatus}
+                          </button>
                         </td>
                       </tr>
                     ))}

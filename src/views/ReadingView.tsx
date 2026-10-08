@@ -18,13 +18,14 @@ import { useI18n } from '../i18n/I18nContext';
 import { READING_DATA } from '../data/readingData';
 import { RubyText } from '../components/common/RubyText';
 import { AudioButton } from '../components/common/AudioButton';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { ReadingLesson } from '../types';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 
 export const ReadingView: React.FC = () => {
   const { activeLevel } = useApp();
   const { profile, logActivity, addXP } = useUser();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   const levelReadings = READING_DATA.filter((r) => r.level === activeLevel);
   const [selectedReading, setSelectedReading] = useState<ReadingLesson>(
@@ -32,7 +33,7 @@ export const ReadingView: React.FC = () => {
   );
 
   const [showFurigana, setShowFurigana] = useState(true);
-  const [showTranslation, setShowTranslation] = useState(false);
+  const [showTranslation, setShowTranslation] = useState(() => profile.showTranslation !== false);
   const [userAnswers, setUserAnswers] = useState<Record<string, number>>({});
   const [isSubmitted, setIsSubmitted] = useState(false);
 
@@ -78,7 +79,7 @@ export const ReadingView: React.FC = () => {
     setSelectedReading(passage);
     setUserAnswers({});
     setIsSubmitted(false);
-    setShowTranslation(false);
+    setShowTranslation(profile.showTranslation !== false);
   };
 
   return (
@@ -144,18 +145,11 @@ export const ReadingView: React.FC = () => {
             </button>
 
             {/* Translation Toggle */}
-            <button
-              type="button"
-              onClick={() => setShowTranslation(!showTranslation)}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border transition-colors ${
-                showTranslation
-                  ? 'bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-800'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-500 border-slate-200 dark:border-slate-700'
-              }`}
-            >
-              <Languages size={14} />
-              {t('reading.toggleTranslation')}: {showTranslation ? 'ON' : 'OFF'}
-            </button>
+            <TranslationToggleButton
+              size="sm"
+              showTranslation={showTranslation}
+              onToggle={(enabled) => setShowTranslation(enabled)}
+            />
 
             {/* Audio narration */}
             {selectedReading.audioScript && (

@@ -29,6 +29,7 @@ import { JapaneseInput } from '../keyboard/JapaneseInput';
 import { useUser } from '../../context/UserContext';
 import { AuthService } from '../../services/authService';
 import { AIAccessGateModal } from '../auth/AIAccessGateModal';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const BusinessEmailStudio: React.FC = () => {
   const { profile } = useUser();
@@ -116,8 +117,10 @@ export const BusinessEmailStudio: React.FC = () => {
           </p>
         </div>
 
-        {/* Mode Switcher Tabs */}
-        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+        <div className="flex items-center gap-3">
+          <TranslationToggleButton size="sm" />
+          {/* Mode Switcher Tabs */}
+          <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => setStudioMode('comparative')}
@@ -158,6 +161,7 @@ export const BusinessEmailStudio: React.FC = () => {
           </button>
         </div>
       </div>
+    </div>
 
       {/* ========================================================================= */}
       {/* MODE 1: 4-STEP COMPARATIVE ARCHITECTURE */}

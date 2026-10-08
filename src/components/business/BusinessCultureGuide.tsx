@@ -17,6 +17,7 @@ import {
 import { BUSINESS_CULTURE_GUIDES } from '../../data/business/businessCultureData';
 import { useI18n } from '../../i18n/I18nContext';
 import { getCultureGuideTranslation } from '../../data/translations/businessTranslations';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const BusinessCultureGuide: React.FC = () => {
   const { language } = useI18n();
@@ -31,14 +32,17 @@ export const BusinessCultureGuide: React.FC = () => {
   return (
     <div className="space-y-6">
       {/* Header */}
-      <div className="border-b border-slate-200 dark:border-slate-800 pb-4">
-        <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
-          <Shield className="text-indigo-600 dark:text-indigo-400" size={22} />
-          <span>日本のビジネスマナーと企業文化 (Workplace Culture & Etiquette)</span>
-        </h2>
-        <p className="text-xs text-slate-500 dark:text-slate-400">
-          Understand core tendencies and cultural protocols: Seating arrangements, business card exchange, Hou-Ren-Sou, and consensus building.
-        </p>
+      <div className="border-b border-slate-200 dark:border-slate-800 pb-4 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+        <div>
+          <h2 className="text-xl font-black text-slate-900 dark:text-white flex items-center gap-2">
+            <Shield className="text-indigo-600 dark:text-indigo-400" size={22} />
+            <span>日本のビジネスマナーと企業文化 (Workplace Culture & Etiquette)</span>
+          </h2>
+          <p className="text-xs text-slate-500 dark:text-slate-400">
+            Understand core tendencies and cultural protocols: Seating arrangements, business card exchange, Hou-Ren-Sou, and consensus building.
+          </p>
+        </div>
+        <TranslationToggleButton size="sm" />
       </div>
 
       {/* Topic Switcher Pills */}

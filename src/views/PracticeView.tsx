@@ -10,9 +10,11 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useSRS } from '../context/SRSContext';
+import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
 import { PRACTICE_QUESTIONS } from '../data/practiceData';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { PracticeQuestion } from '../types/practice';
 import { adaptPracticeQuestions } from '../session/adapters/practiceAdapter';
 import { useLearningSession } from '../session/hooks/useLearningSession';
@@ -21,6 +23,7 @@ import { SessionResultModal } from '../session/components/SessionResultModal';
 export const PracticeView: React.FC = () => {
   const { activeLevel } = useApp();
   const { rateItem } = useSRS();
+  const { profile } = useUser();
   const { t } = useI18n();
 
   const [activeCategory, setActiveCategory] = useState<string>('all');
@@ -158,6 +161,7 @@ export const PracticeView: React.FC = () => {
             )}
           </div>
           <div className="flex items-center gap-3">
+            <TranslationToggleButton size="sm" />
             <button
               type="button"
               onClick={() => setIsReporting(true)}
@@ -178,7 +182,7 @@ export const PracticeView: React.FC = () => {
           <div className="text-xl sm:text-2xl font-bold font-japanese text-slate-900 dark:text-white leading-relaxed">
             {currentQuestion.prompt}
           </div>
-          {currentQuestion.promptSub && (
+          {profile.showTranslation !== false && currentQuestion.promptSub && (
             <div className="text-xs text-slate-500 dark:text-slate-400 italic">
               {currentQuestion.promptSub}
             </div>

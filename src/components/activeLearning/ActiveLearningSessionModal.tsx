@@ -20,6 +20,7 @@ import { useActiveLearning } from '../../context/ActiveLearningContext';
 import { speechService } from '../../services/speechService';
 import { ConfusionPair, LearningPlanItem } from '../../types/activeLearning';
 import { AIGatewayService, ExplanationResponse, PracticeQuestionItem } from '../../services/aiGatewayService';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const ActiveLearningSessionModal: React.FC = () => {
   const {
@@ -144,12 +145,15 @@ export const ActiveLearningSessionModal: React.FC = () => {
             </div>
           </div>
 
-          <button
-            onClick={closeSession}
-            className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+            <button
+              onClick={closeSession}
+              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Multi-Step Session Progression Tabs */}

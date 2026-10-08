@@ -18,6 +18,7 @@ import { BusinessCourseLevel, BusinessGoal } from '../../types/business';
 import { BUSINESS_COURSES } from '../../data/business/businessCurriculumData';
 import { useI18n } from '../../i18n/I18nContext';
 import { getBusinessCourseText } from '../../data/translations/businessTranslations';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 interface BusinessHeaderProps {
   activeLevel: BusinessCourseLevel;
@@ -102,6 +103,10 @@ export const BusinessHeader: React.FC<BusinessHeaderProps> = ({
 
           {/* Goal & Certificate Action Area */}
           <div className="flex flex-col sm:flex-row md:flex-col items-stretch sm:items-center md:items-end gap-3 shrink-0">
+            <div className="self-end">
+              <TranslationToggleButton size="sm" />
+            </div>
+
             {/* Goal Pill Button */}
             <button
               type="button"

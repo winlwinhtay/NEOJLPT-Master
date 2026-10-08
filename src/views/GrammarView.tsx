@@ -12,14 +12,17 @@ import {
   EyeOff,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
+import { useUser } from '../context/UserContext';
 import { useI18n } from '../i18n/I18nContext';
 import { GRAMMAR_DATA } from '../data/grammarData';
 import { AudioButton } from '../components/common/AudioButton';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { GrammarItem } from '../types';
 import { translateExampleSentence } from '../data/translations/multilingualEngine';
 
 export const GrammarView: React.FC = () => {
   const { activeLevel, selectedGrammarId, setSelectedGrammarId } = useApp();
+  const { profile } = useUser();
   const { t, language } = useI18n();
 
   const [searchQuery, setSearchQuery] = useState('');
@@ -89,6 +92,7 @@ export const GrammarView: React.FC = () => {
 
         {/* Controls */}
         <div className="flex items-center gap-3">
+          <TranslationToggleButton size="sm" />
           <button
             onClick={() => setComparisonMode(!comparisonMode)}
             className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border shadow-sm cursor-pointer ${
@@ -149,9 +153,15 @@ export const GrammarView: React.FC = () => {
               </p>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-japanese">
                 明日、早く起きなければなりません。
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
-                  {translateExampleSentence('明日、早く起きなければなりません。', 'I must wake up early tomorrow.', language)}
-                </span>
+                {profile.showTranslation !== false ? (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
+                    {translateExampleSentence('明日、早く起きなければなりません。', 'I must wake up early tomorrow.', language)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 italic block mt-0.5">
+                    Translation hidden (Trans OFF)
+                  </span>
+                )}
               </div>
             </div>
 
@@ -168,9 +178,15 @@ export const GrammarView: React.FC = () => {
               </p>
               <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-japanese">
                 明日は来なくてもいいです。
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
-                  {translateExampleSentence('明日は来なくてもいいです。', 'You do not have to come tomorrow.', language)}
-                </span>
+                {profile.showTranslation !== false ? (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
+                    {translateExampleSentence('明日は来なくてもいいです。', 'You do not have to come tomorrow.', language)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 italic block mt-0.5">
+                    Translation hidden (Trans OFF)
+                  </span>
+                )}
               </div>
             </div>
           </div>
@@ -196,9 +212,18 @@ export const GrammarView: React.FC = () => {
                 <h2 className="text-3xl font-black font-japanese text-brand-600 dark:text-brand-400 mt-2">
                   {activeGrammar.pattern}
                 </h2>
-                <p className="text-sm font-bold text-slate-900 dark:text-white mt-1">
-                  {activeGrammar.meaningsByLang?.[language] || activeGrammar.meaning}
-                </p>
+                {profile.showTranslation !== false ? (
+                  <p className="text-sm font-bold text-slate-900 dark:text-white mt-1">
+                    {activeGrammar.meaningsByLang?.[language] || activeGrammar.meaning}
+                  </p>
+                ) : (
+                  <span className="text-xs text-slate-400 italic mt-1 block">
+                    Translation hidden (Trans OFF)
+                  </span>
+                )}
+              </div>
+              <div className="shrink-0">
+                <TranslationToggleButton size="sm" />
               </div>
             </div>
 
@@ -217,9 +242,15 @@ export const GrammarView: React.FC = () => {
               <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">
                 {t('grammar.explanation')}
               </h4>
-              <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-                {activeGrammar.explanationsByLang?.[language] || activeGrammar.explanation}
-              </p>
+              {profile.showTranslation !== false ? (
+                <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
+                  {activeGrammar.explanationsByLang?.[language] || activeGrammar.explanation}
+                </p>
+              ) : (
+                <p className="text-xs text-slate-400 italic">
+                  Translation is hidden. Turn Trans ON to view in {language.toUpperCase()}.
+                </p>
+              )}
             </div>
 
             {/* Example Sentences */}
@@ -228,24 +259,14 @@ export const GrammarView: React.FC = () => {
                 <h4 className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                   {t('grammar.examples')}
                 </h4>
-                <button
-                  type="button"
-                  onClick={() => {
-                    setShowTranslations(!showTranslations);
-                    setRevealedExamples({});
-                  }}
-                  className="flex items-center gap-1.5 px-3 py-1 rounded-xl text-xs font-bold bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-600 dark:text-slate-300 transition-colors cursor-pointer"
-                >
-                  {showTranslations ? <EyeOff size={13} /> : <Eye size={13} />}
-                  {showTranslations
-                    ? t('listening.hideTranslation') || 'Hide Translations'
-                    : t('listening.showTranslation') || 'Show Translations'}
-                </button>
+                <div className="flex items-center gap-2">
+                  <TranslationToggleButton size="sm" />
+                </div>
               </div>
 
               <div className="space-y-2.5">
                 {activeGrammar.examples.map((ex, idx) => {
-                  const isVisible = showTranslations || !!revealedExamples[idx];
+                  const isVisible = (profile.showTranslation !== false && showTranslations) || !!revealedExamples[idx];
                   const translationText =
                     ex.translationsByLang?.[language] ||
                     translateExampleSentence(ex.jp, ex.en, language);

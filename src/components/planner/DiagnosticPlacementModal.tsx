@@ -15,6 +15,7 @@ import { PracticeQuestion } from '../../types/practice';
 import { JLPTLevel } from '../../types';
 import { StudyPlannerService } from '../../services/studyPlannerService';
 import { AudioButton } from '../common/AudioButton';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 interface DiagnosticPlacementModalProps {
   isOpen: boolean;
@@ -85,12 +86,15 @@ export const DiagnosticPlacementModal: React.FC<DiagnosticPlacementModalProps> =
               </p>
             </div>
           </div>
-          <button
-            onClick={onClose}
-            className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
-          >
-            <X size={20} />
-          </button>
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+            <button
+              onClick={onClose}
+              className="p-1.5 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            >
+              <X size={20} />
+            </button>
+          </div>
         </div>
 
         {/* Modal Body */}

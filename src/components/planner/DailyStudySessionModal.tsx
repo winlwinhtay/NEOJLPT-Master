@@ -18,6 +18,7 @@ import { DailyStudyPlan, DailyStudyTask } from '../../types/studyPlan';
 import { AudioButton } from '../common/AudioButton';
 import { useUser } from '../../context/UserContext';
 import { useSRS } from '../../context/SRSContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 interface DailyStudySessionModalProps {
@@ -35,6 +36,7 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
 }) => {
   const { profile, addXP, logActivity } = useUser();
   const { rateItem } = useSRS();
+  const { language } = useI18n();
 
   const [currentTaskIndex, setCurrentTaskIndex] = useState(0);
   const [showVocabBack, setShowVocabBack] = useState(false);
@@ -209,12 +211,18 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                           </span>
                         </div>
                       </div>
-                      <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-left text-xs">
-                        <span className="text-[10px] text-slate-400 font-bold block">Meaning:</span>
-                        <span className="font-bold text-slate-900 dark:text-white text-sm">
-                          {currentTask.contentData.meaning}
-                        </span>
-                      </div>
+                      {profile.showTranslation !== false ? (
+                        <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-left text-xs">
+                          <span className="text-[10px] text-slate-400 font-bold block">Meaning:</span>
+                          <span className="font-bold text-slate-900 dark:text-white text-sm">
+                            {currentTask.contentData.meaningsByLang?.[language] || currentTask.contentData.meaning}
+                          </span>
+                        </div>
+                      ) : (
+                        <div className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-left text-xs text-slate-400 italic">
+                          Translation hidden (Trans OFF)
+                        </div>
+                      )}
                     </div>
                   )}
 
@@ -224,9 +232,11 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                       <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 leading-relaxed font-japanese">
                         {currentTask.contentData.passagePlain || currentTask.contentData.passage}
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
-                        {currentTask.contentData.translationEn}
-                      </p>
+                      {profile.showTranslation !== false && (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 italic">
+                          {currentTask.contentData.translationEn}
+                        </p>
+                      )}
                     </div>
                   )}
 
@@ -247,7 +257,9 @@ export const DailyStudySessionModal: React.FC<DailyStudySessionModalProps> = ({
                                 <span className="font-japanese text-slate-900 dark:text-white">
                                   {line.text}
                                 </span>
-                                <p className="text-[11px] text-slate-400">{line.translationEn}</p>
+                                {profile.showTranslation !== false && (
+                                  <p className="text-[11px] text-slate-400">{line.translationEn}</p>
+                                )}
                               </div>
                               <AudioButton text={line.text} size="sm" />
                             </div>

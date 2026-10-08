@@ -37,6 +37,7 @@ import { KanjiSchoolPrinciplesModal } from '../components/kanji/KanjiSchoolPrinc
 import { KanjiConfusionStudio } from '../components/kanji/KanjiConfusionStudio';
 import { KanjiVocabularyNetwork } from '../components/kanji/KanjiVocabularyNetwork';
 import { AudioButton } from '../components/common/AudioButton';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { generate5ExampleSentences } from '../data/generators/kanjiGenerator';
 import { getKanjiStrokeData } from '../data/kanjiStrokeData';
@@ -45,7 +46,7 @@ import { KanjiItem, RadicalItem, RadicalPosition } from '../types';
 
 export const KanjiView: React.FC = () => {
   const { activeLevel, selectedKanjiId, setSelectedKanjiId } = useApp();
-  const { logActivity } = useUser();
+  const { logActivity, profile } = useUser();
   const { srsItems, toggleFavorite, getItemProgress } = useSRS();
   const { t, language } = useI18n();
 
@@ -411,9 +412,15 @@ export const KanjiView: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                        {activeKanji.meaningsByLang?.[language] || activeKanji.meaning}
-                      </h2>
+                      {profile.showTranslation !== false ? (
+                        <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
+                          {activeKanji.meaningsByLang?.[language] || activeKanji.meaning}
+                        </h2>
+                      ) : (
+                        <div className="text-sm font-bold text-slate-400 italic mt-1">
+                          Translation hidden (Trans OFF)
+                        </div>
+                      )}
                       <p className="text-xs text-slate-400 mt-0.5">
                         {t('kanji.radicals')}: {activeKanji.radicals?.join(', ') || '—'}
                       </p>
@@ -421,6 +428,7 @@ export const KanjiView: React.FC = () => {
                   </div>
 
                   <div className="flex items-center gap-2 flex-wrap">
+                    <TranslationToggleButton size="sm" />
                     <button
                       type="button"
                       onClick={() => setPrinciplesModalOpen(true)}
@@ -711,7 +719,7 @@ export const KanjiView: React.FC = () => {
                     </div>
 
                     {/* Toolbar: Global Show/Hide Translation & Furigana */}
-                    <div className="flex items-center gap-2">
+                    <div className="flex items-center gap-2 flex-wrap">
                       <button
                         type="button"
                         onClick={() => setShowFurigana(!showFurigana)}
@@ -724,25 +732,14 @@ export const KanjiView: React.FC = () => {
                         {t('kanji.showFurigana', 'Furigana')}
                       </button>
 
-                      <button
-                        type="button"
-                        onClick={() => setShowAllTranslations(!showAllTranslations)}
-                        className="px-3 py-1.5 rounded-xl text-xs font-bold transition-all bg-indigo-600 hover:bg-indigo-700 text-white flex items-center gap-1.5 shadow-sm shadow-indigo-200 dark:shadow-none"
-                      >
-                        {showAllTranslations ? <EyeOff size={14} /> : <Eye size={14} />}
-                        <span>
-                          {showAllTranslations
-                            ? t('kanji.hideTranslation', 'Hide Translations')
-                            : t('kanji.showTranslation', 'Show Translations')}
-                        </span>
-                      </button>
+                      <TranslationToggleButton size="sm" />
                     </div>
                   </div>
 
                   {/* 5 Sentences Cards List */}
                   <div className="space-y-3">
                     {displaySentences.map((sentence, idx) => {
-                      const isCardHidden = !showAllTranslations || hiddenSentenceIndices.has(idx);
+                      const isCardHidden = profile.showTranslation === false || !showAllTranslations || hiddenSentenceIndices.has(idx);
                       const translatedText =
                         sentence.translationsByLang?.[language] ||
                         sentence.translationsByLang?.['en'] ||

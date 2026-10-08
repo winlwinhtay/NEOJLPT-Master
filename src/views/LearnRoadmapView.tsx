@@ -47,12 +47,13 @@ import { AdBanner } from '../components/common/AdBanner';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 import { adaptPracticeQuestion } from '../session/adapters/practiceAdapter';
+import { translateExampleSentence } from '../data/translations/multilingualEngine';
 
 export const LearnRoadmapView: React.FC = () => {
   const { activeLevel, setActiveLevel, selectedLessonId, setSelectedLessonId, setActiveView } = useApp();
   const { profile, completedLessons, completeLesson } = useUser();
   const { srsItems } = useSRS();
-  const { t } = useI18n();
+  const { t, language } = useI18n();
 
   // Study Plan State
   const [studyPlan, setStudyPlan] = useState<StudyPlan | null>(() => StorageService.loadStudyPlan());
@@ -251,7 +252,9 @@ export const LearnRoadmapView: React.FC = () => {
                       <span className="text-xs text-slate-400 font-japanese">{v.hiragana}</span>
                     </div>
                     {profile.showTranslation !== false ? (
-                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">{v.meaning}</p>
+                      <p className="text-xs text-slate-600 dark:text-slate-300 mt-1">
+                        {v.meaningsByLang?.[language] || v.meaning}
+                      </p>
                     ) : (
                       <span className="text-[10px] text-slate-400 italic mt-1 block">Translation hidden (Trans OFF)</span>
                     )}
@@ -293,9 +296,15 @@ export const LearnRoadmapView: React.FC = () => {
                     <h4 className="font-japanese font-black text-lg text-brand-600 dark:text-brand-400">
                       {g.pattern}
                     </h4>
-                    <p className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5">
-                      {g.meaning}
-                    </p>
+                    {profile.showTranslation !== false ? (
+                      <p className="text-xs font-semibold text-slate-900 dark:text-white mt-0.5">
+                        {g.meaningsByLang?.[language] || g.meaning}
+                      </p>
+                    ) : (
+                      <span className="text-[10px] text-slate-400 italic mt-0.5 block">
+                        Translation hidden (Trans OFF)
+                      </span>
+                    )}
                   </div>
                 </div>
 
@@ -304,7 +313,9 @@ export const LearnRoadmapView: React.FC = () => {
                 </div>
 
                 <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-                  {g.explanation}
+                  {profile.showTranslation !== false
+                    ? (g.explanationsByLang?.[language] || g.explanation)
+                    : g.explanation}
                 </p>
 
                 <div className="space-y-2 pt-2">
@@ -321,8 +332,12 @@ export const LearnRoadmapView: React.FC = () => {
                           {ex.jp}
                         </p>
                         <p className="text-slate-400 text-[11px]">{ex.reading}</p>
-                        {profile.showTranslation !== false && (
-                          <p className="text-slate-600 dark:text-slate-300 mt-1">{ex.en}</p>
+                        {profile.showTranslation !== false ? (
+                          <p className="text-slate-600 dark:text-slate-300 mt-1">
+                            {ex.translationsByLang?.[language] || translateExampleSentence(ex.jp, ex.en, language)}
+                          </p>
+                        ) : (
+                          <span className="text-[10px] text-slate-400 italic mt-1 block">Translation hidden (Trans OFF)</span>
                         )}
                       </div>
                       <AudioButton text={ex.jp} size="sm" />
@@ -485,6 +500,7 @@ export const LearnRoadmapView: React.FC = () => {
 
         {/* Top Controls */}
         <div className="flex items-center gap-2.5">
+          <TranslationToggleButton size="sm" />
           <button
             type="button"
             onClick={() => setDiagnosticOpen(true)}

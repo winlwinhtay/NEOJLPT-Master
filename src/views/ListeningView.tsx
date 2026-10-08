@@ -19,11 +19,12 @@ import { LISTENING_DATA } from '../data/listeningData';
 import { speechService } from '../services/speechService';
 import { ListeningLesson } from '../types';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 
 export const ListeningView: React.FC = () => {
   const { activeLevel } = useApp();
-  const { logActivity, addXP } = useUser();
-  const { t } = useI18n();
+  const { logActivity, addXP, profile } = useUser();
+  const { t, language } = useI18n();
 
   const levelListeningList = LISTENING_DATA.filter((l) => l.level === activeLevel);
   const [selectedLesson, setSelectedLesson] = useState<ListeningLesson>(
@@ -158,9 +159,12 @@ export const ListeningView: React.FC = () => {
             </h2>
           </div>
 
-          <span className="px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-xs font-bold capitalize">
-            {selectedLesson.questionType.replace('_', ' ')}
-          </span>
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+            <span className="px-2.5 py-1 rounded-full bg-purple-50 dark:bg-purple-950 text-purple-700 dark:text-purple-300 text-xs font-bold capitalize">
+              {selectedLesson.questionType.replace('_', ' ')}
+            </span>
+          </div>
         </div>
 
         {/* Audio Visualizer & Controls Box */}
@@ -246,7 +250,9 @@ export const ListeningView: React.FC = () => {
                     </span>
                   </div>
                   <div className="text-xs text-slate-400 font-japanese pl-2">{line.reading}</div>
-                  <div className="text-xs text-slate-600 dark:text-slate-300 pl-2">{line.translationEn}</div>
+                  {profile.showTranslation !== false && (
+                    <div className="text-xs text-slate-600 dark:text-slate-300 pl-2">{line.translationEn}</div>
+                  )}
                 </div>
               ))}
             </div>
@@ -268,7 +274,7 @@ export const ListeningView: React.FC = () => {
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white">
               {selectedLesson.questionJp}
             </h3>
-            {selectedLesson.questionEn && (
+            {profile.showTranslation !== false && selectedLesson.questionEn && (
               <p className="text-xs text-slate-400 italic">{selectedLesson.questionEn}</p>
             )}
           </div>

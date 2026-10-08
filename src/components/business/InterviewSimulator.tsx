@@ -33,9 +33,15 @@ import {
   InterviewEvaluationResult,
 } from '../../types/business';
 import { AudioButton } from '../common/AudioButton';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 import { AIGatewayService } from '../../services/aiGatewayService';
+import { useUser } from '../../context/UserContext';
+import { useI18n } from '../../i18n/I18nContext';
+import { translateExampleSentence } from '../../data/translations/multilingualEngine';
 
 export const InterviewSimulator: React.FC = () => {
+  const { profile } = useUser();
+  const { language } = useI18n();
   const [selectedModeId, setSelectedModeId] = useState<InterviewModeId>('basic_entry');
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>(
     INTERVIEW_QUESTION_BANK.find((q) => q.modeId === 'basic_entry')?.id || INTERVIEW_QUESTION_BANK[0].id
@@ -112,6 +118,7 @@ export const InterviewSimulator: React.FC = () => {
         </div>
 
         <div className="flex items-center gap-2">
+          <TranslationToggleButton size="sm" />
           <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold font-mono">
             {INTERVIEW_QUESTION_BANK.length} Questions Bank
           </span>
@@ -268,9 +275,11 @@ export const InterviewSimulator: React.FC = () => {
               <h3 className="text-lg sm:text-xl font-black font-japanese text-slate-900 dark:text-white leading-relaxed">
                 「{activeQuestion.questionJp}」
               </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                {activeQuestion.questionEn}
-              </p>
+              {profile.showTranslation !== false && (
+                <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                  {translateExampleSentence(activeQuestion.questionJp, activeQuestion.questionEn, language)}
+                </p>
+              )}
             </div>
 
             {/* STAR Framework Structure Guide */}
@@ -353,9 +362,11 @@ export const InterviewSimulator: React.FC = () => {
                   <p className="text-xs sm:text-sm font-japanese text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
                     {activeQuestion.modelAnswerJp}
                   </p>
-                  <p className="text-xs text-slate-500 dark:text-slate-400 italic pt-2 border-t border-indigo-100/60 dark:border-indigo-900/40">
-                    {activeQuestion.modelAnswerEn}
-                  </p>
+                  {profile.showTranslation !== false && (
+                    <p className="text-xs text-slate-500 dark:text-slate-400 italic pt-2 border-t border-indigo-100/60 dark:border-indigo-900/40">
+                      {translateExampleSentence(activeQuestion.modelAnswerJp, activeQuestion.modelAnswerEn, language)}
+                    </p>
+                  )}
                 </div>
               )}
             </div>

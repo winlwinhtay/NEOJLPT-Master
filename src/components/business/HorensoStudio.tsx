@@ -20,8 +20,11 @@ import {
 } from 'lucide-react';
 import { WORKPLACE_SCRIPTS_DATA, WorkplaceDialogueItem } from '../../data/business/horensoTelephoneMeetingData';
 import { AudioButton } from '../common/AudioButton';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
+import { useUser } from '../../context/UserContext';
 
 export const HorensoStudio: React.FC = () => {
+  const { profile } = useUser();
   const [selectedCategory, setSelectedCategory] = useState<'horenso' | 'telephone' | 'meeting' | 'negotiation'>('horenso');
   const [selectedScriptId, setSelectedScriptId] = useState<string>(
     WORKPLACE_SCRIPTS_DATA.find((s) => s.category === 'horenso')?.id || WORKPLACE_SCRIPTS_DATA[0].id
@@ -193,9 +196,12 @@ export const HorensoStudio: React.FC = () => {
                   {activeScript.titleJp}
                 </h3>
               </div>
-              <span className="text-xs text-slate-400 italic">
-                {activeScript.situation}
-              </span>
+              <div className="flex items-center gap-2">
+                <TranslationToggleButton size="sm" />
+                <span className="text-xs text-slate-400 italic">
+                  {activeScript.situation}
+                </span>
+              </div>
             </div>
 
             {/* Turn-by-Turn Script Bubble Timeline */}
@@ -231,9 +237,11 @@ export const HorensoStudio: React.FC = () => {
                       {line.japanese}
                     </p>
 
-                    <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                      {line.english}
-                    </p>
+                    {profile.showTranslation !== false && (
+                      <p className="text-xs text-slate-500 dark:text-slate-400 italic">
+                        {line.english}
+                      </p>
+                    )}
 
                     {line.keyLearningPoint && (
                       <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/50 text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">

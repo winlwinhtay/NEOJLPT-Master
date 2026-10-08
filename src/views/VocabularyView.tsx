@@ -21,6 +21,7 @@ import { VOCABULARY_DATA } from '../data/vocabularyData';
 import { AudioButton } from '../components/common/AudioButton';
 import { RubyText } from '../components/common/RubyText';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
+import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { SRSRating } from '../services/srsService';
 import { MasteryStatus, VocabularyItem } from '../types';
 import { getVocabularyStudyTip } from '../data/translations/vocabTipsTranslations';
@@ -125,28 +126,31 @@ export const VocabularyView: React.FC = () => {
           </p>
         </div>
 
-        {/* View Switcher */}
-        <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
-          <button
-            onClick={() => setViewMode('flashcards')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              viewMode === 'flashcards'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            {t('vocab.flashcardMode')}
-          </button>
-          <button
-            onClick={() => setViewMode('list')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
-              viewMode === 'list'
-                ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
-                : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            {t('vocab.listMode')} ({filteredVocab.length})
-          </button>
+        {/* View Switcher & Translation Toggle */}
+        <div className="flex items-center gap-3">
+          <TranslationToggleButton size="sm" />
+          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
+            <button
+              onClick={() => setViewMode('flashcards')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'flashcards'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              {t('vocab.flashcardMode')}
+            </button>
+            <button
+              onClick={() => setViewMode('list')}
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all ${
+                viewMode === 'list'
+                  ? 'bg-white dark:bg-slate-900 text-slate-900 dark:text-white shadow-sm'
+                  : 'text-slate-500 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              {t('vocab.listMode')} ({filteredVocab.length})
+            </button>
+          </div>
         </div>
       </div>
 
@@ -321,9 +325,15 @@ export const VocabularyView: React.FC = () => {
                       /* BACK SIDE */
                       <div className="space-y-4 animate-fade-in">
                         <div>
-                          <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
-                            {currentWord.meaningsByLang?.[language] || currentWord.meaning}
-                          </div>
+                          {profile.showTranslation !== false ? (
+                            <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
+                              {currentWord.meaningsByLang?.[language] || currentWord.meaning}
+                            </div>
+                          ) : (
+                            <div className="text-base font-bold text-slate-400 italic py-1">
+                              Translation hidden (Trans OFF)
+                            </div>
+                          )}
                           <div className="text-xs font-mono text-slate-400 mt-1 flex items-center justify-center gap-2">
                             <span>[{currentWord.romaji}]</span>
                             <span>•</span>
@@ -351,7 +361,9 @@ export const VocabularyView: React.FC = () => {
                                 >
                                   <strong>{c.phrase}</strong>
                                   <span className="text-[10px] text-slate-400">({c.reading})</span>
-                                  <span className="text-[10px] text-slate-500">— {c.meaning}</span>
+                                  {profile.showTranslation !== false && (
+                                    <span className="text-[10px] text-slate-500">— {c.meaning}</span>
+                                  )}
                                 </span>
                               ))}
                             </div>
@@ -366,9 +378,15 @@ export const VocabularyView: React.FC = () => {
                           <div className="font-japanese text-xs text-slate-400">
                             {currentWord.exampleReading}
                           </div>
-                          <div className="text-xs text-slate-600 dark:text-slate-300 pt-1">
-                            {currentWord.exampleByLang?.[language] || currentWord.exampleEn}
-                          </div>
+                          {profile.showTranslation !== false ? (
+                            <div className="text-xs text-slate-600 dark:text-slate-300 pt-1">
+                              {currentWord.exampleByLang?.[language] || currentWord.exampleEn}
+                            </div>
+                          ) : (
+                            <div className="text-[11px] text-slate-400 italic pt-1">
+                              Translation hidden (Trans OFF)
+                            </div>
+                          )}
                         </div>
 
                         {/* Localized Pedagogical Study Tip, Mnemonic & Pitfall Alert across all 19 languages */}
@@ -514,12 +532,20 @@ export const VocabularyView: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      <div className="text-xs font-semibold text-brand-600 dark:text-brand-400 mt-0.5">
-                        {v.meaningsByLang?.[language] || v.meaning}
-                      </div>
-                      <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                        {v.exampleJp} — {v.exampleByLang?.[language] || v.exampleEn}
-                      </div>
+                      {profile.showTranslation !== false ? (
+                        <>
+                          <div className="text-xs font-semibold text-brand-600 dark:text-brand-400 mt-0.5">
+                            {v.meaningsByLang?.[language] || v.meaning}
+                          </div>
+                          <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
+                            {v.exampleJp} — {v.exampleByLang?.[language] || v.exampleEn}
+                          </div>
+                        </>
+                      ) : (
+                        <div className="text-xs text-slate-400 italic mt-0.5">
+                          {v.exampleJp} <span className="opacity-60">(Translation hidden)</span>
+                        </div>
+                      )}
                       {(() => {
                         const tipData = getVocabularyStudyTip(
                           v.word,

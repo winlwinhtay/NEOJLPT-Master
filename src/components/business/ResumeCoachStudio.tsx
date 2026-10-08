@@ -29,6 +29,7 @@ import {
 } from '../../data/business/careerJobData';
 import { RirekishoRecord, ShokumuKeirekishoRecord } from '../../types/business';
 import { AIGatewayService } from '../../services/aiGatewayService';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const ResumeCoachStudio: React.FC = () => {
   const [activeTab, setActiveTab] = useState<'rirekisho' | 'shokumu' | 'phrasing'>('rirekisho');
@@ -87,46 +88,49 @@ export const ResumeCoachStudio: React.FC = () => {
           </p>
         </div>
 
-        {/* Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
-          <button
-            type="button"
-            onClick={() => setActiveTab('rirekisho')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'rirekisho'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <User size={14} />
-            <span>履歴書 (Rirekisho)</span>
-          </button>
+        {/* Tab Switcher & Translation */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <TranslationToggleButton size="sm" />
+          <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+            <button
+              type="button"
+              onClick={() => setActiveTab('rirekisho')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'rirekisho'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <User size={14} />
+              <span>履歴書 (Rirekisho)</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('shokumu')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'shokumu'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Briefcase size={14} />
-            <span>職務経歴書 (CV)</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('shokumu')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'shokumu'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Briefcase size={14} />
+              <span>職務経歴書 (CV)</span>
+            </button>
 
-          <button
-            type="button"
-            onClick={() => setActiveTab('phrasing')}
-            className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
-              activeTab === 'phrasing'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Sparkles size={14} />
-            <span>表現格上げコーチ</span>
-          </button>
+            <button
+              type="button"
+              onClick={() => setActiveTab('phrasing')}
+              className={`flex items-center gap-2 px-3.5 py-2 rounded-xl text-xs font-bold transition-all ${
+                activeTab === 'phrasing'
+                  ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                  : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+              }`}
+            >
+              <Sparkles size={14} />
+              <span>表現格上げコーチ</span>
+            </button>
+          </div>
         </div>
       </div>
 

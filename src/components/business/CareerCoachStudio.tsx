@@ -22,6 +22,7 @@ import {
 } from 'lucide-react';
 import { CAREER_10_STEPS } from '../../data/business/careerJobData';
 import { CorporateReadinessScore } from '../../types/business';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const CareerCoachStudio: React.FC = () => {
   const [activeSection, setActiveSection] = useState<'roadmap' | 'jd_analyzer' | 'readiness'>('roadmap');
@@ -130,8 +131,10 @@ export const CareerCoachStudio: React.FC = () => {
           </p>
         </div>
 
-        {/* Section Navigation Tabs */}
-        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
+        {/* Section Navigation Tabs & Translation */}
+        <div className="flex items-center gap-2 flex-wrap">
+          <TranslationToggleButton size="sm" />
+          <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700">
           <button
             type="button"
             onClick={() => setActiveSection('roadmap')}
@@ -172,6 +175,7 @@ export const CareerCoachStudio: React.FC = () => {
           </button>
         </div>
       </div>
+    </div>
 
       {/* ========================================================================= */}
       {/* SECTION 1: 10-STEP CAREER ROADMAP */}

@@ -37,6 +37,7 @@ import {
 } from '../../data/business/businessLessonDetailData';
 import { AudioButton } from '../common/AudioButton';
 import { useUser } from '../../context/UserContext';
+import { useI18n } from '../../i18n/I18nContext';
 import { useJapaneseKeyboard } from '../../context/JapaneseKeyboardContext';
 import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
@@ -66,6 +67,8 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
   onOpenStudioTab,
 }) => {
   const { profile, addXP, logActivity } = useUser();
+  const { language } = useI18n();
+  const activeLang = profile.translationLanguage || language || 'en';
   const { openKeyboard, registerActiveInput } = useJapaneseKeyboard();
 
   const [activeTab, setActiveTab] = useState<
@@ -399,15 +402,21 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
 
                     {profile.showTranslation !== false || revealedItems[line.id] ? (
                       <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 space-y-1 text-xs">
+                        {activeLang === 'my' && line.myanmar ? (
+                          <p className="text-slate-800 dark:text-slate-200 font-medium">
+                            <span className="font-bold text-[10px] uppercase text-emerald-600 dark:text-emerald-400 mr-1.5">MY</span>
+                            {line.myanmar}
+                          </p>
+                        ) : null}
                         {line.english && (
-                          <p className="text-slate-700 dark:text-slate-300">
+                          <p className={activeLang === 'my' && line.myanmar ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300 font-medium'}>
                             <span className="font-bold text-[10px] uppercase text-indigo-500 mr-1.5">EN</span>
                             {line.english}
                           </p>
                         )}
-                        {line.myanmar && (
-                          <p className="text-slate-600 dark:text-slate-400">
-                            <span className="font-bold text-[10px] uppercase text-indigo-500 mr-1.5">MY</span>
+                        {activeLang !== 'my' && line.myanmar && (
+                          <p className="text-slate-500 dark:text-slate-400">
+                            <span className="font-bold text-[10px] uppercase text-emerald-600 dark:text-emerald-400 mr-1.5">MY</span>
                             {line.myanmar}
                           </p>
                         )}
@@ -462,11 +471,24 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     <div className="text-xs space-y-1">
                       {profile.showTranslation !== false || revealedItems[`vocab-${idx}`] ? (
                         <>
-                          <p className="font-bold text-slate-800 dark:text-slate-200">
-                            {v.meaningEn}
-                          </p>
-                          {v.meaningMy && (
-                            <p className="text-slate-500 dark:text-slate-400">{v.meaningMy}</p>
+                          {activeLang === 'my' && v.meaningMy ? (
+                            <>
+                              <p className="font-bold text-slate-800 dark:text-slate-200">
+                                {v.meaningMy}
+                              </p>
+                              {v.meaningEn && (
+                                <p className="text-slate-500 dark:text-slate-400">{v.meaningEn}</p>
+                              )}
+                            </>
+                          ) : (
+                            <>
+                              <p className="font-bold text-slate-800 dark:text-slate-200">
+                                {v.meaningEn}
+                              </p>
+                              {v.meaningMy && (
+                                <p className="text-slate-500 dark:text-slate-400">{v.meaningMy}</p>
+                              )}
+                            </>
                           )}
                           <p className="text-[11px] text-slate-600 dark:text-slate-400 italic">
                             💡 {v.nuance}
@@ -518,13 +540,28 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                   <div className="text-xs space-y-1 text-slate-700 dark:text-slate-300">
                     {profile.showTranslation !== false || revealedItems[`grammar-${idx}`] ? (
                       <>
-                        <p>
-                          <strong>Meaning:</strong> {g.meaningEn}
-                        </p>
-                        {g.meaningMy && (
-                          <p className="text-slate-500 dark:text-slate-400">
-                            <strong>MY:</strong> {g.meaningMy}
-                          </p>
+                        {activeLang === 'my' && g.meaningMy ? (
+                          <>
+                            <p>
+                              <strong>အဓိပ္ပာယ်:</strong> {g.meaningMy}
+                            </p>
+                            {g.meaningEn && (
+                              <p className="text-slate-500 dark:text-slate-400">
+                                <strong>EN:</strong> {g.meaningEn}
+                              </p>
+                            )}
+                          </>
+                        ) : (
+                          <>
+                            <p>
+                              <strong>Meaning:</strong> {g.meaningEn}
+                            </p>
+                            {g.meaningMy && (
+                              <p className="text-slate-500 dark:text-slate-400">
+                                <strong>MY:</strong> {g.meaningMy}
+                              </p>
+                            )}
+                          </>
                         )}
                         <p className="text-[11px] text-slate-600 dark:text-slate-400">
                           Rule: {g.usageRule}

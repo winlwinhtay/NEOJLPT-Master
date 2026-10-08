@@ -22,9 +22,14 @@ import { WORKPLACE_SCRIPTS_DATA, WorkplaceDialogueItem } from '../../data/busine
 import { AudioButton } from '../common/AudioButton';
 import { TranslationToggleButton } from '../common/TranslationToggleButton';
 import { useUser } from '../../context/UserContext';
+import { useI18n } from '../../i18n/I18nContext';
 
 export const HorensoStudio: React.FC = () => {
   const { profile } = useUser();
+  const { language } = useI18n();
+  const isTransOn = profile.showTranslation !== false;
+  const activeLang = profile.translationLanguage || language || 'en';
+
   const [selectedCategory, setSelectedCategory] = useState<'horenso' | 'telephone' | 'meeting' | 'negotiation'>('horenso');
   const [selectedScriptId, setSelectedScriptId] = useState<string>(
     WORKPLACE_SCRIPTS_DATA.find((s) => s.category === 'horenso')?.id || WORKPLACE_SCRIPTS_DATA[0].id
@@ -139,7 +144,13 @@ export const HorensoStudio: React.FC = () => {
                   <h4 className="text-xs font-bold font-japanese text-slate-900 dark:text-white">
                     {sc.titleJp}
                   </h4>
-                  <p className="text-[11px] text-slate-400">{sc.titleEn}</p>
+                  {isTransOn ? (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {activeLang === 'my' && sc.titleMy ? sc.titleMy : sc.titleEn}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 italic">Translation OFF</p>
+                  )}
                 </div>
               );
             })}
@@ -156,6 +167,11 @@ export const HorensoStudio: React.FC = () => {
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-japanese">
               {activeScript.keyRule}
             </p>
+            {isTransOn && (
+              <p className="text-xs text-amber-900 dark:text-amber-200/90 leading-relaxed pt-1.5 border-t border-amber-200/60 dark:border-amber-900/40">
+                {activeLang === 'my' && activeScript.keyRuleMy ? activeScript.keyRuleMy : activeScript.keyRule}
+              </p>
+            )}
           </div>
 
           {/* Essential Key Phrases Card */}
@@ -175,9 +191,13 @@ export const HorensoStudio: React.FC = () => {
                     </span>
                     <AudioButton text={phrase.phrase} size="sm" />
                   </div>
-                  <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                    {phrase.meaning}
-                  </p>
+                  {isTransOn ? (
+                    <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                      {activeLang === 'my' && phrase.meaningMy ? phrase.meaningMy : phrase.meaning}
+                    </p>
+                  ) : (
+                    <p className="text-[10px] text-slate-400 italic">Translation hidden</p>
+                  )}
                 </div>
               ))}
             </div>
@@ -196,11 +216,13 @@ export const HorensoStudio: React.FC = () => {
                   {activeScript.titleJp}
                 </h3>
               </div>
-              <div className="flex items-center gap-2">
+              <div className="flex items-center gap-2 max-w-md text-right">
                 <TranslationToggleButton size="sm" />
-                <span className="text-xs text-slate-400 italic">
-                  {activeScript.situation}
-                </span>
+                {isTransOn && (
+                  <span className="text-xs text-slate-500 dark:text-slate-400 italic text-left sm:text-right">
+                    {activeLang === 'my' && activeScript.situationMy ? activeScript.situationMy : activeScript.situation}
+                  </span>
+                )}
               </div>
             </div>
 
@@ -237,15 +259,22 @@ export const HorensoStudio: React.FC = () => {
                       {line.japanese}
                     </p>
 
-                    {profile.showTranslation !== false && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                        {line.english}
+                    {isTransOn ? (
+                      <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                        {activeLang === 'my' && line.myanmar ? line.myanmar : line.english}
+                      </p>
+                    ) : (
+                      <p className="text-[11px] text-slate-400 italic">
+                        Translation hidden (Trans OFF)
                       </p>
                     )}
 
                     {line.keyLearningPoint && (
                       <div className="pt-2 border-t border-slate-200/50 dark:border-slate-700/50 text-[11px] text-indigo-700 dark:text-indigo-300 font-medium">
-                        💡 <span className="font-bold">重要解説:</span> {line.keyLearningPoint}
+                        💡 <span className="font-bold">重要解説:</span>{' '}
+                        {isTransOn && activeLang === 'my' && line.keyLearningPointMy
+                          ? line.keyLearningPointMy
+                          : line.keyLearningPoint}
                       </div>
                     )}
                   </div>

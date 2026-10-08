@@ -38,10 +38,14 @@ import { AIGatewayService } from '../../services/aiGatewayService';
 import { useUser } from '../../context/UserContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { translateExampleSentence } from '../../data/translations/multilingualEngine';
+import { getInterviewQuestionTranslation } from '../../data/translations/businessTranslations';
 
 export const InterviewSimulator: React.FC = () => {
   const { profile } = useUser();
   const { language } = useI18n();
+  const isTransOn = profile.showTranslation !== false;
+  const activeLang = profile.translationLanguage || language || 'en';
+
   const [selectedModeId, setSelectedModeId] = useState<InterviewModeId>('basic_entry');
   const [selectedQuestionId, setSelectedQuestionId] = useState<string>(
     INTERVIEW_QUESTION_BANK.find((q) => q.modeId === 'basic_entry')?.id || INTERVIEW_QUESTION_BANK[0].id
@@ -63,6 +67,10 @@ export const InterviewSimulator: React.FC = () => {
       INTERVIEW_QUESTION_BANK[0]
     );
   }, [selectedQuestionId, currentModeQuestions]);
+
+  const qTranslation = useMemo(() => {
+    return getInterviewQuestionTranslation(activeQuestion.id, activeLang as any);
+  }, [activeQuestion.id, activeLang]);
 
   const activeModeInfo = useMemo(() => {
     return INTERVIEW_MODES.find((m) => m.id === selectedModeId) || INTERVIEW_MODES[0];
@@ -237,7 +245,7 @@ export const InterviewSimulator: React.FC = () => {
               </h4>
             </div>
             <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-              {activeQuestion.interviewerIntent}
+              {isTransOn && qTranslation?.intent ? qTranslation.intent : activeQuestion.interviewerIntent}
             </p>
           </div>
 
@@ -275,9 +283,13 @@ export const InterviewSimulator: React.FC = () => {
               <h3 className="text-lg sm:text-xl font-black font-japanese text-slate-900 dark:text-white leading-relaxed">
                 「{activeQuestion.questionJp}」
               </h3>
-              {profile.showTranslation !== false && (
+              {isTransOn ? (
                 <p className="text-xs text-slate-500 dark:text-slate-400 italic">
-                  {translateExampleSentence(activeQuestion.questionJp, activeQuestion.questionEn, language)}
+                  {qTranslation?.question || activeQuestion.questionEn}
+                </p>
+              ) : (
+                <p className="text-[11px] text-slate-400 italic">
+                  Translation hidden (Trans OFF)
                 </p>
               )}
             </div>
@@ -362,9 +374,13 @@ export const InterviewSimulator: React.FC = () => {
                   <p className="text-xs sm:text-sm font-japanese text-slate-800 dark:text-slate-200 leading-relaxed whitespace-pre-line">
                     {activeQuestion.modelAnswerJp}
                   </p>
-                  {profile.showTranslation !== false && (
+                  {isTransOn ? (
                     <p className="text-xs text-slate-500 dark:text-slate-400 italic pt-2 border-t border-indigo-100/60 dark:border-indigo-900/40">
-                      {translateExampleSentence(activeQuestion.modelAnswerJp, activeQuestion.modelAnswerEn, language)}
+                      {qTranslation?.modelAnswer || activeQuestion.modelAnswerEn}
+                    </p>
+                  ) : (
+                    <p className="text-[11px] text-slate-400 italic pt-2">
+                      Translation hidden (Trans OFF)
                     </p>
                   )}
                 </div>

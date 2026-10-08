@@ -43,12 +43,15 @@ import { generate5ExampleSentences } from '../data/generators/kanjiGenerator';
 import { getKanjiStrokeData } from '../data/kanjiStrokeData';
 import { getKanjiEducationalDetail } from '../data/kanjiEducationalData';
 import { KanjiItem, RadicalItem, RadicalPosition } from '../types';
+import { SupportedLanguage } from '../types/i18n';
 
 export const KanjiView: React.FC = () => {
   const { activeLevel, selectedKanjiId, setSelectedKanjiId } = useApp();
   const { logActivity, profile } = useUser();
   const { srsItems, toggleFavorite, getItemProgress } = useSRS();
   const { t, language } = useI18n();
+  const activeLang: SupportedLanguage = (profile.translationLanguage || language || 'en') as SupportedLanguage;
+  const isTransOn = profile.showTranslation !== false;
 
   // Subcategory tabs: 'kanji' | 'radicals' | 'confusion' | 'network'
   const [activeTab, setActiveTab] = useState<'kanji' | 'radicals' | 'confusion' | 'network'>('kanji');
@@ -107,10 +110,10 @@ export const KanjiView: React.FC = () => {
     if (!activeKanji) return undefined;
     return getKanjiEducationalDetail(
       activeKanji.kanji,
-      activeKanji.meaningsByLang?.[language] || activeKanji.meaning,
+      activeKanji.meaningsByLang?.[activeLang] || activeKanji.meaning,
       activeKanji.radicals?.[0] || activeKanji.kanji
     );
-  }, [activeKanji, language]);
+  }, [activeKanji, activeLang]);
 
   // 5 Sentences Studio UI state
   const [showAllTranslations, setShowAllTranslations] = useState(true);
@@ -195,7 +198,7 @@ export const KanjiView: React.FC = () => {
       if (radicalStrokeFilter && r.strokeCount !== radicalStrokeFilter) return false;
       if (radicalSearch.trim()) {
         const q = radicalSearch.toLowerCase();
-        const translatedMeaning = r.meaningsByLang[language] || r.meaningEn;
+        const translatedMeaning = r.meaningsByLang[activeLang] || r.meaningEn;
         const match =
           r.radical.toLowerCase().includes(q) ||
           r.nameJp.toLowerCase().includes(q) ||
@@ -412,9 +415,9 @@ export const KanjiView: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      {profile.showTranslation !== false ? (
+                      {isTransOn ? (
                         <h2 className="text-2xl font-black text-slate-900 dark:text-white mt-1">
-                          {activeKanji.meaningsByLang?.[language] || activeKanji.meaning}
+                          {activeKanji.meaningsByLang?.[activeLang] || activeKanji.meaning}
                         </h2>
                       ) : (
                         <div className="text-sm font-bold text-slate-400 italic mt-1">
@@ -911,9 +914,11 @@ export const KanjiView: React.FC = () => {
                       <div className="text-3xl font-kanji font-black text-slate-900 dark:text-white group-hover:scale-110 transition-transform">
                         {k.kanji}
                       </div>
-                      <div className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
-                        {k.meaningsByLang?.[language] || k.meaning}
-                      </div>
+                      {isTransOn && (
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
+                          {k.meaningsByLang?.[activeLang] || k.meaning}
+                        </div>
+                      )}
                       <div className="text-[10px] text-slate-400">
                         {k.strokeCount} {t('kanji.strokes')}
                       </div>
@@ -1090,7 +1095,7 @@ export const KanjiView: React.FC = () => {
           {/* Radicals Cards Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4 gap-4">
             {paginatedRadicalsList.map((item) => {
-              const translatedMeaning = item.meaningsByLang[language] || item.meaningEn;
+              const translatedMeaning = item.meaningsByLang[activeLang] || item.meaningEn;
 
               return (
                 <div
@@ -1292,10 +1297,10 @@ export const KanjiView: React.FC = () => {
             {/* Meaning in active language (19-lang matrix) */}
             <div className="p-4 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-100 dark:border-indigo-900/50 space-y-1">
               <span className="text-[10px] font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider block">
-                Meaning ({language.toUpperCase()}):
+                Meaning ({activeLang.toUpperCase()}):
               </span>
               <div className="text-base font-bold text-slate-900 dark:text-white">
-                {selectedRadicalModal.meaningsByLang[language] || selectedRadicalModal.meaningEn}
+                {selectedRadicalModal.meaningsByLang[activeLang] || selectedRadicalModal.meaningEn}
               </div>
               <div className="text-xs text-slate-500">
                 English: {selectedRadicalModal.meaningEn}

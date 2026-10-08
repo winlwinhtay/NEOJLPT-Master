@@ -1,5 +1,6 @@
 import { GrammarItem } from '../../types';
 import { CANONICAL_GRAMMAR } from '../canonicalGrammarData';
+import { getLocalizedGrammarContent } from '../translations/multilingualEngine';
 
 /**
  * Returns the authenticated, canonical JLPT grammar curriculum (N5, N4, N3, N2, N1).
@@ -7,5 +8,18 @@ import { CANONICAL_GRAMMAR } from '../canonicalGrammarData';
  * and comprehensive multilingual translations (including Burmese, Japanese, English).
  */
 export function generateFullGrammar(): GrammarItem[] {
-  return CANONICAL_GRAMMAR;
+  return CANONICAL_GRAMMAR.map((g) => {
+    const localized = getLocalizedGrammarContent(g.pattern, g.meaning, g.explanation);
+    return {
+      ...g,
+      meaningsByLang: {
+        ...localized.meaningsByLang,
+        ...(g.meaningsByLang || {}),
+      },
+      explanationsByLang: {
+        ...localized.explanationsByLang,
+        ...(g.explanationsByLang || {}),
+      },
+    };
+  });
 }

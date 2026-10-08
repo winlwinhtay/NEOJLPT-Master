@@ -19,13 +19,19 @@ import {
 } from 'lucide-react';
 import { BUSINESS_KEIGO_VERBS, CUSHION_PHRASES, KEIGO_CONFUSION_EXERCISES } from '../../data/business/businessKeigoData';
 import { AudioButton } from '../common/AudioButton';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
+import { useUser } from '../../context/UserContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { getKeigoVerbTranslation, getCushionWordTranslation } from '../../data/translations/businessTranslations';
 import { adaptKeigoConfusionExercises } from '../../session/adapters/businessAdapter';
 import { useLearningSession } from '../../session/hooks/useLearningSession';
 
 export const BusinessKeigoStudio: React.FC = () => {
+  const { profile } = useUser();
   const { language } = useI18n();
+  const activeLang = profile.translationLanguage || language || 'en';
+  const isTransOn = profile.showTranslation !== false;
+
   const [activeTab, setActiveTab] = useState<'matrix' | 'confusion' | 'cushion'>('matrix');
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedVerbId, setSelectedVerbId] = useState<string>(BUSINESS_KEIGO_VERBS[0].id);
@@ -95,7 +101,9 @@ export const BusinessKeigoStudio: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
+        <div className="flex items-center gap-3">
+          <TranslationToggleButton size="sm" />
+          <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
           <button
             type="button"
             onClick={() => setActiveTab('matrix')}
@@ -129,6 +137,7 @@ export const BusinessKeigoStudio: React.FC = () => {
           >
             クッション言葉 Cushion
           </button>
+          </div>
         </div>
       </div>
 
@@ -172,9 +181,11 @@ export const BusinessKeigoStudio: React.FC = () => {
                           ({verb.reading})
                         </span>
                       </div>
-                      <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
-                        {verb.meaning}
-                      </p>
+                      {isTransOn && (
+                        <p className="text-[11px] text-slate-500 dark:text-slate-400 truncate max-w-[200px]">
+                          {getKeigoVerbTranslation(verb.id, activeLang)?.meaning || verb.meaning}
+                        </p>
+                      )}
                     </div>
 
                     <div className="text-right text-[10px] font-mono space-y-0.5">
@@ -199,7 +210,7 @@ export const BusinessKeigoStudio: React.FC = () => {
                   Verb Transformation Deep Dive
                 </span>
                 {(() => {
-                  const verbI18n = getKeigoVerbTranslation(selectedVerb.id, language);
+                  const verbI18n = getKeigoVerbTranslation(selectedVerb.id, activeLang);
                   return (
                     <>
                       <div className="flex items-baseline gap-3 mt-1">
@@ -209,9 +220,11 @@ export const BusinessKeigoStudio: React.FC = () => {
                         <span className="text-sm font-japanese text-slate-400">
                           （{selectedVerb.reading}）
                         </span>
-                        <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
-                          {verbI18n?.meaning || selectedVerb.meaning}
-                        </span>
+                        {isTransOn && (
+                          <span className="text-sm font-bold text-indigo-600 dark:text-indigo-400">
+                            {verbI18n?.meaning || selectedVerb.meaning}
+                          </span>
+                        )}
                       </div>
                     </>
                   );
@@ -265,7 +278,9 @@ export const BusinessKeigoStudio: React.FC = () => {
                 </span>
               </div>
               <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed pl-6">
-                {getKeigoVerbTranslation(selectedVerb.id, language)?.actorRule || selectedVerb.actorRule}
+                {isTransOn
+                  ? (getKeigoVerbTranslation(selectedVerb.id, activeLang)?.actorRule || selectedVerb.actorRule)
+                  : selectedVerb.actorRule}
               </p>
             </div>
 
@@ -494,15 +509,17 @@ export const BusinessKeigoStudio: React.FC = () => {
                 </div>
 
                 {(() => {
-                  const cushionI18n = getCushionWordTranslation(item.phrase, language);
+                  const cushionI18n = getCushionWordTranslation(item.phrase, activeLang);
                   return (
                     <>
-                      <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
-                        {cushionI18n?.meaning || item.meaning}
-                      </div>
+                      {isTransOn && (
+                        <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400">
+                          {cushionI18n?.meaning || item.meaning}
+                        </div>
+                      )}
 
                       <p className="text-[11px] text-slate-500 dark:text-slate-400">
-                        <strong>When to use:</strong> {cushionI18n?.usage || item.situation}
+                        <strong>When to use:</strong> {isTransOn ? (cushionI18n?.usage || item.situation) : item.situation}
                       </p>
                     </>
                   );

@@ -24,6 +24,7 @@ import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { SRSRating } from '../services/srsService';
 import { MasteryStatus, VocabularyItem } from '../types';
+import { SupportedLanguage } from '../types/i18n';
 import { getVocabularyStudyTip } from '../data/translations/vocabTipsTranslations';
 
 export const VocabularyView: React.FC = () => {
@@ -31,6 +32,8 @@ export const VocabularyView: React.FC = () => {
   const { srsItems, rateItem, toggleFavorite, getItemProgress } = useSRS();
   const { logActivity, profile } = useUser();
   const { t, language } = useI18n();
+  const activeLang: SupportedLanguage = (profile.translationLanguage || language || 'en') as SupportedLanguage;
+  const isTransOn = profile.showTranslation !== false;
 
   const [searchQuery, setSearchQuery] = useState('');
   const [activeFilter, setActiveFilter] = useState<'all' | 'due' | 'learning' | 'review' | 'mastered' | 'favorite'>('all');
@@ -325,9 +328,9 @@ export const VocabularyView: React.FC = () => {
                       /* BACK SIDE */
                       <div className="space-y-4 animate-fade-in">
                         <div>
-                          {profile.showTranslation !== false ? (
+                          {isTransOn ? (
                             <div className="text-2xl font-black text-brand-600 dark:text-brand-400">
-                              {currentWord.meaningsByLang?.[language] || currentWord.meaning}
+                              {currentWord.meaningsByLang?.[activeLang] || currentWord.meaning}
                             </div>
                           ) : (
                             <div className="text-base font-bold text-slate-400 italic py-1">
@@ -361,7 +364,7 @@ export const VocabularyView: React.FC = () => {
                                 >
                                   <strong>{c.phrase}</strong>
                                   <span className="text-[10px] text-slate-400">({c.reading})</span>
-                                  {profile.showTranslation !== false && (
+                                  {isTransOn && (
                                     <span className="text-[10px] text-slate-500">— {c.meaning}</span>
                                   )}
                                 </span>
@@ -378,9 +381,9 @@ export const VocabularyView: React.FC = () => {
                           <div className="font-japanese text-xs text-slate-400">
                             {currentWord.exampleReading}
                           </div>
-                          {profile.showTranslation !== false ? (
+                          {isTransOn ? (
                             <div className="text-xs text-slate-600 dark:text-slate-300 pt-1">
-                              {currentWord.exampleByLang?.[language] || currentWord.exampleEn}
+                              {currentWord.exampleByLang?.[activeLang] || currentWord.exampleEn}
                             </div>
                           ) : (
                             <div className="text-[11px] text-slate-400 italic pt-1">
@@ -393,9 +396,9 @@ export const VocabularyView: React.FC = () => {
                         {(() => {
                           const tipData = getVocabularyStudyTip(
                             currentWord.word,
-                            currentWord.meaningsByLang?.[language] || currentWord.meaning,
+                            currentWord.meaningsByLang?.[activeLang] || currentWord.meaning,
                             currentWord.partOfSpeech,
-                            language
+                            activeLang
                           );
                           return (
                             <div className="p-3.5 rounded-2xl bg-amber-50/70 dark:bg-amber-950/30 border border-amber-200/80 dark:border-amber-900/40 text-left space-y-1.5">
@@ -532,13 +535,13 @@ export const VocabularyView: React.FC = () => {
                           </span>
                         )}
                       </div>
-                      {profile.showTranslation !== false ? (
+                      {isTransOn ? (
                         <>
                           <div className="text-xs font-semibold text-brand-600 dark:text-brand-400 mt-0.5">
-                            {v.meaningsByLang?.[language] || v.meaning}
+                            {v.meaningsByLang?.[activeLang] || v.meaning}
                           </div>
                           <div className="text-[11px] text-slate-500 dark:text-slate-400 mt-1">
-                            {v.exampleJp} — {v.exampleByLang?.[language] || v.exampleEn}
+                            {v.exampleJp} — {v.exampleByLang?.[activeLang] || v.exampleEn}
                           </div>
                         </>
                       ) : (
@@ -549,9 +552,9 @@ export const VocabularyView: React.FC = () => {
                       {(() => {
                         const tipData = getVocabularyStudyTip(
                           v.word,
-                          v.meaningsByLang?.[language] || v.meaning,
+                          v.meaningsByLang?.[activeLang] || v.meaning,
                           v.partOfSpeech,
-                          language
+                          activeLang
                         );
                         return (
                           <div className="text-[11px] text-amber-700 dark:text-amber-400/90 mt-1 flex items-center gap-1.5">

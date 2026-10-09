@@ -1023,53 +1023,53 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
   const langBadge = activeLang.toUpperCase();
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-6 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
-      <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-4xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col max-h-[92vh]">
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-2 sm:p-4 md:p-6 bg-slate-900/80 backdrop-blur-sm animate-fade-in">
+      <div className="bg-white dark:bg-slate-900 rounded-2xl sm:rounded-3xl max-w-4xl w-full border border-slate-200 dark:border-slate-800 shadow-2xl overflow-hidden flex flex-col h-[94vh] sm:h-auto sm:max-h-[92vh]">
         {/* ================================================================= */}
         {/* HEADER BAR */}
         {/* ================================================================= */}
-        <div className="px-6 py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between gap-4">
-          <div className="flex items-center gap-3 min-w-0">
+        <div className="px-3.5 sm:px-6 py-2.5 sm:py-4 border-b border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between gap-2.5 sm:gap-4 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
             <div
-              className={`w-11 h-11 rounded-2xl flex items-center justify-center font-bold text-sm shrink-0 shadow-sm ${
+              className={`w-9 h-9 sm:w-11 sm:h-11 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm shrink-0 shadow-sm ${
                 isCompleted
                   ? 'bg-emerald-500 text-white'
                   : 'bg-indigo-600 text-white'
               }`}
             >
-              {isCompleted ? <CheckCircle2 size={22} /> : `L${lesson.lessonNumber}`}
+              {isCompleted ? <CheckCircle2 size={18} className="sm:w-[22px] sm:h-[22px]" /> : `L${lesson.lessonNumber}`}
             </div>
 
-            <div className="min-w-0">
-              <div className="flex items-center gap-2 flex-wrap">
-                <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2 text-slate-400">
+                <span className="text-[10px] sm:text-[11px] font-mono font-bold uppercase truncate max-w-[110px] sm:max-w-none">
                   {getModalText('lessonNum', activeLang)} {lesson.lessonNumber}
                 </span>
-                <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold font-mono">
+                <span className="px-1.5 sm:px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[9px] sm:text-[10px] font-bold font-mono shrink-0">
                   JLPT {lesson.prerequisiteJpLevel}
                 </span>
-                <span className="text-slate-400 text-xs">•</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Clock size={12} /> {lesson.estimatedMinutes} {getModalText('mins', activeLang)}
+                <span className="text-slate-400 text-xs hidden xs:inline">•</span>
+                <span className="text-[10px] sm:text-[11px] text-slate-500 dark:text-slate-400 hidden xs:flex items-center gap-1 shrink-0">
+                  <Clock size={11} /> {lesson.estimatedMinutes} {getModalText('mins', activeLang)}
                 </span>
               </div>
-              <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate font-japanese">
+              <h2 className="text-sm sm:text-lg font-black text-slate-900 dark:text-white truncate font-japanese">
                 {lesson.titleJp}
               </h2>
-              <p className={`text-xs text-slate-500 dark:text-slate-400 truncate ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
+              <p className={`text-[11px] sm:text-xs text-slate-500 dark:text-slate-400 truncate ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
                 {localizedLesson?.title || lesson.titleEn}
                 {activeLang !== 'en' && activeLang !== 'ja' && lesson.titleEn ? ` (${lesson.titleEn})` : ''}
               </p>
             </div>
           </div>
 
-          <div className="flex items-center gap-2 shrink-0">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <TranslationToggleButton size="sm" />
 
             <button
               type="button"
               onClick={handleCompleteLessonWithReward}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+              className={`hidden sm:flex px-3 py-1.5 rounded-xl text-xs font-bold transition-all items-center gap-1.5 cursor-pointer shadow-sm ${
                 isCompleted
                   ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 dark:shadow-none'
@@ -1082,9 +1082,10 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
             <button
               type="button"
               onClick={onClose}
-              className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
+              aria-label="Close modal"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer shrink-0"
             >
-              <X size={20} />
+              <X size={18} className="sm:w-5 sm:h-5" />
             </button>
           </div>
         </div>
@@ -1092,7 +1093,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
         {/* ================================================================= */}
         {/* TABS NAVIGATION */}
         {/* ================================================================= */}
-        <div className="px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-2 overflow-x-auto scrollbar-none">
+        <div className="px-3 sm:px-6 border-b border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 flex items-center gap-1 sm:gap-2 overflow-x-auto scrollbar-none shrink-0">
           {tabs.map((tab) => {
             const isCurrent = activeTab === tab.id;
             return (
@@ -1100,7 +1101,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                 key={tab.id}
                 type="button"
                 onClick={() => setActiveTab(tab.id)}
-                className={`py-3 px-3 text-xs font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer ${
+                className={`py-2.5 sm:py-3 px-2 sm:px-3 text-xs font-bold border-b-2 flex items-center gap-1.5 whitespace-nowrap transition-all cursor-pointer shrink-0 ${
                   isCurrent
                     ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400'
                     : 'border-transparent text-slate-500 dark:text-slate-400 hover:text-slate-800 dark:hover:text-slate-200'
@@ -1116,7 +1117,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
         {/* ================================================================= */}
         {/* TAB BODY (SCROLLABLE) */}
         {/* ================================================================= */}
-        <div className="p-6 overflow-y-auto flex-1 space-y-6">
+        <div className="p-3.5 sm:p-6 overflow-y-auto flex-1 space-y-4 sm:space-y-6">
           {/* TAB 1: OVERVIEW & RULES */}
           {activeTab === 'overview' && (
             <div className="space-y-6">
@@ -1229,16 +1230,16 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                       key={line.id}
                       className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/40 border border-slate-200 dark:border-slate-700/60 space-y-2.5 transition-all"
                     >
-                      <div className="flex items-center justify-between">
-                        <div className="flex items-center gap-2">
-                          <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold">
+                      <div className="flex items-center justify-between gap-2">
+                        <div className="flex items-center gap-2 min-w-0 flex-1 flex-wrap">
+                          <span className="px-2.5 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold shrink-0">
                             {line.speaker}
                           </span>
-                          <span className="text-[11px] text-slate-400 font-mono">
+                          <span className="text-[11px] text-slate-400 font-mono truncate">
                             {line.speakerRole}
                           </span>
                         </div>
-                        <AudioButton text={line.japanese} size="sm" />
+                        <AudioButton text={line.japanese} size="sm" className="shrink-0" />
                       </div>
 
                       <div className="space-y-1">
@@ -1359,9 +1360,9 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                       </div>
 
                       {v.exampleSentence && (
-                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between text-xs font-japanese text-slate-700 dark:text-slate-300">
-                          <span>{v.exampleSentence}</span>
-                          <AudioButton text={v.exampleSentence} size="sm" />
+                        <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 flex items-center justify-between gap-2 text-xs font-japanese text-slate-700 dark:text-slate-300">
+                          <span className="flex-1 min-w-0">{v.exampleSentence}</span>
+                          <AudioButton text={v.exampleSentence} size="sm" className="shrink-0" />
                         </div>
                       )}
                     </div>
@@ -1456,7 +1457,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                             key={eIdx}
                             className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 flex items-start justify-between gap-3 text-xs"
                           >
-                            <div className="space-y-1">
+                            <div className="space-y-1 flex-1 min-w-0">
                               <p className="font-japanese font-bold text-slate-900 dark:text-white">
                                 {ex.japanese}
                               </p>
@@ -1476,7 +1477,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                                 </p>
                               )}
                             </div>
-                            <AudioButton text={ex.japanese} size="sm" />
+                            <AudioButton text={ex.japanese} size="sm" className="shrink-0" />
                           </div>
                         );
                       })}
@@ -1648,9 +1649,9 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                   </div>
                 </div>
 
-                <div className="p-4 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between gap-4">
-                  <div>
-                    <span className="text-xl sm:text-2xl font-black font-japanese text-slate-900 dark:text-white block">
+                <div className="p-3.5 sm:p-4 rounded-xl bg-white dark:bg-slate-900 border border-indigo-100 dark:border-indigo-900/40 flex items-center justify-between gap-3 sm:gap-4">
+                  <div className="flex-1 min-w-0">
+                    <span className="text-lg sm:text-2xl font-black font-japanese text-slate-900 dark:text-white block">
                       {currentPhrase.phraseJp}
                     </span>
                     <span className="text-xs text-indigo-600 dark:text-indigo-400 font-japanese font-semibold">
@@ -1663,19 +1664,19 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                       {activeLang !== 'en' && activeLang !== 'ja' && currentPhrase.meaningEn ? ` (${currentPhrase.meaningEn})` : ''}
                     </p>
                   </div>
-                  <AudioButton text={currentPhrase.phraseJp} size="md" />
+                  <AudioButton text={currentPhrase.phraseJp} size="md" className="shrink-0" />
                 </div>
 
                 {/* Typing Input with Virtual Keyboard Trigger */}
                 <div className="space-y-2 pt-2">
-                  <div className="flex items-center justify-between">
+                  <div className="flex items-center justify-between gap-2 flex-wrap">
                     <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
                       {getModalText('typingInstruction', activeLang)}
                     </label>
                     <button
                       type="button"
                       onClick={() => openKeyboard()}
-                      className="px-3 py-1 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer shrink-0"
                     >
                       <Keyboard size={14} />
                       <span>{getModalText('japaneseKeyboard', activeLang)}</span>
@@ -1733,40 +1734,44 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
         {/* ================================================================= */}
         {/* FOOTER BAR (NAVIGATION & COMPLETION) */}
         {/* ================================================================= */}
-        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between gap-3">
+        <div className="px-3 sm:px-6 py-2.5 sm:py-3.5 border-t border-slate-200 dark:border-slate-800 bg-slate-50/90 dark:bg-slate-800/80 backdrop-blur-xs flex items-center justify-between gap-2 shrink-0">
           <button
             type="button"
             onClick={onSelectPrevLesson}
             disabled={!hasPrevLesson}
-            className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            title={getModalText('prevLesson', activeLang)}
+            className="px-2.5 sm:px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
           >
-            <ChevronLeft size={16} />
-            <span>{getModalText('prevLesson', activeLang)}</span>
+            <ChevronLeft size={16} className="shrink-0" />
+            <span className="hidden xs:inline">{getModalText('prevLesson', activeLang)}</span>
           </button>
 
-          <div className="flex items-center gap-2">
-            <button
-              type="button"
-              onClick={handleCompleteLessonWithReward}
-              className={`px-5 py-2.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-sm ${
-                isCompleted
-                  ? 'bg-emerald-500 text-white shadow-emerald-200 dark:shadow-none'
-                  : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 dark:shadow-none'
-              }`}
-            >
-              <CheckCircle2 size={16} />
-              <span>{isCompleted ? `${getModalText('completed', activeLang)} (+50 XP)` : `${getModalText('markDone', activeLang)}`}</span>
-            </button>
-          </div>
+          <button
+            type="button"
+            onClick={handleCompleteLessonWithReward}
+            className={`flex-1 min-w-0 max-w-sm mx-auto px-3 sm:px-5 py-2 sm:py-2.5 rounded-xl text-xs font-bold transition-all flex items-center justify-center gap-1.5 cursor-pointer shadow-sm shrink ${
+              isCompleted
+                ? 'bg-emerald-500 text-white shadow-emerald-200 dark:shadow-none'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 dark:shadow-none'
+            }`}
+          >
+            <CheckCircle2 size={16} className="shrink-0" />
+            <span className={`truncate text-center ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
+              {isCompleted
+                ? `${getModalText('completed', activeLang)} (+50 XP)`
+                : `${getModalText('markDone', activeLang)}`}
+            </span>
+          </button>
 
           <button
             type="button"
             onClick={onSelectNextLesson}
             disabled={!hasNextLesson}
-            className="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
+            title={getModalText('nextLesson', activeLang)}
+            className="px-2.5 sm:px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1 cursor-pointer disabled:opacity-30 disabled:cursor-not-allowed shrink-0"
           >
-            <span>{getModalText('nextLesson', activeLang)}</span>
-            <ChevronRight size={16} />
+            <span className="hidden xs:inline">{getModalText('nextLesson', activeLang)}</span>
+            <ChevronRight size={16} className="shrink-0" />
           </button>
         </div>
       </div>

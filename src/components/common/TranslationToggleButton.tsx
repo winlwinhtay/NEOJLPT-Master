@@ -114,14 +114,16 @@ export const TranslationToggleButton: React.FC<TranslationToggleButtonProps> = (
           }`}
         >
           {isEnabled ? (
-            <Eye size={size === 'sm' ? 12 : 14} className="text-indigo-600 dark:text-indigo-400" />
+            <Eye size={size === 'sm' ? 12 : 14} className="text-indigo-600 dark:text-indigo-400 shrink-0" />
           ) : (
-            <EyeOff size={size === 'sm' ? 12 : 14} className="text-slate-400" />
+            <EyeOff size={size === 'sm' ? 12 : 14} className="text-slate-400 shrink-0" />
           )}
-          <span className="font-japanese font-black">訳</span>
-          <span className="uppercase tracking-wider">
-            {isEnabled ? 'Trans ON' : 'Trans OFF'}
-          </span>
+          <span className="font-japanese font-black shrink-0">訳</span>
+          {variant !== 'compact' && variant !== 'minimal' && (
+            <span className="uppercase tracking-wider hidden sm:inline whitespace-nowrap">
+              {isEnabled ? 'Trans ON' : 'Trans OFF'}
+            </span>
+          )}
         </button>
 
         {/* Optional Language Selector Pill */}
@@ -133,7 +135,7 @@ export const TranslationToggleButton: React.FC<TranslationToggleButtonProps> = (
               setDropdownOpen(!dropdownOpen);
             }}
             title={`Select Translation Language (Current: ${currentLangObj.nativeName})`}
-            className={`flex items-center gap-1 border-l font-bold transition-colors cursor-pointer ${
+            className={`flex items-center gap-1 border-l font-bold transition-colors cursor-pointer shrink-0 ${
               size === 'sm' ? 'px-1.5 py-1' : 'px-2 py-1.5'
             } ${
               isEnabled
@@ -141,11 +143,11 @@ export const TranslationToggleButton: React.FC<TranslationToggleButtonProps> = (
                 : 'border-slate-200 dark:border-slate-700 hover:bg-slate-200/60 dark:hover:bg-slate-700/60'
             }`}
           >
-            <span>{currentLangObj.flag}</span>
+            <span className="shrink-0">{currentLangObj.flag}</span>
             <span className="uppercase font-mono text-[10px]">
               {currentLang.toUpperCase()}
             </span>
-            <ChevronDown size={11} className="opacity-70" />
+            <ChevronDown size={11} className="opacity-70 shrink-0" />
           </button>
         )}
       </div>

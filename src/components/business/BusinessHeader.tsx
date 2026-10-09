@@ -76,7 +76,7 @@ export const BusinessHeader: React.FC<BusinessHeaderProps> = ({
   return (
     <div className="space-y-6">
       {/* Hero Banner */}
-      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-6 sm:p-8 border border-slate-800 shadow-xl">
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-4 sm:p-6 lg:p-8 border border-slate-800 shadow-xl">
         <div className="absolute top-0 right-0 -mt-10 -mr-10 w-72 h-72 bg-indigo-500/20 rounded-full blur-3xl pointer-events-none" />
         <div className="absolute bottom-0 left-1/4 -mb-10 w-72 h-72 bg-emerald-500/10 rounded-full blur-3xl pointer-events-none" />
 
@@ -148,15 +148,15 @@ export const BusinessHeader: React.FC<BusinessHeaderProps> = ({
 
         {/* Progress Bar inside Hero */}
         <div className="mt-6 pt-4 border-t border-slate-800/80 flex flex-col sm:flex-row sm:items-center justify-between gap-3">
-          <div className="flex items-center gap-3">
-            <span className="text-xs text-slate-400">Course Progress:</span>
-            <div className="w-48 sm:w-64 h-2 bg-slate-800 rounded-full overflow-hidden">
+          <div className="flex items-center gap-2 sm:gap-3 flex-1 min-w-0">
+            <span className="text-xs text-slate-400 shrink-0">Course Progress:</span>
+            <div className="flex-1 max-w-xs h-2 bg-slate-800 rounded-full overflow-hidden min-w-[60px]">
               <div
                 className="h-full bg-gradient-to-r from-indigo-500 to-emerald-400 rounded-full transition-all duration-500"
                 style={{ width: `${progressPct}%` }}
               />
             </div>
-            <span className="text-xs font-bold font-mono text-white">
+            <span className="text-xs font-bold font-mono text-white shrink-0">
               {completedLessonsCount}/{totalLessonsCount} ({progressPct}%)
             </span>
           </div>

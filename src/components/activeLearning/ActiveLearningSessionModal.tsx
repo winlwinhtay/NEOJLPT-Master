@@ -161,30 +161,31 @@ export const ActiveLearningSessionModal: React.FC = () => {
     <div className="fixed inset-0 z-50 flex items-center justify-center p-3 sm:p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in overflow-y-auto">
       <div className="relative w-full max-w-3xl bg-slate-900 rounded-3xl border border-slate-800 shadow-2xl text-white overflow-hidden flex flex-col my-auto max-h-[90vh]">
         {/* Top Header Bar */}
-        <div className="flex items-center justify-between p-4 sm:p-6 border-b border-slate-800 bg-slate-950/40">
-          <div className="flex items-center gap-3">
-            <span className="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-400/30 flex items-center justify-center font-bold text-xs">
+        <div className="flex items-center justify-between p-3.5 sm:p-6 border-b border-slate-800 bg-slate-950/40 gap-2.5 shrink-0">
+          <div className="flex items-center gap-2.5 sm:gap-3 min-w-0 flex-1">
+            <span className="w-8 h-8 rounded-xl bg-brand-500/20 text-brand-300 border border-brand-400/30 flex items-center justify-center font-bold text-xs shrink-0">
               {activeItemIndex + 1}/{dailyPlan?.items.length || 1}
             </span>
-            <div>
-              <div className="flex items-center gap-2">
-                <span className="text-xs uppercase font-bold text-brand-400">
+            <div className="min-w-0 flex-1">
+              <div className="flex items-center gap-1.5 sm:gap-2">
+                <span className="text-xs uppercase font-bold text-brand-400 truncate">
                   {item.skill} • {item.activity.replace('_', ' ')}
                 </span>
-                <span className="text-slate-600">•</span>
-                <span className="text-xs text-slate-400">{item.minutes} min</span>
+                <span className="text-slate-600 hidden xs:inline">•</span>
+                <span className="text-xs text-slate-400 shrink-0 hidden xs:inline">{item.minutes} min</span>
               </div>
-              <h3 className="text-base sm:text-lg font-bold text-white truncate max-w-md">
+              <h3 className="text-sm sm:text-lg font-bold text-white truncate">
                 {item.title}
               </h3>
             </div>
           </div>
 
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-1.5 sm:gap-2 shrink-0">
             <TranslationToggleButton size="sm" />
             <button
               onClick={closeSession}
-              className="p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors"
+              aria-label="Close session"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-400 hover:text-white hover:bg-slate-800 transition-colors shrink-0"
             >
               <X className="w-5 h-5" />
             </button>

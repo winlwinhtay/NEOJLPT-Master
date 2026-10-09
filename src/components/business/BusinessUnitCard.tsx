@@ -173,21 +173,21 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
       {/* Unit Header Bar */}
       <div
         onClick={() => setIsExpanded(!isExpanded)}
-        className="p-5 sm:p-6 flex items-center justify-between gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
+        className="p-4 sm:p-6 flex items-center justify-between gap-3 sm:gap-4 cursor-pointer hover:bg-slate-50/50 dark:hover:bg-slate-800/30 transition-colors"
       >
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 min-w-0 flex-1">
           <div
-            className={`w-12 h-12 rounded-2xl flex items-center justify-center font-bold text-sm font-mono shrink-0 shadow-sm ${
+            className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl sm:rounded-2xl flex items-center justify-center font-bold text-xs sm:text-sm font-mono shrink-0 shadow-sm ${
               isUnitCompleted
                 ? 'bg-emerald-500 text-white'
                 : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-900/50'
             }`}
           >
-            {isUnitCompleted ? <CheckCircle2 size={22} /> : `U${unit.unitNumber}`}
+            {isUnitCompleted ? <CheckCircle2 size={20} className="sm:w-[22px] sm:h-[22px]" /> : `U${unit.unitNumber}`}
           </div>
 
-          <div className="space-y-0.5">
-            <div className="flex items-center gap-2">
+          <div className="space-y-0.5 min-w-0 flex-1">
+            <div className="flex items-center gap-2 flex-wrap">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Unit {unit.unitNumber}
               </span>
@@ -196,7 +196,7 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                 {completedInUnit}/{unit.lessons.length} {getCardText('completed', activeLang)}
               </span>
             </div>
-            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-japanese">
+            <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-japanese truncate">
               {unit.titleJp}
             </h3>
             {showTranslation ? (
@@ -249,8 +249,8 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                       : 'bg-slate-50/70 dark:bg-slate-800/40 border-slate-200/80 dark:border-slate-800'
                   }`}
                 >
-                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                    <div className="flex items-start gap-3">
+                  <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+                    <div className="flex items-start gap-2.5 sm:gap-3 min-w-0 flex-1">
                       <button
                         type="button"
                         onClick={() => onToggleCompleteLesson(lesson.id)}
@@ -266,7 +266,7 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
 
                       <div
                         onClick={() => onSelectPractice && onSelectPractice(lesson)}
-                        className="cursor-pointer group flex-1"
+                        className="cursor-pointer group flex-1 min-w-0"
                       >
                         <div className="flex items-center gap-2">
                           <span className="text-[10px] uppercase font-bold text-slate-400 font-mono">
@@ -276,11 +276,11 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                             {lesson.prerequisiteJpLevel}
                           </span>
                         </div>
-                        <h4 className="text-sm font-bold font-japanese text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
+                        <h4 className="text-sm font-bold font-japanese text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors truncate">
                           {lesson.titleJp}
                         </h4>
                         {showTranslation && (
-                          <div className={`text-xs text-slate-600 dark:text-slate-400 ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
+                          <div className={`text-xs text-slate-600 dark:text-slate-400 truncate ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
                             {localizedLesson.title}
                             {activeLang !== 'en' && activeLang !== 'ja' && lesson.titleEn && (
                               <span className="text-[11px] text-slate-400 ml-1.5 font-normal">
@@ -292,7 +292,7 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                       </div>
                     </div>
 
-                    <div className="flex items-center gap-2 self-end sm:self-center shrink-0">
+                    <div className="flex items-center justify-between sm:justify-end gap-2 self-stretch sm:self-center shrink-0 pt-2 sm:pt-0 border-t sm:border-t-0 border-slate-200/50 dark:border-slate-700/40">
                       <span className="text-[11px] text-slate-400 flex items-center gap-1 mr-1">
                         <Clock size={12} />
                         <span>{lesson.estimatedMinutes}m</span>
@@ -311,7 +311,7 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
 
                   {/* Learning Objectives */}
                   {localizedLesson.learningObjectives && localizedLesson.learningObjectives.length > 0 && showTranslation && (
-                    <div className="pl-9 space-y-1">
+                    <div className="pl-2 sm:pl-9 space-y-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
                         {getCardText('learningOutcomes', activeLang)}
                       </span>
@@ -325,7 +325,7 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
 
                   {/* Key Vocabulary Pills */}
                   {lesson.keyVocabulary && lesson.keyVocabulary.length > 0 && (
-                    <div className="pl-9 flex items-center gap-1.5 flex-wrap pt-1">
+                    <div className="pl-2 sm:pl-9 flex items-center gap-1.5 flex-wrap pt-1">
                       <span className="text-[10px] font-bold text-slate-400 uppercase mr-1">Vocab:</span>
                       {lesson.keyVocabulary.map((vocab, vIdx) => (
                         <span
@@ -340,7 +340,7 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
 
                   {/* Cultural Note */}
                   {localizedLesson.culturalNote && showTranslation && (
-                    <div className={`ml-9 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
+                    <div className={`ml-0 sm:ml-9 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
                       💡 <strong>{getCardText('culturalInsight', activeLang)}</strong>{' '}
                       {localizedLesson.culturalNote}
                     </div>

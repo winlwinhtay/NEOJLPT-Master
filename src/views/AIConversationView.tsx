@@ -20,11 +20,14 @@ import {
   Key,
   X,
   Settings,
+  Sliders,
+  Clock,
+  Check,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { AIService } from '../services/aiService';
-import { speechService } from '../services/speechService';
+import { speechService, RecognitionSessionHandle } from '../services/speechService';
 import { AudioButton } from '../components/common/AudioButton';
 import { JapaneseInput } from '../components/keyboard/JapaneseInput';
 import { AuthService } from '../services/authService';
@@ -62,6 +65,48 @@ export const AIConversationView: React.FC = () => {
   };
 
   const messagesEndRef = useRef<HTMLDivElement | null>(null);
+
+  interface VoiceSettings {
+    maxDuration: number; // in seconds (15, 30, 60, 120)
+    silenceTimeout: number; // in ms (0 = manual stop only, 3000 = 3s, 5000 = 5s)
+    autoSend: boolean; // false = review first, true = send directly
+  }
+
+  const [voiceSettings, setVoiceSettings] = useState<VoiceSettings>(() => {
+    try {
+      const saved = localStorage.getItem('jlpt_ai_voice_settings');
+      if (saved) return JSON.parse(saved);
+    } catch (e) {}
+    return {
+      maxDuration: 30,
+      silenceTimeout: 0, // 0 = manual stop only (default) so pauses don't cut off speech!
+      autoSend: false,   // false = review & edit first
+    };
+  });
+  const [voiceSettingsOpen, setVoiceSettingsOpen] = useState(false);
+  const [recordingElapsed, setRecordingElapsed] = useState(0);
+  const [recordingRemaining, setRecordingRemaining] = useState(30);
+  const [liveTranscript, setLiveTranscript] = useState('');
+  const recognitionRef = useRef<RecognitionSessionHandle | null>(null);
+
+  const updateVoiceSettings = (newSettings: Partial<VoiceSettings>) => {
+    setVoiceSettings((prev) => {
+      const updated = { ...prev, ...newSettings };
+      try {
+        localStorage.setItem('jlpt_ai_voice_settings', JSON.stringify(updated));
+      } catch (e) {}
+      return updated;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
 
   const topicMeta = AIService.getTopicMeta(selectedTopic);
 
@@ -166,8 +211,8 @@ export const AIConversationView: React.FC = () => {
     }
   };
 
-  // Microphone STT recognition trigger
-  const handleMicToggle = () => {
+  // Microphone Continuous STT Recognition Controls
+  const handleStartVoiceRecording = () => {
     // Supabase Email Authentication Check for Full AI Feature
     const authCheck = AuthService.canAccessAIFeature(profile);
     if (!authCheck.allowed) {
@@ -175,31 +220,90 @@ export const AIConversationView: React.FC = () => {
       return;
     }
 
-    if (isListening) {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+    }
+
+    setRecordingElapsed(0);
+    setRecordingRemaining(voiceSettings.maxDuration);
+    setLiveTranscript('');
+    setIsListening(true);
+
+    const session = speechService.createContinuousRecognitionSession({
+      lang: 'ja-JP',
+      continuous: true,
+      maxDurationSeconds: voiceSettings.maxDuration,
+      silenceTimeoutMs: voiceSettings.silenceTimeout,
+      onInterim: (interim, full) => {
+        setLiveTranscript(full);
+        setInputVal(full);
+      },
+      onTimeTick: (elapsed, remaining) => {
+        setRecordingElapsed(elapsed);
+        setRecordingRemaining(remaining);
+      },
+      onFinalResult: (finalText) => {
+        setIsListening(false);
+        const trimmed = finalText.trim();
+        if (trimmed) {
+          setInputVal(trimmed);
+          if (voiceSettings.autoSend) {
+            handleSendMessage(trimmed);
+          }
+        }
+      },
+      onError: (err) => {
+        console.error('Speech error', err);
+        setIsListening(false);
+      },
+      onEnd: () => {
+        setIsListening(false);
+      },
+    });
+
+    recognitionRef.current = session;
+    if (session.isSupported) {
+      session.start();
+    } else {
+      setIsListening(false);
+      alert('Speech Recognition is not supported in this browser. Please type your message.');
+    }
+  };
+
+  const handleStopVoiceRecording = (sendImmediately: boolean = false) => {
+    if (!recognitionRef.current) {
       setIsListening(false);
       return;
     }
 
-    const rec = speechService.createRecognitionSession(
-      (transcript, isFinal) => {
-        setInputVal(transcript);
-        if (isFinal) {
-          setIsListening(false);
-          handleSendMessage(transcript);
-        }
-      },
-      (err) => {
-        console.error('Speech error', err);
-        setIsListening(false);
-      },
-      () => setIsListening(false)
-    );
+    const textToKeep = liveTranscript || inputVal;
+    recognitionRef.current.stop();
+    recognitionRef.current = null;
+    setIsListening(false);
 
-    if (rec.isSupported) {
-      setIsListening(true);
-      rec.start();
+    if (textToKeep.trim()) {
+      setInputVal(textToKeep.trim());
+      if (sendImmediately || voiceSettings.autoSend) {
+        handleSendMessage(textToKeep.trim());
+      }
+    }
+  };
+
+  const handleCancelVoiceRecording = () => {
+    if (recognitionRef.current) {
+      recognitionRef.current.abort();
+      recognitionRef.current = null;
+    }
+    setIsListening(false);
+    setLiveTranscript('');
+  };
+
+  const handleMicToggle = () => {
+    if (isListening) {
+      handleStopVoiceRecording(false);
     } else {
-      alert('Speech Recognition is not supported in this browser. Please type your message.');
+      handleStartVoiceRecording();
     }
   };
 
@@ -461,6 +565,88 @@ export const AIConversationView: React.FC = () => {
           );
         })()}
 
+        {/* Interactive Live Voice Recording Banner */}
+        {isListening && (
+          <div className="px-4 py-3 bg-gradient-to-r from-rose-50 via-amber-50 to-rose-50 dark:from-rose-950/50 dark:via-amber-950/30 dark:to-rose-950/50 border-t border-rose-200 dark:border-rose-900/60 animate-fade-in shadow-inner">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3">
+              {/* Left: Indicator, Timer & Live Transcript */}
+              <div className="flex items-center gap-3">
+                <div className="relative flex items-center justify-center">
+                  <div className="w-9 h-9 rounded-2xl bg-rose-500 text-white flex items-center justify-center animate-pulse shadow-md shadow-rose-500/40">
+                    <Mic size={18} />
+                  </div>
+                  <span className="absolute -top-1 -right-1 flex h-3 w-3">
+                    <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-rose-400 opacity-75"></span>
+                    <span className="relative inline-flex rounded-full h-3 w-3 bg-rose-600"></span>
+                  </span>
+                </div>
+
+                <div className="space-y-0.5">
+                  <div className="flex items-center gap-2">
+                    <span className="text-xs font-black tracking-wide text-rose-600 dark:text-rose-400 uppercase">
+                      🎙️ Recording (Japanese)
+                    </span>
+                    <span className="px-2 py-0.5 rounded-md text-[10px] font-mono font-bold bg-rose-100 dark:bg-rose-900/60 text-rose-700 dark:text-rose-300">
+                      {Math.floor(recordingElapsed / 60)}:{(recordingElapsed % 60).toString().padStart(2, '0')} / {Math.floor(voiceSettings.maxDuration / 60)}:{(voiceSettings.maxDuration % 60).toString().padStart(2, '0')}
+                    </span>
+                    {voiceSettings.silenceTimeout === 0 && (
+                      <span className="text-[10px] px-1.5 py-0.5 rounded bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 font-bold">
+                        Manual Mode (No Cutoff)
+                      </span>
+                    )}
+                  </div>
+                  <p className="text-xs text-slate-700 dark:text-slate-200 font-japanese font-medium truncate max-w-[260px] sm:max-w-md">
+                    {liveTranscript ? `「${liveTranscript}」` : '日本語でお話しください（話す途中で止まりません）...'}
+                  </p>
+                </div>
+              </div>
+
+              {/* Right: Actions */}
+              <div className="flex items-center gap-2 self-end sm:self-auto">
+                <button
+                  type="button"
+                  onClick={handleCancelVoiceRecording}
+                  className="px-2.5 py-1.5 rounded-xl border border-slate-300 dark:border-slate-700 hover:bg-slate-100 dark:hover:bg-slate-800 text-slate-500 dark:text-slate-400 text-xs font-semibold flex items-center gap-1 transition-all cursor-pointer"
+                  title="Cancel recording"
+                >
+                  <X size={14} />
+                  <span>Cancel</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStopVoiceRecording(false)}
+                  className="px-3 py-1.5 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold flex items-center gap-1 shadow-sm transition-all cursor-pointer"
+                  title="Finish recording and review/edit text before sending"
+                >
+                  <Check size={14} />
+                  <span>Review / Edit</span>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => handleStopVoiceRecording(true)}
+                  className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-rose-500 to-rose-600 hover:from-rose-600 hover:to-rose-700 text-white text-xs font-bold flex items-center gap-1 shadow-md shadow-rose-500/30 transition-all cursor-pointer"
+                  title="Finish and send immediately to AI"
+                >
+                  <Send size={14} />
+                  <span>Send</span>
+                </button>
+              </div>
+            </div>
+
+            {/* Time Limit Progress Bar */}
+            <div className="w-full bg-rose-200/60 dark:bg-rose-950/60 rounded-full h-1 mt-2.5 overflow-hidden">
+              <div
+                className="bg-gradient-to-r from-rose-500 to-amber-500 h-1 rounded-full transition-all duration-300"
+                style={{
+                  width: `${Math.min(100, (recordingElapsed / voiceSettings.maxDuration) * 100)}%`,
+                }}
+              />
+            </div>
+          </div>
+        )}
+
         {/* Input Footer */}
         <div className="p-4 border-t border-slate-100 dark:border-slate-800 bg-white dark:bg-slate-900">
           <form
@@ -482,16 +668,26 @@ export const AIConversationView: React.FC = () => {
               />
             </div>
 
+            {/* Voice Limit / Settings Button */}
+            <button
+              type="button"
+              onClick={() => setVoiceSettingsOpen(true)}
+              className="p-2.5 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700 transition-all cursor-pointer"
+              title="Voice Recording Limit & Controls (အသံသွင်းခြင်း ဆက်တင်များ)"
+            >
+              <Sliders size={18} />
+            </button>
+
             {/* Mic STT Button */}
             <button
               type="button"
               onClick={handleMicToggle}
-              className={`p-2.5 rounded-2xl transition-all ${
+              className={`p-2.5 rounded-2xl transition-all cursor-pointer ${
                 isListening
                   ? 'bg-rose-500 text-white animate-pulse shadow-md shadow-rose-500/30'
-                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200'
+                  : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-200 dark:hover:bg-slate-700'
               }`}
-              title="Speak into Microphone"
+              title={isListening ? 'Stop recording (အသံသွင်းခြင်း ရပ်မည်)' : 'Start speaking (ဂျပန်လို အသံသွင်းပြောဆိုမည်)'}
             >
               {isListening ? <MicOff size={18} /> : <Mic size={18} />}
             </button>
@@ -499,7 +695,7 @@ export const AIConversationView: React.FC = () => {
             <button
               type="submit"
               disabled={!inputVal.trim() || isBotTyping}
-              className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5"
+              className="px-5 py-2.5 rounded-2xl bg-indigo-600 hover:bg-indigo-700 disabled:opacity-40 text-white font-bold text-xs shadow-md transition-all flex items-center gap-1.5 cursor-pointer"
             >
               <Send size={16} />
               <span className="hidden sm:inline">Send</span>
@@ -705,6 +901,175 @@ export const AIConversationView: React.FC = () => {
                 <li>မက်ဆေ့ချ်တစ်ခုလျှင် ကုန်ကျစရိတ် $0.0001 အောက်သာ ရှိပါသည်။</li>
               </ul>
             </div>
+          </div>
+        </div>
+      )}
+
+      {/* Voice Controls & Duration Limit Modal */}
+      {voiceSettingsOpen && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/60 backdrop-blur-xs animate-fade-in">
+          <div className="bg-white dark:bg-slate-900 rounded-3xl max-w-md w-full border border-slate-200 dark:border-slate-800 shadow-2xl p-6 space-y-5 animate-scale-up">
+            <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-800">
+              <div className="flex items-center gap-2.5">
+                <div className="w-8 h-8 rounded-xl bg-rose-50 dark:bg-rose-950/50 flex items-center justify-center text-rose-600 dark:text-rose-400">
+                  <Sliders size={18} />
+                </div>
+                <div>
+                  <h3 className="font-bold text-slate-900 dark:text-white text-sm">
+                    Voice Recording & Limit Controls
+                  </h3>
+                  <p className="text-[11px] text-slate-400 font-myanmar">
+                    အသံသွင်းချိန် ကန့်သတ်ချက်နှင့် ထိန်းချုပ်မှုများ
+                  </p>
+                </div>
+              </div>
+              <button
+                type="button"
+                onClick={() => setVoiceSettingsOpen(false)}
+                className="p-1 rounded-xl text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 cursor-pointer"
+              >
+                <X size={18} />
+              </button>
+            </div>
+
+            {/* Explanation Banner */}
+            <div className="p-3 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-[11px] text-amber-900 dark:text-amber-200 leading-relaxed font-myanmar flex items-start gap-2">
+              <Lightbulb size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+              <span>
+                ဂျပန်စကားပြောရာတွင် စကားမဆုံးသေးမီ အသံရပ်မသွားစေရန် <strong>Manual Stop Only</strong> ကို အကြံပြုထားပါသည်။ မိမိစိတ်ကြိုက် စဉ်းစားပြောဆိုပြီးမှ Stop နှိပ်နိုင်ပါသည်။
+              </span>
+            </div>
+
+            {/* Section 1: Duration Limit */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-myanmar">
+                <Clock size={14} className="text-rose-500" />
+                <span>စကားပြောချိန် အများဆုံး ကန့်သတ်ချက် (Max Time Limit)</span>
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                {[
+                  { sec: 15, label: '15 စက္ကန့်', desc: 'စကားတို (Quick reply)' },
+                  { sec: 30, label: '30 စက္ကန့်', desc: 'စံနှုန်း (Standard - Default)' },
+                  { sec: 60, label: '60 စက္ကန့်', desc: 'စကားရှည် (Detailed)' },
+                  { sec: 120, label: '120 စက္ကန့်', desc: 'အပြည့်အစုံ (Story)' },
+                ].map((item) => (
+                  <button
+                    key={item.sec}
+                    type="button"
+                    onClick={() => updateVoiceSettings({ maxDuration: item.sec })}
+                    className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                      voiceSettings.maxDuration === item.sec
+                        ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-bold shadow-xs'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <div className="text-xs">{item.label}</div>
+                    <div className="text-[10px] text-slate-400 font-myanmar">{item.desc}</div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Section 2: Silence & Pause Handling */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 flex items-center gap-1.5 font-myanmar">
+                <Mic size={14} className="text-rose-500" />
+                <span>စကားရပ်နားချိန် စောင့်ဆိုင်းမှု (Pause Tolerance)</span>
+              </label>
+              <div className="space-y-1.5">
+                {[
+                  {
+                    val: 0,
+                    title: 'Manual Stop Only (အကြံပြုထားသည်)',
+                    desc: 'စကားမဆုံးခင် အသံလုံးဝမရပ်ပါ။ Stop နှိပ်မှသာ အသံသွင်းခြင်း ရပ်ပါမည်။',
+                  },
+                  {
+                    val: 5000,
+                    title: '၅ စက္ကန့် စောင့်မည် (5s Silence Timeout)',
+                    desc: 'စကားပြောရပ်နားပြီး ၅ စက္ကန့်ကြာ တိတ်ဆိတ်နေမှ အလိုအလျောက် ရပ်ပါမည်။',
+                  },
+                  {
+                    val: 3000,
+                    title: '၃ စက္ကန့် စောင့်မည် (3s Silence Timeout)',
+                    desc: 'စကားပြောရပ်နားပြီး ၃ စက္ကန့်ကြာ တိတ်ဆိတ်နေမှ အလိုအလျောက် ရပ်ပါမည်။',
+                  },
+                ].map((item) => (
+                  <button
+                    key={item.val}
+                    type="button"
+                    onClick={() => updateVoiceSettings({ silenceTimeout: item.val })}
+                    className={`w-full p-2.5 rounded-2xl border text-left transition-all flex items-start gap-2.5 cursor-pointer ${
+                      voiceSettings.silenceTimeout === item.val
+                        ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 shadow-xs'
+                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                    }`}
+                  >
+                    <div
+                      className={`w-4 h-4 rounded-full border mt-0.5 flex items-center justify-center shrink-0 ${
+                        voiceSettings.silenceTimeout === item.val
+                          ? 'border-rose-500 bg-rose-500 text-white'
+                          : 'border-slate-300 dark:border-slate-700'
+                      }`}
+                    >
+                      {voiceSettings.silenceTimeout === item.val && <div className="w-1.5 h-1.5 bg-white rounded-full" />}
+                    </div>
+                    <div>
+                      <div className="text-xs font-bold">{item.title}</div>
+                      <div className="text-[11px] text-slate-500 dark:text-slate-400 font-myanmar">
+                        {item.desc}
+                      </div>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
+
+            {/* Section 3: Action after Recording */}
+            <div className="space-y-2">
+              <label className="text-xs font-bold text-slate-700 dark:text-slate-300 font-myanmar">
+                အသံသွင်းပြီးပါက လုပ်ဆောင်ချက် (After Recording)
+              </label>
+              <div className="grid grid-cols-2 gap-2">
+                <button
+                  type="button"
+                  onClick={() => updateVoiceSettings({ autoSend: false })}
+                  className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                    !voiceSettings.autoSend
+                      ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-bold shadow-xs'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="text-xs font-bold">✍️ Review & Edit</div>
+                  <div className="text-[10px] text-slate-400 font-myanmar">
+                    အရင်စစ်ဆေး/ပြင်ဆင်မည်
+                  </div>
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => updateVoiceSettings({ autoSend: true })}
+                  className={`p-2.5 rounded-2xl border text-left transition-all cursor-pointer ${
+                    voiceSettings.autoSend
+                      ? 'border-rose-500 bg-rose-50/60 dark:bg-rose-950/40 text-rose-900 dark:text-rose-200 font-bold shadow-xs'
+                      : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700'
+                  }`}
+                >
+                  <div className="text-xs font-bold">⚡ Auto-Send</div>
+                  <div className="text-[10px] text-slate-400 font-myanmar">
+                    ချက်ချင်း တိုက်ရိုက်ပို့မည်
+                  </div>
+                </button>
+              </div>
+            </div>
+
+            {/* Done Button */}
+            <button
+              type="button"
+              onClick={() => setVoiceSettingsOpen(false)}
+              className="w-full py-2.5 rounded-2xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 font-bold text-xs shadow-md transition-all cursor-pointer"
+            >
+              ပြီးပါပြီ (Save & Close)
+            </button>
           </div>
         </div>
       )}

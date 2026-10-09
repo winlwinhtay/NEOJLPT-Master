@@ -7,6 +7,25 @@ export interface SpeechPlaybackOptions {
   onError?: (err: any) => void;
 }
 
+export interface ContinuousRecognitionOptions {
+  lang?: string;
+  continuous?: boolean;
+  maxDurationSeconds?: number; // 0 for unlimited, or e.g. 15, 30, 60, 120
+  silenceTimeoutMs?: number; // 0 for manual stop only, or e.g. 3500ms
+  onInterim?: (interimText: string, fullText: string) => void;
+  onFinalResult?: (finalText: string) => void;
+  onTimeTick?: (elapsedSeconds: number, remainingSeconds: number) => void;
+  onError?: (error: string) => void;
+  onEnd?: () => void;
+}
+
+export interface RecognitionSessionHandle {
+  start: () => void;
+  stop: () => void;
+  abort: () => void;
+  isSupported: boolean;
+}
+
 class SpeechService {
   private synth: SpeechSynthesis | null = null;
   private japaneseVoice: SpeechSynthesisVoice | null = null;
@@ -79,26 +98,27 @@ class SpeechService {
     }
   }
 
-  // Speech Recognition (Speech-to-Text)
+  // Speech Recognition (Speech-to-Text) - Backward-compatible helper
   public createRecognitionSession(
     onResult: (transcript: string, isFinal: boolean) => void,
     onError: (error: string) => void,
-    onEnd: () => void
-  ): { start: () => void; stop: () => void; isSupported: boolean } {
+    onEnd: () => void,
+    options?: { continuous?: boolean; lang?: string }
+  ): RecognitionSessionHandle {
     if (typeof window === 'undefined') {
-      return { start: () => {}, stop: () => {}, isSupported: false };
+      return { start: () => {}, stop: () => {}, abort: () => {}, isSupported: false };
     }
 
     const SpeechRecognition =
       (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
 
     if (!SpeechRecognition) {
-      return { start: () => {}, stop: () => {}, isSupported: false };
+      return { start: () => {}, stop: () => {}, abort: () => {}, isSupported: false };
     }
 
     const recognition = new SpeechRecognition();
-    recognition.lang = 'ja-JP';
-    recognition.continuous = false;
+    recognition.lang = options?.lang || 'ja-JP';
+    recognition.continuous = options?.continuous ?? false;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
 
@@ -119,6 +139,7 @@ class SpeechService {
     };
 
     recognition.onerror = (event: any) => {
+      if (event.error === 'no-speech' || event.error === 'aborted') return;
       onError(event.error || 'Recognition error occurred');
     };
 
@@ -140,6 +161,159 @@ class SpeechService {
         } catch (e) {
           // Ignore
         }
+      },
+      abort: () => {
+        try {
+          recognition.abort();
+        } catch (e) {}
+      },
+      isSupported: true,
+    };
+  }
+
+  // Continuous Speech Recognition with Duration Limits, Silence Detector, and Interim Callbacks
+  public createContinuousRecognitionSession(
+    options: ContinuousRecognitionOptions
+  ): RecognitionSessionHandle {
+    if (typeof window === 'undefined') {
+      return { start: () => {}, stop: () => {}, abort: () => {}, isSupported: false };
+    }
+
+    const SpeechRecognition =
+      (window as any).SpeechRecognition || (window as any).webkitSpeechRecognition;
+
+    if (!SpeechRecognition) {
+      return { start: () => {}, stop: () => {}, abort: () => {}, isSupported: false };
+    }
+
+    const recognition = new SpeechRecognition();
+    recognition.lang = options.lang || 'ja-JP';
+    recognition.continuous = options.continuous !== false; // true by default!
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+
+    let isManuallyStopped = false;
+    let isAborted = false;
+    let latestFullTranscript = '';
+    let silenceTimer: any = null;
+    let tickInterval: any = null;
+    let elapsedSeconds = 0;
+    const maxDuration = options.maxDurationSeconds ?? 30;
+    const silenceMs = options.silenceTimeoutMs ?? 0;
+
+    const resetSilenceTimer = () => {
+      if (silenceMs <= 0) return;
+      if (silenceTimer) clearTimeout(silenceTimer);
+      silenceTimer = setTimeout(() => {
+        finishSession(false);
+      }, silenceMs);
+    };
+
+    const cleanupTimers = () => {
+      if (silenceTimer) {
+        clearTimeout(silenceTimer);
+        silenceTimer = null;
+      }
+      if (tickInterval) {
+        clearInterval(tickInterval);
+        tickInterval = null;
+      }
+    };
+
+    const finishSession = (aborted: boolean = false) => {
+      if (isManuallyStopped || isAborted) return;
+      cleanupTimers();
+
+      if (aborted) {
+        isAborted = true;
+        try {
+          recognition.abort();
+        } catch (e) {}
+        options.onEnd?.();
+      } else {
+        isManuallyStopped = true;
+        try {
+          recognition.stop();
+        } catch (e) {}
+        options.onFinalResult?.(latestFullTranscript);
+        options.onEnd?.();
+      }
+    };
+
+    recognition.onresult = (event: any) => {
+      if (isManuallyStopped || isAborted) return;
+
+      let final = '';
+      let interim = '';
+
+      for (let i = 0; i < event.results.length; ++i) {
+        const item = event.results[i];
+        if (item.isFinal) {
+          final += item[0].transcript;
+        } else {
+          interim += item[0].transcript;
+        }
+      }
+
+      const total = (final + interim).trim();
+      latestFullTranscript = total;
+      options.onInterim?.(interim, total);
+
+      if (total.length > 0) {
+        resetSilenceTimer();
+      }
+    };
+
+    recognition.onerror = (event: any) => {
+      const err = event.error;
+      if (err === 'no-speech' || err === 'aborted') {
+        return;
+      }
+      cleanupTimers();
+      options.onError?.(err || 'Recognition error occurred');
+    };
+
+    recognition.onend = () => {
+      cleanupTimers();
+      if (!isManuallyStopped && !isAborted) {
+        options.onFinalResult?.(latestFullTranscript);
+        options.onEnd?.();
+      }
+    };
+
+    return {
+      start: () => {
+        isManuallyStopped = false;
+        isAborted = false;
+        latestFullTranscript = '';
+        elapsedSeconds = 0;
+        cleanupTimers();
+
+        try {
+          recognition.start();
+
+          tickInterval = setInterval(() => {
+            elapsedSeconds += 1;
+            const remaining = maxDuration > 0 ? Math.max(0, maxDuration - elapsedSeconds) : 999;
+            options.onTimeTick?.(elapsedSeconds, remaining);
+
+            if (maxDuration > 0 && elapsedSeconds >= maxDuration) {
+              finishSession(false);
+            }
+          }, 1000);
+
+          if (silenceMs > 0) {
+            resetSilenceTimer();
+          }
+        } catch (e) {
+          console.warn('Speech recognition start failed or already active', e);
+        }
+      },
+      stop: () => {
+        finishSession(false);
+      },
+      abort: () => {
+        finishSession(true);
       },
       isSupported: true,
     };

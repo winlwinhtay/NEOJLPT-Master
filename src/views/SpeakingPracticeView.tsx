@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import React, { useState, useMemo, useRef, useEffect } from 'react';
 import {
   Mic,
   MicOff,
@@ -13,7 +13,7 @@ import {
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
-import { speechService } from '../services/speechService';
+import { speechService, RecognitionSessionHandle } from '../services/speechService';
 import { AudioButton } from '../components/common/AudioButton';
 import { JapaneseInput } from '../components/keyboard/JapaneseInput';
 import { SpeakingAttemptResult } from '../types/ai';
@@ -44,27 +44,59 @@ export const SpeakingPracticeView: React.FC = () => {
     evaluateSpeech(inputText);
   };
 
+  const recognitionRef = useRef<RecognitionSessionHandle | null>(null);
+
+  useEffect(() => {
+    return () => {
+      if (recognitionRef.current) {
+        recognitionRef.current.abort();
+        recognitionRef.current = null;
+      }
+    };
+  }, []);
+
   const handleStartRecording = () => {
+    if (isRecording) {
+      if (recognitionRef.current) {
+        recognitionRef.current.stop();
+        recognitionRef.current = null;
+      }
+      setIsRecording(false);
+      return;
+    }
+
     setResult(null);
     setTranscript('');
+    setIsRecording(true);
 
-    const session = speechService.createRecognitionSession(
-      (spokenText: string, isFinal: boolean) => {
-        setTranscript(spokenText);
-        if (isFinal) {
-          setIsRecording(false);
-          evaluateSpeech(spokenText);
+    const session = speechService.createContinuousRecognitionSession({
+      lang: 'ja-JP',
+      continuous: true,
+      maxDurationSeconds: 30,
+      silenceTimeoutMs: 3500, // 3.5 seconds silence buffer so pauses don't cut off speech
+      onInterim: (_interim: string, full: string) => {
+        setTranscript(full);
+      },
+      onFinalResult: (finalText: string) => {
+        setIsRecording(false);
+        const trimmed = finalText.trim();
+        if (trimmed) {
+          setTranscript(trimmed);
+          evaluateSpeech(trimmed);
         }
       },
-      (err: any) => {
+      onError: (err: any) => {
         console.error(err);
         setIsRecording(false);
       },
-      () => setIsRecording(false)
-    );
+      onEnd: () => {
+        setIsRecording(false);
+      },
+    });
+
+    recognitionRef.current = session;
 
     if (session.isSupported) {
-      setIsRecording(true);
       session.start();
     } else {
       // Fallback simulation for browsers with blocked mic

@@ -47,7 +47,7 @@ import { AdBanner } from '../components/common/AdBanner';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 import { adaptPracticeQuestion } from '../session/adapters/practiceAdapter';
-import { translateExampleSentence } from '../data/translations/multilingualEngine';
+import { translateExampleSentence, GRAMMAR_MULTILINGUAL_MAP } from '../data/translations/multilingualEngine';
 import { SupportedLanguage } from '../types/i18n';
 
 export const LearnRoadmapView: React.FC = () => {
@@ -188,14 +188,14 @@ export const LearnRoadmapView: React.FC = () => {
             {activeLevel} • Lesson {currentLesson.lessonNumber}
           </span>
           <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {isTransOn && activeLang === 'my' && currentLesson.title.includes('〜わけだ')
-              ? 'ယုတ္တိရှိသော ကောက်ချက်: 〜わけだ'
+            {isTransOn && activeLang !== 'en' && activeLang !== 'ja' && currentLesson.title.includes('〜わけだ') && GRAMMAR_MULTILINGUAL_MAP['〜わけだ']?.[activeLang]?.meaning
+              ? `${GRAMMAR_MULTILINGUAL_MAP['〜わけだ']![activeLang]!.meaning}: 〜わけだ`
               : currentLesson.title}
           </h1>
           <p className="text-sm text-slate-600 dark:text-slate-300 leading-relaxed max-w-2xl">
             <strong>{isTransOn && activeLang === 'my' ? 'ရည်မှန်းချက်:' : 'Goal:'}</strong>{' '}
-            {isTransOn && activeLang === 'my' && currentLesson.title.includes('〜わけだ')
-              ? 'အခြေအနေတစ်ခုသည် သဘာဝကျကျ အဘယ်ကြောင့် ဖြစ်ပေါ်လာရသည်ကို ရှင်းပြနိုင်ရန်။'
+            {isTransOn && activeLang !== 'en' && activeLang !== 'ja' && currentLesson.title.includes('〜わけだ') && GRAMMAR_MULTILINGUAL_MAP['〜わけだ']?.[activeLang]?.explanation
+              ? GRAMMAR_MULTILINGUAL_MAP['〜わけだ']![activeLang]!.explanation
               : currentLesson.objective}
           </p>
         </div>
@@ -229,8 +229,8 @@ export const LearnRoadmapView: React.FC = () => {
               {isTransOn && activeLang === 'my' ? 'သင်ခန်းစာ ခြုံငုံသုံးသပ်ချက် (Overview)' : 'Lesson Overview'}
             </h3>
             <p className="text-sm text-slate-700 dark:text-slate-300 leading-relaxed">
-              {isTransOn && activeLang === 'my' && currentLesson.title.includes('〜わけだ')
-                ? '〜わけだ ကို အကြောင်းရင်း သို့မဟုတ် အချက်အလက်များအပေါ် အခြေခံ၍ သဘာဝကျစွာ ထိုသို့ဖြစ်ရသည်ဟု သဘောပေါက်နားလည်မှုကို ဖော်ပြရာတွင် အသုံးပြုသည်။'
+              {isTransOn && activeLang !== 'en' && activeLang !== 'ja' && currentLesson.title.includes('〜わけだ') && GRAMMAR_MULTILINGUAL_MAP['〜わけだ']?.[activeLang]?.explanation
+                ? GRAMMAR_MULTILINGUAL_MAP['〜わけだ']![activeLang]!.explanation
                 : currentLesson.explanation}
             </p>
             <div className="pt-4 flex justify-end">

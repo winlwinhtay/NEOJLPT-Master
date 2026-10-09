@@ -18,13 +18,19 @@ import { useI18n } from '../i18n/I18nContext';
 import { ContentService } from '../services/content';
 import { speechService } from '../services/speechService';
 import { ListeningLesson } from '../types';
+import { SupportedLanguage } from '../types/i18n';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
+import {
+  getLocalizedListeningLine,
+  getLocalizedListeningSituation,
+} from '../data/translations/mediaContentI18n';
 
 export const ListeningView: React.FC = () => {
   const { activeLevel } = useApp();
   const { logActivity, addXP, profile } = useUser();
   const { t, language } = useI18n();
+  const activeLang = ((profile.translationLanguage || language || 'en') as SupportedLanguage);
 
   const levelListeningList = ContentService.listening.getListeningByLevel(activeLevel);
   const [selectedLesson, setSelectedLesson] = useState<ListeningLesson>(
@@ -154,8 +160,8 @@ export const ListeningView: React.FC = () => {
             <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
               {t('listening.situation')}
             </span>
-            <h2 className="text-lg font-bold text-slate-900 dark:text-white mt-0.5">
-              {selectedLesson.situation}
+            <h2 className={`text-lg font-bold text-slate-900 dark:text-white mt-0.5 ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
+              {getLocalizedListeningSituation(selectedLesson.id, activeLang, selectedLesson.situation)}
             </h2>
           </div>
 
@@ -239,22 +245,41 @@ export const ListeningView: React.FC = () => {
               {t('listening.dialogue')}:
             </span>
             <div className="space-y-3">
-              {selectedLesson.dialogue.map((line, idx) => (
-                <div key={idx} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1">
-                  <div className="flex items-center gap-2">
-                    <span className="font-bold text-xs text-purple-600 dark:text-purple-400">
-                      {line.speaker}:
-                    </span>
-                    <span className="font-japanese font-bold text-sm text-slate-900 dark:text-white">
-                      {line.text}
-                    </span>
+              {selectedLesson.dialogue.map((line, idx) => {
+                const lineTrans = getLocalizedListeningLine(selectedLesson.id, idx, activeLang, line.translationEn);
+
+                return (
+                  <div key={idx} className="p-3 rounded-xl bg-white dark:bg-slate-900 border border-slate-100 dark:border-slate-800 space-y-1">
+                    <div className="flex items-center gap-2">
+                      <span className="font-bold text-xs text-purple-600 dark:text-purple-400">
+                        {line.speaker}:
+                      </span>
+                      <span className="font-japanese font-bold text-sm text-slate-900 dark:text-white">
+                        {line.text}
+                      </span>
+                    </div>
+                    <div className="text-xs text-slate-400 font-japanese pl-2">{line.reading}</div>
+                    {profile.showTranslation !== false && (
+                      <div className="pl-2 space-y-0.5">
+                        <div className={`text-xs text-slate-700 dark:text-slate-200 font-medium ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
+                          {activeLang !== 'ja' && (
+                            <span className="font-bold text-[10px] uppercase text-purple-600 dark:text-purple-400 mr-1.5">
+                              {activeLang.toUpperCase()}:
+                            </span>
+                          )}
+                          {lineTrans}
+                        </div>
+                        {activeLang !== 'en' && activeLang !== 'ja' && line.translationEn && lineTrans !== line.translationEn && (
+                          <div className="text-[11px] text-slate-400">
+                            <span className="font-bold text-[10px] uppercase mr-1">EN:</span>
+                            {line.translationEn}
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
-                  <div className="text-xs text-slate-400 font-japanese pl-2">{line.reading}</div>
-                  {profile.showTranslation !== false && (
-                    <div className="text-xs text-slate-600 dark:text-slate-300 pl-2">{line.translationEn}</div>
-                  )}
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
         ) : (

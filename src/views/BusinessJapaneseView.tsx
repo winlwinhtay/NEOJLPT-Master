@@ -46,10 +46,12 @@ import { AudioButton } from '../components/common/AudioButton';
 import { getBusinessTabName } from '../data/translations/businessTranslations';
 import { getLocalizedBusinessVocabMeaning } from '../data/translations/businessContentI18n';
 import { getVocabularyStudyTip } from '../data/translations/vocabTipsTranslations';
+import { SupportedLanguage } from '../types/i18n';
 
 export const BusinessJapaneseView: React.FC = () => {
   const { logActivity, profile } = useUser();
   const { t, language } = useI18n();
+  const activeLang = ((profile.translationLanguage || language || 'en') as SupportedLanguage);
 
   // Navigation state
   const [activeCourseLevel, setActiveCourseLevel] = useState<BusinessCourseLevel>('foundation');
@@ -192,16 +194,16 @@ export const BusinessJapaneseView: React.FC = () => {
     label: string;
     icon: React.ReactNode;
   }[] = [
-    { id: 'curriculum', label: getBusinessTabName('curriculum', language), icon: <Layers size={16} /> },
-    { id: 'keigo', label: getBusinessTabName('keigo', language), icon: <Award size={16} /> },
+    { id: 'curriculum', label: getBusinessTabName('curriculum', activeLang), icon: <Layers size={16} /> },
+    { id: 'keigo', label: getBusinessTabName('keigo', activeLang), icon: <Award size={16} /> },
     { id: 'email', label: 'ビジネスメール (4段階比較)', icon: <Mail size={16} /> },
     { id: 'horenso', label: '報連相・電話・会議', icon: <MessageSquare size={16} /> },
     { id: 'career_hub', label: 'キャリア戦略・求人分析', icon: <Compass size={16} /> },
     { id: 'resume_coach', label: '履歴書・職務経歴書', icon: <FileCheck size={16} /> },
     { id: 'interview_sim', label: '面接シミュレーター', icon: <Users2 size={16} /> },
-    { id: 'culture', label: getBusinessTabName('culture', language), icon: <Shield size={16} /> },
-    { id: 'vocabulary', label: getBusinessTabName('vocabulary', language), icon: <BookA size={16} /> },
-    { id: 'exam', label: getBusinessTabName('exam', language), icon: <GraduationCap size={16} /> },
+    { id: 'culture', label: getBusinessTabName('culture', activeLang), icon: <Shield size={16} /> },
+    { id: 'vocabulary', label: getBusinessTabName('vocabulary', activeLang), icon: <BookA size={16} /> },
+    { id: 'exam', label: getBusinessTabName('exam', activeLang), icon: <GraduationCap size={16} /> },
   ];
 
   return (
@@ -387,7 +389,7 @@ export const BusinessJapaneseView: React.FC = () => {
                       </span>
                     </div>
                     <div className="text-xs font-bold text-indigo-600 dark:text-indigo-400 mt-0.5">
-                      {getLocalizedBusinessVocabMeaning(item.word, item.meaningEn, language)}
+                      {getLocalizedBusinessVocabMeaning(item.word, item.meaningEn, activeLang)}
                     </div>
                   </div>
 
@@ -432,9 +434,9 @@ export const BusinessJapaneseView: React.FC = () => {
                 {(() => {
                   const tipData = getVocabularyStudyTip(
                     item.word,
-                    getLocalizedBusinessVocabMeaning(item.word, item.meaningEn, language),
+                    getLocalizedBusinessVocabMeaning(item.word, item.meaningEn, activeLang),
                     item.partOfSpeech,
-                    language
+                    activeLang
                   );
                   return (
                     <div className="pt-2 border-t border-slate-100 dark:border-slate-800 text-[11px] text-amber-700 dark:text-amber-400/90 leading-snug">

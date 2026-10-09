@@ -580,22 +580,485 @@ export const BUSINESS_LESSONS_I18N: Record<string, BusinessLessonI18nData> = {
   },
 };
 
+
+// ----------------------------------------------------------------------------
+// Comprehensive Multilingual Translation Registry for Units & Lessons
+// Across all 19 supported languages:
+// en, ja, my, th, zh, ko, es, fr, vi, id, tr, de, pt, nl, hi, bn, ms, ar, tl
+// ----------------------------------------------------------------------------
+export const BUSINESS_UNITS_MULTILINGUAL: Record<
+  string,
+  Partial<Record<SupportedLanguage, { title: string; description: string }>>
+> = {
+  'u-found-1': {
+    th: { title: 'การทำงานในบริษัทญี่ปุ่นและสิ่งแวดล้อมในที่ทำงาน', description: 'ลำดับชั้นในองค์กร แผนกต่างๆ ตำแหน่งงานทั่วไป และการสื่อสารประจำวันในออฟฟิศ' },
+    zh: { title: '日本企业与职场环境', description: '公司组织架构、部门职责、常见职位头衔与日常办公沟通要领。' },
+    ko: { title: '일본 기업과 직장 환경', description: '회사 조직 계층, 부서, 직함 및 일상적인 사무실 업무 소통.' },
+    es: { title: 'Trabajar en una empresa japonesa', description: 'Jerarquía organizacional, departamentos, títulos comunes y comunicación diaria en la oficina.' },
+    fr: { title: 'Travailler dans une entreprise japonaise', description: 'Hiérarchie d\'entreprise, départements, titres de poste et communication quotidienne.' },
+    vi: { title: 'Làm việc trong công ty Nhật Bản', description: 'Cơ cấu tổ chức, các phòng ban, chức danh thông dụng và giao tiếp văn phòng hàng ngày.' },
+    id: { title: 'Bekerja di Perusahaan Jepang', description: 'Hierarki organisasi, departemen, jabatan umum, dan komunikasi kantor sehari-hari.' },
+    de: { title: 'Arbeiten in einem japanischen Unternehmen', description: 'Organisationshierarchie, Abteilungen, Berufsbezeichnungen und Bürokommunikation.' },
+    pt: { title: 'Trabalhando em uma empresa japonesa', description: 'Hierarquia organizacional, departamentos, cargos comuns e comunicação no escritório.' },
+    tr: { title: 'Bir Japon Şirketinde Çalışmak', description: 'Organizasyon hiyerarşisi, departmanlar, unvanlar ve günlük ofis iletişimi.' },
+  },
+  'u-found-2': {
+    th: { title: 'การแนะนำตัวและมารยาทการแลกนามบัตร (名刺)', description: 'การแนะนำตัวในวันเริ่มงาน พิธีสารการแลกนามบัตร และการทักทายในเชิงธุรกิจ' },
+    zh: { title: '自我介绍与名片（名刺）交换礼仪', description: '入职首日自我介绍、名片交换规范与职场同行引见礼仪。' },
+    ko: { title: '자기소개 및 명함(名刺) 교환 매너', description: '배치 첫날 자기소개, 명함 전달 및 수령 예절, 비즈니스 상호 인사.' },
+    es: { title: 'Presentación y etiqueta de tarjetas de visita (Meishi)', description: 'Presentaciones profesionales, protocolo de tarjetas de visita y saludos comerciales.' },
+    fr: { title: 'Présentation et étiquette des cartes de visite (Meishi)', description: 'Présentations professionnelles, protocole des cartes de visite et salutations.' },
+    vi: { title: 'Tự giới thiệu và quy tắc trao đổi danh thiếp (Meishi)', description: 'Giới thiệu bản thân ngày đầu đi làm, nghi thức trao nhận danh thiếp chuyên nghiệp.' },
+    id: { title: 'Perkenalan Diri & Etiket Kartu Nama (Meishi)', description: 'Perkenalan profesional di hari pertama, protokol kartu nama bisnis, dan sapaan kerja.' },
+    de: { title: 'Selbstvorstellung & Visitenkarten-Etikette (Meishi)', description: 'Professionelle Vorstellungen, Visitenkarten-Protokoll und geschäftliche Begrüßungen.' },
+    pt: { title: 'Autoapresentação e etiqueta de cartões de visita (Meishi)', description: 'Apresentações no primeiro dia, protocolo de cartões de visita e saudações profissionais.' },
+    tr: { title: 'Kendini Tanıtma ve Kartvizit (Meishi) Görgü Kuralları', description: 'İlk iş gününde tanışma, kartvizit alıp verme protokolü ve selamlaşma.' },
+  },
+  'u-found-3': {
+    th: { title: 'การขอความช่วยเหลือ การขออนุญาต และการขอโทษอย่างสุภาพ', description: 'การใช้คำช่วยลดแรงปะทะ (Cushion words) เพื่อความสุภาพ การขออนุญาต และการขอโทษอย่างจริงใจ' },
+    zh: { title: '职场礼貌请求、请假许可与诚恳致歉', description: '运用缓冲词（クッション言葉）委婉请求、向上级请示许可与职业致歉规范。' },
+    ko: { title: '직장 내 정중한 요청, 허가 구하기 및 사과', description: '쿠션어(クッション言葉)를 활용한 완곡한 요청, 상사 승인 요청 및 진심 어린 사과.' },
+    es: { title: 'Peticiones corteses, permisos y disculpas en el trabajo', description: 'Uso de palabras de amortiguación (Cushion words), solicitud de permisos y disculpas sinceras.' },
+    fr: { title: 'Demandes polies, autorisations et excuses au travail', description: 'Utilisation des mots coussins pour adoucir les requêtes, demandes d\'autorisation et excuses.' },
+    vi: { title: 'Nhờ vả lịch sự, xin phép và xin lỗi nơi công sở', description: 'Sử dụng từ đệm (Cushion words) để nói giảm nói tránh, xin phép cấp trên và xin lỗi chân thành.' },
+    id: { title: 'Permintaan Sopan, Izin, dan Maaf di Tempat Kerja', description: 'Menggunakan cushion words untuk melunakkan permintaan, meminta izin, dan meminta maaf.' },
+    de: { title: 'Höfliche Bitten, Genehmigungen und Entschuldigungen', description: 'Verwendung von Kissenwörtern (Cushion Words) für höfliche Anfragen und Entschuldigungen.' },
+    pt: { title: 'Pedidos educados, permissões e desculpas no trabalho', description: 'Uso de palavras de acolhimento (Cushion words) para suavizar pedidos e pedir desculpas.' },
+    tr: { title: 'İş Yerinde Kibar İstekler, İzin ve Özür Dileme', description: 'İstekleri yumuşatmak için yastık sözcükler kullanma, izin isteme ve samimi özürler.' },
+  },
+  'u-found-4': {
+    th: { title: 'พื้นฐานการรับสายและสนทนาโทรศัพท์สำนักงาน', description: 'การรับสายภายใน 3 สัญญาณกริ่ง การแจ้งชื่อบริษัท การขอให้รอสาย และการโอนสายอย่างสุภาพ' },
+    zh: { title: '商务电话接听与应对基础', description: '响铃3声内接听、规范报出公司名称、礼貌请对方稍候与转接电话。' },
+    ko: { title: '비즈니스 전화 응대 및 접수 기초', description: '3회 벨 이내 수신, 회사명 밝히기, 대기 안내 및 정중한 전화 연결.' },
+    es: { title: 'Fundamentos de la atención telefónica en la oficina', description: 'Responder antes de 3 timbres, identificar la empresa, poner en espera y transferir llamadas.' },
+    fr: { title: 'Bases de la réception téléphonique de bureau', description: 'Décrocher en moins de 3 sonneries, nommer l\'entreprise, faire patienter et transférer.' },
+    vi: { title: 'Cơ bản nghe và nhận cuộc gọi văn phòng', description: 'Nhấc máy trong 3 hồi chuông, xưng tên công ty, đề nghị chờ máy và chuyển máy lịch sự.' },
+    id: { title: 'Dasar Menerima & Menjawab Telepon Kantor', description: 'Menjawab dalam 3 dering, menyebut nama perusahaan, meminta menunggu, dan mentransfer panggilan.' },
+    de: { title: 'Grundlagen des geschäftlichen Telefonierens', description: 'Melden innerhalb von 3 Klingelzeichen, Firmennamen nennen und Weiterleiten.' },
+    pt: { title: 'Noções básicas de atendimento telefônico no escritório', description: 'Atender em 3 toques, identificar a empresa, pedir para aguardar e transferir.' },
+    tr: { title: 'Ofis Telefonu Karşılama Temelleri', description: '3 çalışta açma, şirket adını belirtme, bekletme ve kibarca aktarma.' },
+  },
+  'u-found-5': {
+    th: { title: 'พื้นฐานและโครงสร้างการเขียนอีเมลธุรกิจ', description: 'องค์ประกอบ 7 ส่วนมาตรฐานของอีเมลธุรกิจญี่ปุ่น: หัวข้อ ผู้รับ คำทักทาย เนื้อหา คำขอร้อง บทสรุป และลายเซ็น' },
+    zh: { title: '商务邮件撰写基础与标准格式', description: '日式标准商务邮件7大要素：主题行、收件人、问候语、正文要义、请求事项、结语与企业签名。' },
+    ko: { title: '비즈니스 이메일 작성 기본 및 7대 구성', description: '일본 표준 7단계 이메일 공식: 제목, 수신인, 첫인사, 본문 맥락, 요청, 맺음말, 서명.' },
+    es: { title: 'Estructura y redacción de correos de negocios', description: 'Fórmula estándar de 7 partes: Asunto, Destinatario, Saludo, Contexto, Petición, Cierre y Firma.' },
+    fr: { title: 'Structure et bases de l\'e-mail professionnel', description: 'Formule en 7 points : Objet, Destinataire, Formule de politesse, Contexte, Demande, Conclusion et Signature.' },
+    vi: { title: 'Quy chuẩn và cấu trúc viết email thương mại', description: '7 phần tiêu chuẩn của email thương mại Nhật Bản: Tiêu đề, Người nhận, Lời chào, Nội dung, Yêu cầu, Kết thư và Chữ ký.' },
+    id: { title: 'Struktur dan Dasar Penulisan Email Bisnis', description: '7 bagian standar email bisnis Jepang: Subjek, Penerima, Salam, Konteks, Permintaan, Penutup, dan Tanda Tangan.' },
+    de: { title: 'Aufbau und Grundlagen geschäftlicher E-Mails', description: 'Standardaufbau in 7 Schritten: Betreff, Empfänger, Anrede, Kontext, Bitte, Grußformel und Signatur.' },
+    pt: { title: 'Estrutura e redação de e-mails de negócios', description: 'Fórmula em 7 partes: Assunto, Destinatário, Saudação, Contexto, Pedido, Encerramento e Assinatura.' },
+    tr: { title: 'İş E-postası Temelleri ve Yapısı', description: '7 standart bölüm: Konu, Alıcı, Selamlama, Bağlam, İstek, Kapanış ve İmza.' },
+  },
+  'u-inter-1': {
+    th: { title: 'การฝึกฝนเคโกะอย่างเป็นระบบ', description: 'กฎมุมมองของผู้พูด การผันกริยาพิเศษ การหลีกเลี่ยงเคโกะซ้ำซ้อน (二重敬語) และแบบฝึกหัด' },
+    zh: { title: '系统精通商务敬语（尊他语与自谦语）', description: '深度解析主体视角法则、特殊动词变形、规避二重敬语（二重敬語）误区与实战对比。' },
+    ko: { title: '체계적인 비즈니스 경어 완벽 마스터', description: '화자 시점 규칙, 불규칙 동사 변형, 이중 경어(二重敬語) 방지법 및 혼동 연습.' },
+    es: { title: 'Dominio sistemático del Keigo (honorífico)', description: 'Reglas de perspectiva, verbos irregulares, evitar el doble keigo y ejercicios prácticos.' },
+    fr: { title: 'Maîtrise systématique du Keigo (langage honorifique)', description: 'Règles de perspective, verbes irréguliers, élimination du double keigo et exercices.' },
+    vi: { title: 'Nắm vững hệ thống kính ngữ Keigo chuyên nghiệp', description: 'Quy tắc góc nhìn người nói, biến đổi động từ bất quy tắc và tránh lỗi kính ngữ kép (二重敬語).' },
+    id: { title: 'Penguasaan Sistematis Bahasa Sopan Keigo', description: 'Aturan sudut pandang, perubahan verba tidak beraturan, dan menghindari double keigo.' },
+    de: { title: 'Systematische Beherrschung von Keigo (Höflichkeitssprache)', description: 'Perspektivregeln, unregelmäßige Verben und Vermeidung von doppeltem Keigo.' },
+    pt: { title: 'Domínio sistemático de Keigo (linguagem respeitosa)', description: 'Regras de perspectiva, verbos irregulares e como evitar keigo duplo.' },
+    tr: { title: 'Sistematik Keigo (Saygı Dili) Hakimiyeti', description: 'Konuşmacı kuralları, düzensiz fiiller ve ikili keigo hatalarından kaçınma.' },
+  },
+  'u-inter-2': {
+    th: { title: 'การใช้โฮเรนโซ (รายงาน-ติดต่อ-ปรึกษา) ในการทำงานจริง', description: 'กฎทองของที่ทำงานญี่ปุ่น: การรายงานความคืบหน้าตรงเวลา การแจ้งเหตุล่าช้าล่วงหน้า และการขอคำปรึกษาจากหัวหน้า' },
+    zh: { title: '职场报联相（Hou-Ren-Sou）实战精通', description: '日企职场黄金铁律：及时推进度汇报、提前预警延误预兆并向上级主动请教对策。' },
+    ko: { title: '호렌소 (보고·연락·상담) 실전 완벽 마스터', description: '일본 직장의 황금률: 시의적절한 진척 보고, 지연 사전 경고 및 상사 상담 기술.' },
+    es: { title: 'Dominio de Hou-Ren-Sou (Informar, Comunicar, Consultar)', description: 'La regla de oro del trabajo japonés: reportes de progreso puntuales, alertas de retrasos y consultas a superiores.' },
+    fr: { title: 'Pratique experte du Hou-Ren-Sou (Rapporter, Informer, Consulter)', description: 'La règle d\'or en entreprise japonaise : rapports d\'étape, alertes de retard et conseils hiérarchiques.' },
+    vi: { title: 'Thực hành thành thạo quy tắc vàng Hou-Ren-Sou', description: 'Quy tắc vàng nơi công sở Nhật: Báo cáo tiến độ kịp thời, thông báo chậm trễ từ sớm và xin ý kiến cấp trên.' },
+    id: { title: 'Menguasai Hou-Ren-Sou (Lapor, Hubungi, Konsultasi)', description: 'Aturan emas tempat kerja Jepang: laporan kemajuan tepat waktu, peringatan keterlambatan, dan konsultasi.' },
+    de: { title: 'Beherrschung von Hou-Ren-Sou (Berichten, Informieren, Beraten)', description: 'Die goldene Regel japanischer Unternehmen: Fortschrittsberichte, Verzögerungswarnungen und Beratung.' },
+    pt: { title: 'Dominando o Hou-Ren-Sou (Reportar, Comunicar, Consultar)', description: 'A regra de ouro do ambiente japonês: relatórios pontuais, avisos de atraso e consultas aos superiores.' },
+    tr: { title: 'Hou-Ren-Sou (Rapor, İletişim, Danışma) Uygulaması', description: 'Japon çalışma kültürünün altın kuralı: zamanında raporlama, gecikme bildirimleri ve danışma.' },
+  },
+  'u-inter-3': {
+    th: { title: 'การเขียนอีเมลธุรกิจเชิงปฏิบัติ', description: 'การนัดหมาย การแนบเอกสารสำคัญ การส่งจดหมายขอบคุณหลังการประชุม และการเตือนความจำอย่างสุภาพ' },
+    zh: { title: '实用商务邮件写作进阶', description: '商务日程预约、机密附件发送、会后感谢函与委婉催促提醒邮件撰写。' },
+    ko: { title: '실무 비즈니스 이메일 작성', description: '미팅 일정 조율, 비밀 문서 첨부 발송, 회의 후 감사 인사 및 정중한 독촉 메일.' },
+    es: { title: 'Redacción práctica de correos electrónicos de negocios', description: 'Coordinar citas, adjuntar documentos confidenciales, notas de agradecimiento y recordatorios corteses.' },
+    fr: { title: 'Rédaction pratique d\'e-mails d\'affaires', description: 'Planification de rendez-vous, pièces jointes confidentielles, remerciements et relances polies.' },
+    vi: { title: 'Thực hành viết email thương mại ứng dụng', description: 'Sắp xếp lịch hẹn, đính kèm tài liệu bảo mật, thư cảm ơn sau cuộc họp và nhắc việc khéo léo.' },
+    id: { title: 'Praktik Menulis Email Bisnis', description: 'Menjadwalkan pertemuan, melampirkan dokumen penting, ucapan terima kasih, dan pengingat sopan.' },
+    de: { title: 'Praxisorientierte geschäftliche E-Mail-Korrespondenz', description: 'Terminvereinbarungen, vertrauliche Anhänge, Dankschreiben nach Besprechungen und Erinnerungen.' },
+    pt: { title: 'Redação prática de e-mails corporativos', description: 'Agendamento de reuniões, anexos confidenciais, agradecimentos pós-reunião e lembretes polidos.' },
+    tr: { title: 'Uygulamalı İş E-postası Yazımı', description: 'Randevu ayarlama, gizli belge ekleme, toplantı sonrası teşekkür ve kibar hatırlatmalar.' },
+  },
+  'u-inter-4': {
+    th: { title: 'การเข้าร่วมการประชุมธุรกิจญี่ปุ่น', description: 'การทำความเข้าใจวาระการประชุม การแสดงความเห็นชอบและความเห็นต่างอย่างสุภาพ และการสรุปสิ่งที่ต้องปฏิบัติ' },
+    zh: { title: '参与日企商务会议与讨论', description: '把握会议议程、礼貌表达赞同与委婉异议、精准澄清疑问并归纳行动项。' },
+    ko: { title: '일본 비즈니스 회의 참여 및 토론', description: '회의 안건 이해, 정중한 동의 및 이견 표명, 발언 재확인 및 실행 과제 요약.' },
+    es: { title: 'Participación en reuniones de negocios japonesas', description: 'Comprensión de agendas, expresar acuerdo y desacuerdo cortés, clarificar y resumir tareas.' },
+    fr: { title: 'Participation aux réunions d\'affaires japonaises', description: 'Compréhension de l\'ordre du jour, expression polie du désaccord, clarification et synthèses d\'actions.' },
+    vi: { title: 'Tham gia các cuộc họp kinh doanh Nhật Bản', description: 'Nắm rõ nghị trình họp, bày tỏ đồng thuận và bất đồng lịch sự, tóm tắt các hạng mục công việc cần làm.' },
+    id: { title: 'Berpartisipasi dalam Rapat Bisnis Jepang', description: 'Memahami agenda rapat, menyatakan persetujuan dan ketidaksetujuan secara sopan, serta merangkum aksi.' },
+    de: { title: 'Teilnahme an japanischen Geschäftsbesprechungen', description: 'Verständnis der Agenda, höfliche Meinungsverschiedenheiten und Zusammenfassen von Aufgaben.' },
+    pt: { title: 'Participação em reuniões de negócios japonesas', description: 'Compreensão de pautas, concordância e discordância respeitosa, e resumo de ações.' },
+    tr: { title: 'Japon İş Toplantılarına Katılım', description: 'Toplantı gündemini anlama, kibarca fikir ayrılığı belirtme ve aksiyonları özetleme.' },
+  },
+  'u-inter-5': {
+    th: { title: 'มารยาทองค์กรและลำดับที่นั่ง (席次)', description: 'กฎของที่นั่งเกียรติยศ (Kamiza) และที่นั่งผู้น้อย (Shimoza) ในห้องประชุม รถยนต์ รถแท็กซี่ และลิฟต์' },
+    zh: { title: '商务礼仪与座位顺位规则（席次）', description: '会议室、公务车、出租车与电梯内上座（上座）与下座（下座）严谨座次礼节。' },
+    ko: { title: '비즈니스 매너와 좌석 배치 규칙 (석차)', description: '회의실, 회사 차량, 택시, 엘리베이터 내 상석(上座)과 말석(下座)의 필수 원칙.' },
+    es: { title: 'Etiqueta corporativa y asignación de asientos (Sekiji)', description: 'Reglas de Kamiza (asiento de honor) y Shimoza en salas de reuniones, taxis y elevadores.' },
+    fr: { title: 'Protocole d\'entreprise et plan de table (Sekiji)', description: 'Règles du Kamiza (place d\'honneur) et Shimoza en salle de réunion, taxi et ascenseur.' },
+    vi: { title: 'Quy tắc ứng xử và thứ tự chỗ ngồi trong doanh nghiệp (Sekiji)', description: 'Quy tắc chỗ ngồi danh dự (Kamiza) và chỗ ngồi cấp dưới (Shimoza) trong phòng họp, xe hơi và thang máy.' },
+    id: { title: 'Etiket Korporat dan Aturan Tempat Duduk (Sekiji)', description: 'Aturan Kamiza (kursi kehormatan) dan Shimoza di ruang rapat, mobil perusahaan, taksi, dan lift.' },
+    de: { title: 'Unternehmensetikette und Sitzordnung (Sekiji)', description: 'Regeln für Kamiza (Ehrensitz) und Shimoza in Besprechungsräumen, Taxis und Aufzügen.' },
+    pt: { title: 'Etiqueta corporativa e ordem de assentos (Sekiji)', description: 'Regras de Kamiza (assento de honra) e Shimoza em salas de reunião, táxis e elevadores.' },
+    tr: { title: 'Kurumsal Görgü ve Oturma Düzeni (Sekiji)', description: 'Toplantı odaları, taksiler ve asansörlerde Kamiza (onur koltuğu) ve Shimoza kuralları.' },
+  },
+  'u-upper-1': {
+    th: { title: 'การนำเสนอธุรกิจและข้อเสนอที่โน้มน้าวใจ', description: 'การเปิดตัวอย่างน่าสนใจ การนำเสนอปัญหา การอธิบายกราฟข้อมูลตลาด และการตอบคำถามภายใต้ความกดดัน' },
+    zh: { title: '商务提案汇报与说服性企划陈述', description: '高吸引力开场破冰、精准陈述问题痛点、专业解读市场数据图表与高压答辩技巧。' },
+    ko: { title: '비즈니스 프레젠테이션 및 설득 제안', description: '주목을 끄는 도입부, 문제 정의, 시장 데이터 및 차트 설명, 질의응답 대응력.' },
+    es: { title: 'Presentaciones de negocios y propuestas persuasivas', description: 'Aperturas atractivas, planteamiento de problemas, explicación de gráficos y manejo de preguntas y respuestas.' },
+    fr: { title: 'Présentations d\'affaires et propositions convaincantes', description: 'Accroches percutantes, formulation de problématiques, analyse de données et gestion des questions.' },
+    vi: { title: 'Thuyết trình thương mại và đề xuất thuyết phục', description: 'Mở đầu thu hút, phân tích vấn đề cốt lõi, diễn giải số liệu biểu đồ và làm chủ phần hỏi đáp.' },
+    id: { title: 'Presentasi Bisnis & Proposal Persuasif', description: 'Pembuka menarik, penjelasan masalah, analisis grafik pasar, dan penanganan tanya jawab.' },
+    de: { title: 'Geschäftspräsentationen und überzeugende Vorschläge', description: 'Einstiege, Problemstellungen, Erläuterung von Marktdaten und souveräne Fragerunden.' },
+    pt: { title: 'Apresentações comerciais e propostas persuasivas', description: 'Aberturas impactantes, declaração de problemas, gráficos de mercado e perguntas e respostas.' },
+    tr: { title: 'İş Sunumları ve İkna Edici Teklifler', description: 'Dikkat çekici girişler, sorun tespiti, pazar grafiklerini açıklama ve soru-cevap yönetimi.' },
+  },
+  'u-upper-2': {
+    th: { title: 'การเจรจาการค้าและข้อตกลงเงื่อนไขราคา', description: 'การยื่นข้อเสนอทดแทน การตกลงแบบมีเงื่อนไข การปกป้องผลกำไรอย่างสุภาพ และการบรรลุข้อตกลงแบบ Win-Win' },
+    zh: { title: '商务谈判与价格条款妥协磋商', description: '提出替代方案、附带条件的妥协答应、礼貌捍卫商业利润空间与达成双赢共识。' },
+    ko: { title: '상업 협상 및 조건·가격 절충 기술', description: '대안 제시, 조건부 합의, 정중한 이윤 방어 및 윈윈(Win-Win) 합의 도출.' },
+    es: { title: 'Negociaciones comerciales y compromiso de términos', description: 'Hacer contrapropuestas, acuerdos condicionales, defensa cortés de márgenes y consenso ganar-ganar.' },
+    fr: { title: 'Négociations commerciales et compromis', description: 'Contre-propositions, accords sous conditions, défense polie des marges et consensus gagnant-gagnant.' },
+    vi: { title: 'Đàm phán thương mại và kỹ năng thỏa thuận điều khoản', description: 'Đưa ra phương án thay thế, đồng thuận có điều kiện, bảo vệ biên lợi nhuận và đạt thỏa thuận đôi bên cùng có lợi.' },
+    id: { title: 'Negosiasi Komersial & Kesepakatan Syarat Harga', description: 'Membuat proposal balasan, persetujuan bersyarat, menjaga margin laba, dan konsensus win-win.' },
+    de: { title: 'Geschäftsverhandlungen und Konditionskompromisse', description: 'Gegenvorschläge, bedingte Einigungen, höfliche Margenverteidigung und Win-Win-Lösungen.' },
+    pt: { title: 'Negociações comerciais e compromissos de termos', description: 'Contrapropostas, acordos condicionais, defesa de margens e consenso ganha-ganha.' },
+    tr: { title: 'Ticari Müzakereler ve Şartlarda Uzlaşma', description: 'Karşı teklifler, koşullu anlaşmalar, kar marjını koruma ve kazan-kazan uzlaşısı.' },
+  },
+  'u-upper-3': {
+    th: { title: 'การรับมือข้อร้องเรียนและการแก้ไขวิกฤต', description: 'การแสดงความเข้าอกเข้าใจในเบื้องต้น การรับฟังโดยไม่แทรก การหาสาเหตุที่แท้จริง และการวางมาตรการป้องกัน' },
+    zh: { title: '客户投诉应对与危机善后化解', description: '首要共情倾听、全程耐心不打断、查明客观事实起因、制定补救对策并落实防再次发生机制。' },
+    ko: { title: '고객 클레임 대응 및 문제 해결', description: '초기 공감 표현, 경청, 객관적 원인 규명, 재발 방지 대책 수립.' },
+    es: { title: 'Reclamaciones de clientes y resolución de crisis', description: 'Empatía inicial, escuchar sin interrumpir, determinar causas y prevenir recurrencias.' },
+    fr: { title: 'Réclamations clients et résolution de crise', description: 'Empathie initiale, écoute active sans interruption, recherche des causes et prévention.' },
+    vi: { title: 'Xử lý khiếu nại khách hàng và giải quyết khủng hoảng', description: 'Thấu hiểu ngay từ đầu, lắng nghe không ngắt lời, làm rõ nguyên nhân và phòng ngừa tái diễn.' },
+    id: { title: 'Keluhan Pelanggan & Penyelesaian Krisis', description: 'Empati awal, mendengarkan tanpa memotong, mencari akar masalah, dan pencegahan berulang.' },
+    de: { title: 'Kundenreklamationen und Krisenbewältigung', description: 'Empathie bei der ersten Reaktion, aktives Zuhören, Ursachenermittlung und Fehlervermeidung.' },
+    pt: { title: 'Reclamações de clientes e resolução de crises', description: 'Empatia inicial, escuta ativa, determinação de causas e prevenção de reincidências.' },
+    tr: { title: 'Müşteri Şikayetleri ve Kriz Çözümü', description: 'İlk temasta empati, söz kesmeden dinleme, kök neden analizi ve tekrarları önleme.' },
+  },
+  'u-prof-1': {
+    th: { title: 'การจัดการผู้มีส่วนได้ส่วนเสียระดับผู้บริหารและวัฒนธรรมเนะมะวะชิ (Nemawashi)', description: 'การตัดสินใจบนพื้นฐานฉันทามติ การปรับจูนนอกรอบก่อนการประชุม (Nemawashi) และกระบวนการขออนุมัติแบบริงกิ (Ringi)' },
+    zh: { title: '高管利益相关方沟通与根回（Nemawashi）文化', description: '理解共识驱动型决策、非正式会前私下对齐（根回し）与凛议书（稟議）审批闭环。' },
+    ko: { title: '임원 이해관계자 관리 및 네마와시(사전 정지) 문화', description: '합의 기반 의사결정 이해, 공식 회의 전 사전 의견 조율(根回し) 및 품의서(稟議) 승인 프로세스.' },
+    es: { title: 'Gestión de partes interesadas ejecutivas y cultura Nemawashi', description: 'Toma de decisiones por consenso, alineación previa informal (Nemawashi) y proceso de aprobación Ringi.' },
+    fr: { title: 'Gestion des parties prenantes exécutives et culture Nemawashi', description: 'Prise de décision par consensus, alignement informel préalable (Nemawashi) et processus Ringi.' },
+    vi: { title: 'Quản trị các bên liên quan cấp điều hành và văn hóa Nemawashi', description: 'Hiểu cơ chế ra quyết định đồng thuận, trao đổi ngầm trước cuộc họp (Nemawashi) và quy trình phê duyệt Ringi.' },
+    id: { title: 'Manajemen Pemangku Kepentingan Eksekutif & Budaya Nemawashi', description: 'Pengambilan keputusan berbasis konsensus, penyelarasan informal sebelumnya, dan persetujuan Ringi.' },
+    de: { title: 'Management von Führungskräften und Nemawashi-Kultur', description: 'Konsensentscheidungen, informelle Vorabstimmung (Nemawashi) und der Ringi-Genehmigungsprozess.' },
+    pt: { title: 'Gestão de executivos e cultura Nemawashi', description: 'Tomada de decisão por consenso, alinhamento prévio informal (Nemawashi) e processo Ringi.' },
+    tr: { title: 'Üst Düzey Paydaş Yönetimi ve Nemawashi Kültürü', description: 'Konsensüs odaklı karar alma, gayriresmi ön uzlaşma (Nemawashi) ve Ringi onay süreci.' },
+  },
+  'u-career-1': {
+    th: { title: 'เรซูเม่ญี่ปุ่น (履歴書) และ Entry Sheet (ES)', description: 'การเขียนเอกสารสมัครงานอย่างเป็นทางการ ประวัติการศึกษาและการทำงาน การเขียน Self-PR และแรงจูงใจในการสมัคร' },
+    zh: { title: '日式简历（履历书）与Entry Sheet（ES）撰写', description: '规范书写求职申请文书、教育与职历排版、提炼高说服力自我PR与志望动机。' },
+    ko: { title: '일본 이력서(履歴書) 및 엔트리 시트(ES) 작성법', description: '정규 입사 지원서 작성, 학력 및 경력 기술, 강력한 자기 PR 및 지원 동기 작성.' },
+    es: { title: 'Currículum japonés (Rirekisho) y Entry Sheet (ES)', description: 'Redacción de documentos formales de solicitud, historial académico y laboral, y redacción de auto-PR.' },
+    fr: { title: 'CV japonais (Rirekisho) et Entry Sheet (ES)', description: 'Rédaction de documents formels de candidature, parcours scolaire et professionnel, et auto-promotion (PR).' },
+    vi: { title: 'Cách viết sơ yếu lý lịch Nhật (Rirekisho) và Entry Sheet (ES)', description: 'Viết hồ sơ ứng tuyển chính thức, trình bày học vấn và kinh nghiệm, viết bài PR bản thân và lý do ứng tuyển.' },
+    id: { title: 'Resume Jepang (Rirekisho) & Entry Sheet (ES)', description: 'Menulis dokumen lamaran resmi, menyusun riwayat pendidikan/kerja, dan membuat Self-PR yang memikat.' },
+    de: { title: 'Japanischer Lebenslauf (Rirekisho) und Entry Sheet (ES)', description: 'Verfassen formeller Bewerbungsunterlagen, Bildungs- und Werdegangsgestaltung und Selbst-PR.' },
+    pt: { title: 'Currículo japonês (Rirekisho) e Entry Sheet (ES)', description: 'Elaboração de documentos formais de candidatura, histórico escolar e profissional, e auto-PR.' },
+    tr: { title: 'Japon Özgeçmişi (Rirekisho) ve Entry Sheet (ES)', description: 'Resmi başvuru belgeleri hazırlama, eğitim/iş geçmişi formatı ve etkili kendini tanıtma (PR).' },
+  },
+  'u-career-2': {
+    th: { title: 'มารยาทการสัมภาษณ์งานและการจำลองสถานการณ์จริง', description: 'มารยาทในการเข้า-ออกจากห้องสัมภาษณ์ (เคาะประตู 3 ครั้ง, 失礼いたします) คำถามสัมภาษณ์หลัก และการถามคำถามกลับ (逆質問)' },
+    zh: { title: '求职面试礼仪与实战演练模拟', description: '面试进退场礼节（敲门3声、失礼いたします口令）、高频面试题答辩与高质量反问面试官（逆質問）技巧。' },
+    ko: { title: '면접 매너 및 실전 시뮬레이션', description: '입퇴실 매너(노크 3회, 실례하겠습니다), 핵심 면접 질문, 돌발 질문 대응 및 역질문(逆質問) 기법.' },
+    es: { title: 'Etiqueta de entrevistas de trabajo y simulación', description: 'Protocolo de entrada/salida (tocar 3 veces, 失礼いたします), preguntas clave y preguntas inversas (Gyakushitsumon).' },
+    fr: { title: 'Étiquette d\'entretien d\'embauche et simulation', description: 'Protocole d\'entrée/sortie (frapper 3 fois, 失礼いたします), questions types et contre-questions (Gyakushitsumon).' },
+    vi: { title: 'Quy tắc phỏng vấn xin việc và mô phỏng thực tế', description: 'Nghi thức ra vào phòng (gõ cửa 3 lần, 失礼いたします), các câu hỏi phỏng vấn trọng tâm và kỹ năng hỏi ngược lại nhà tuyển dụng (逆質問).' },
+    id: { title: 'Etiket Wawancara Kerja & Simulasi', description: 'Protokol keluar-masuk ruangan (mengetuk 3 kali, 失礼いたします), pertanyaan inti wawancara, dan tanya balik (逆質問).' },
+    de: { title: 'Etikette beim Vorstellungsgespräch & Simulation', description: 'Protokoll beim Betreten des Raumes (3-mal klopfen), Kernfragen und Gegenfragen (Gyakushitsumon).' },
+    pt: { title: 'Etiqueta de entrevistas de emprego e simulação', description: 'Protocolo de entrada e saída (bater 3 vezes), perguntas essenciais e contra-perguntas.' },
+    tr: { title: 'İş Mülakatı Görgü Kuralları ve Simülasyon', description: 'Odaya giriş protokolü (3 kez kapı çalma), temel mülakat soruları ve karşı sorular (Gyakushitsumon).' },
+  },
+};
+
+// ----------------------------------------------------------------------------
+// Multilingual Registry for Lessons Across Top Global Languages
+// ----------------------------------------------------------------------------
+export const BUSINESS_LESSONS_MULTILINGUAL: Record<
+  string,
+  Partial<
+    Record<
+      SupportedLanguage,
+      {
+        title: string;
+        culturalNote?: string;
+        scenarioOverview?: string;
+        officeContext?: string;
+      }
+    >
+  >
+> = {
+  'l-f1-1': {
+    th: {
+      title: 'โครงสร้างองค์กร แผนก และตำแหน่งงานในบริษัทญี่ปุ่น',
+      culturalNote: 'เมื่อพูดกับคนภายนอก ห้ามเติมคำว่า "ซัง" (San) ให้กับบุคคลภายในบริษัทเดียวกัน แม้แต่ประธานบริษัทก็ตาม',
+      scenarioOverview: 'เรียนรู้โครงสร้างบริษัทญี่ปุ่น ลำดับขั้นของตำแหน่งงาน และวิธีการเรียกชื่ออย่างถูกต้องทั้งภายในและภายนอกบริษัท',
+      officeContext: 'บรรยากาศสำนักงานทั่วไปในโตเกียว: การประชุมแนะนำพนักงานใหม่และผังองค์กร',
+    },
+    zh: {
+      title: '日企组织架构、部门职责与职务头衔称谓',
+      culturalNote: '向公司外部人员提及自家公司社长或上司时，严禁使用“さん”（San）或敬称，必须直呼其姓或职务。',
+      scenarioOverview: '掌握日企组织架构、常见岗位头衔层级，以及内外有别的职业称谓规则。',
+      officeContext: '东京典型日企办公区：新人入职培训与组织结构说明。',
+    },
+    ko: {
+      title: '일본 기업의 조직도, 부서 및 직함 호칭법',
+      culturalNote: '외부인에게 자사 직원을 말할 때는 사장님이라도 "님"이나 "상"을 붙이지 않고 낮추어 말해야 합니다.',
+      scenarioOverview: '일본 기업의 조직 계층, 직위별 직함 및 사내외 호칭 매너를 배웁니다.',
+      officeContext: '도쿄 사옥 사무실: 신입 사원 직무 오리엔테이션 현장.',
+    },
+    es: {
+      title: 'Jerarquía corporativa japonesa, departamentos y títulos',
+      culturalNote: 'Al hablar con personas externas a la empresa, nunca añada "san" a los miembros de su propia empresa, ni siquiera al presidente.',
+      scenarioOverview: 'Aprenda la jerarquía organizacional, los títulos comunes y cómo dirigirse a colegas interna y externamente.',
+      officeContext: 'Oficina corporativa en Tokio: orientación para nuevos empleados.',
+    },
+    fr: {
+      title: 'Hiérarchie d\'entreprise japonaise, départements et titres',
+      culturalNote: 'Lorsque vous parlez à un client externe, n\'ajoutez jamais "-san" aux membres de votre propre entreprise, même le PDG.',
+      scenarioOverview: 'Maîtrisez la structure d\'entreprise, les titres de poste et les règles de dénomination professionnelle.',
+      officeContext: 'Bureau d\'entreprise à Tokyo : séance d\'orientation des nouvelles recrues.',
+    },
+    vi: {
+      title: 'Cơ cấu tổ chức công ty, các phòng ban và chức danh',
+      culturalNote: 'Khi giao tiếp với người ngoài công ty, tuyệt đối không thêm kính ngữ "San" cho bất kỳ ai thuộc công ty mình, kể cả Giám đốc.',
+      scenarioOverview: 'Học cơ cấu tổ chức, các cấp bậc chức vụ và cách xưng hô chuẩn mực trong ngoài công ty.',
+      officeContext: 'Văn phòng công ty tại Tokyo: Buổi định hướng nhân viên mới.',
+    },
+    id: {
+      title: 'Hierarki Perusahaan Jepang, Departemen & Jabatan',
+      culturalNote: 'Saat berbicara dengan pihak luar, jangan pernah menambahkan "san" pada anggota perusahaan sendiri, termasuk direktur utama.',
+      scenarioOverview: 'Pelajari struktur hierarki, jabatan umum, dan aturan penyebutan internal vs eksternal.',
+      officeContext: 'Kantor pusat Tokyo: sesi orientasi karyawan baru.',
+    },
+    de: {
+      title: 'Japanische Unternehmenshierarchie, Abteilungen und Titel',
+      culturalNote: 'Wenn Sie mit Externen sprechen, hängen Sie niemals "-san" an Mitglieder der eigenen Firma an, auch nicht an den Geschäftsführer.',
+      scenarioOverview: 'Lernen Sie die Organisationshierarchie, Funktionsbezeichnungen und Anrederegeln.',
+      officeContext: 'Unternehmenszentrale in Tokio: Einführung neuer Mitarbeiter.',
+    },
+  },
+  'l-f1-2': {
+    th: {
+      title: 'คำทักทายประจำวันในออฟฟิศและการสื่อสารกับเพื่อนร่วมงาน',
+      culturalNote: 'คำว่า "โอทสึคาเระซามะเดส" คือกาวประสานความสัมพันธ์ในที่ทำงานญี่ปุ่น ใช้ทักทายเมื่อพบกัน เลิกงาน หรือผ่านกันตามทางเดิน',
+      scenarioOverview: 'ฝึกฝนคำทักทายสำคัญในที่ทำงาน: การมาถึงที่ทำงาน การออกไปข้างนอก การกลับมา และการเลิกงานกลับบ้าน',
+    },
+    zh: {
+      title: '办公室日常职业问候与同行寒暄要领',
+      culturalNote: '“お疲れ様です”（辛苦了）是日企职场润滑剂，无论是走廊碰面、发邮件还是下班告别，都必须熟练使用。',
+      scenarioOverview: '精通上班早安问候、外出公干离席、办毕返回公司及下班离岗的核心用语。',
+    },
+    ko: {
+      title: '사무실 일상 비즈니스 인사 및 동료 커뮤니케이션',
+      culturalNote: '"오츠카레사마데스(수고하셨습니다)"는 일본 직장 소통의 기본이자 필수적인 윤활유입니다.',
+      scenarioOverview: '출근 인사, 외출 보고, 복귀 인사 및 퇴근 시 정중한 인사말을 학습합니다.',
+    },
+    es: {
+      title: 'Saludos diarios en la oficina y comunicación entre compañeros',
+      culturalNote: '"Otsukaresama desu" es el lubricante social del trabajo japonés; úselo al cruzarse, por correo o al salir.',
+      scenarioOverview: 'Domine los saludos diarios clave: llegada por la mañana, salida temporal, regreso y despedida.',
+    },
+    fr: {
+      title: 'Salutations professionnelles quotidiennes et échanges au bureau',
+      culturalNote: '"Otsukaresama desu" est indispensable dans l\'univers professionnel japonais ; utilisez-le en toutes circonstances.',
+      scenarioOverview: 'Apprenez les salutations indispensables : arrivée le matin, départ en mission, retour au bureau et fin de journée.',
+    },
+    vi: {
+      title: 'Chào hỏi văn phòng hàng ngày và giao tiếp cùng đồng nghiệp',
+      culturalNote: '"Otsukaresama desu" là câu nói cửa miệng không thể thiếu nơi công sở Nhật, thể hiện sự ghi nhận và tôn trọng đồng nghiệp.',
+      scenarioOverview: 'Thực hành các mẫu câu chào hỏi chuẩn: Khi đến công ty, khi ra ngoài làm việc, khi quay về và khi ra về.',
+    },
+    id: {
+      title: 'Salam Kantor Sehari-hari & Komunikasi Rekan Kerja',
+      culturalNote: '"Otsukaresama desu" adalah perekat sosial tempat kerja Jepang; ucapkan saat berpapasan, di email, atau saat pulang.',
+      scenarioOverview: 'Kuasai salam penting: tiba di kantor, izin keluar dinas, kembali ke kantor, dan pamit pulang.',
+    },
+  },
+  'l-f2-1': {
+    th: {
+      title: 'การแนะนำตัวอย่างมืออาชีพในวันแรกที่เข้าทำงาน (自己紹介)',
+      culturalNote: 'ยืนตัวตรง สบตา โค้งคำนับ 30 องศา และกล่าวชื่อให้ชัดเจนพร้อมความมุ่งมั่นในการเรียนรู้',
+      scenarioOverview: 'การกล่าวแนะนำตัวอย่างมั่นใจต่อหน้าเพื่อนร่วมงานและหัวหน้าในวันเริ่มปฏิบัติงาน',
+    },
+    zh: {
+      title: '入职首日职业自我介绍（自己紹介）与致辞',
+      culturalNote: '身姿挺拔、目光真诚、鞠躬30度，吐字清晰地表达姓名背景及谦虚努力的决心。',
+      scenarioOverview: '学习在新部门全体同事面前清晰、自信且谦逊得体地做入职自我介绍。',
+    },
+    ko: {
+      title: '배치 첫날 프로페셔널 자기소개(自己紹介) 및 각오',
+      culturalNote: '바른 자세와 진심 어린 눈맞춤, 30도 정중한 인사와 함께 겸손하면서도 적극적인 포부를 전합니다.',
+      scenarioOverview: '새로운 팀과 부서 동료들 앞에서 신뢰감을 주는 첫인상과 자기소개 스피치를 연습합니다.',
+    },
+    es: {
+      title: 'Presentación profesional en el primer día de trabajo (Jikoshoukai)',
+      culturalNote: 'Mantenga una postura erguida, contacto visual sincero, inclinación de 30 grados y exprese entusiasmo por aprender.',
+      scenarioOverview: 'Aprenda a realizar una auto-presentación impactante, humilde y profesional ante su nuevo equipo.',
+    },
+    vi: {
+      title: 'Tự giới thiệu bản thân chuyên nghiệp trong ngày đầu nhận việc (Jikoshoukai)',
+      culturalNote: 'Tư thế đứng thẳng, ánh mắt chân thành, cúi chào 30 độ và thể hiện quyết tâm nỗ lực cống hiến cho công ty.',
+      scenarioOverview: 'Thực hành bài phát biểu tự giới thiệu tự tin, lịch sự và truyền cảm hứng trước toàn thể phòng ban mới.',
+    },
+  },
+  'l-f2-2': {
+    th: {
+      title: 'มารยาทการแลกนามบัตรธุรกิจ (名刺交換)',
+      culturalNote: 'ถือด้วยสองมือ ห้ามวางนิ้วทับตัวหนังสือหรือโลโก้ของอีกฝ่าย และวางไว้บนกล่องนามบัตรอย่างประณีต',
+      scenarioOverview: 'ขั้นตอนการแลกเปลี่ยนนามบัตรอย่างถูกต้องตามมารยาทธุรกิจชั้นสูงของญี่ปุ่น',
+    },
+    zh: {
+      title: '商务名片交换礼仪与规范流程（名刺交換）',
+      culturalNote: '双手递接名片，手指切勿遮挡对方姓名或公司标志，入座后须将对方名片工整摆放于名片盒上方。',
+      scenarioOverview: '全流程掌握商务名片递交、接收、复诵确认及会议期间的摆放规矩。',
+    },
+    ko: {
+      title: '비즈니스 명함 교환 예절 및 표준 절차 (名刺交換)',
+      culturalNote: '반드시 양손으로 주고받으며, 상대방의 성명이나 로고를 손가락으로 가리지 않도록 주의합니다.',
+      scenarioOverview: '명함 건네기, 받기, 성명 재확인 및 회의 중 명함 정렬 매너를 완벽히 습득합니다.',
+    },
+    es: {
+      title: 'Etiqueta en el intercambio de tarjetas de visita (Meishi Koukan)',
+      culturalNote: 'Sosténgala siempre con ambas manos, nunca tape el nombre o logotipo con los dedos y colóquela sobre su tarjetero.',
+      scenarioOverview: 'Protocolo completo para entregar, recibir y colocar las tarjetas de visita durante las reuniones.',
+    },
+    vi: {
+      title: 'Quy tắc và nghi thức trao đổi danh thiếp thương mại (Meishi Koukan)',
+      culturalNote: 'Luôn trao và nhận bằng hai tay, không để ngón tay che mất tên hoặc logo đối tác, đặt ngay ngắn trên hộp đựng danh thiếp.',
+      scenarioOverview: 'Học đầy đủ quy trình trao, nhận, đọc tên xác nhận và sắp xếp danh thiếp trên bàn họp.',
+    },
+  },
+  'l-f3-1': {
+    th: {
+      title: 'การใช้คำช่วยลดแรงปะทะ (Cushion words) และการขอร้องอย่างสุภาพ',
+      culturalNote: 'การขึ้นต้นด้วย "โอโซเระอิริมาสุกะ" หรือ "โอเทะซูโอคาเคชิมาสุกะ" จะช่วยลดความรู้สึกถูกสั่งการได้อย่างนุ่มนวล',
+    },
+    zh: {
+      title: '运用缓冲用语（クッション言葉）与职场委婉拜托',
+      culturalNote: '在开口提出要求前先说“恐れ入りますが”或“お手数をおかけしますが”，能瞬间消除生硬感，体现最高教养。',
+    },
+    ko: {
+      title: '쿠션어(クッション言葉) 활용과 정중한 업무 부탁',
+      culturalNote: '"오소레이리마스가", "오테스우오 카케시마스가" 등 쿠션어를 앞세우면 상대방의 부담을 덜어줍니다.',
+    },
+  },
+  'l-f4-1': {
+    th: {
+      title: 'การรับโทรศัพท์สำนักงานภายใน 3 สัญญาณกริ่ง',
+      culturalNote: 'หากรับสายช้าเกิน 3 สัญญาณกริ่ง ต้องกล่าวขอโทษด้วยคำว่า "โอมาทาเซะ อิตาชิมาชิตะ" ก่อนเสมอ',
+    },
+    zh: {
+      title: '3声铃响内接听商务电话与标准应答规范',
+      culturalNote: '若响铃超过3声才接起，第一句话必须是“お待たせいたしました”（让您久等了），以示致歉。',
+    },
+    ko: {
+      title: '3회 벨 이내 비즈니스 전화 수신 및 첫마디 응대',
+      culturalNote: '벨이 3번 이상 울린 후 받았을 때는 반드시 "기다리게 해드려 죄송합니다"로 첫인사를 시작합니다.',
+    },
+  },
+  'l-f5-1': {
+    th: {
+      title: 'โครงสร้าง 7 ส่วนมาตรฐานของอีเมลธุรกิจญี่ปุ่น',
+      culturalNote: 'อีเมลธุรกิจญี่ปุ่นไม่ควรเขียนติดต่อกันเป็นพารากราฟยาวๆ แต่ควรเคาะเว้นวรรคและขึ้นบรรทัดใหม่ให้อ่านง่าย',
+    },
+    zh: {
+      title: '日式标准商务邮件七步黄金结构法',
+      culturalNote: '日文商务邮件讲究视觉呼吸感，单行通常控制在25-35字以内，每2-3行留一空行方便速读。',
+    },
+    ko: {
+      title: '일본 표준 비즈니스 이메일 7대 골든 구조',
+      culturalNote: '비즈니스 이메일은 가독성을 위해 한 줄에 30자 안팎으로 작성하고 적절히 줄바꿈을 해야 합니다.',
+    },
+  },
+  'l-i1-1': {
+    th: {
+      title: 'ความแตกต่างระหว่าง Sonkeigo (ยกย่อง) และ Kenjougo (ถ่อมตน)',
+      culturalNote: 'กฎพื้นฐาน: ยกย่องการกระทำของลูกค้า/คู่ค้า และถ่อมตนเมื่อกล่าวถึงการกระทำของฝ่ายตนเอง',
+    },
+    zh: {
+      title: '尊他语（尊敬語）与自谦语（謙譲語）核心法则',
+      culturalNote: '黄金判定准则：动作主体是客户/对方则用尊敬语；动作主体是自己/己方团队则用自谦语。',
+    },
+    ko: {
+      title: '존경어(상대 높임)와 겸양어(자신 낮춤)의 핵심 구별법',
+      culturalNote: '상대방이나 고객의 행동에는 존경어, 나와 우리 회사 사람의 행동에는 반드시 겸양어를 사용합니다.',
+    },
+  },
+  'l-i2-1': {
+    th: {
+      title: 'การรายงานความคืบหน้า (Hou) และการแจ้งเตือนความล่าช้า',
+      culturalNote: 'รายงานผลลัพธ์หรือข้อสรุปก่อนเสมอ (Conclusion first) แล้วจึงตามด้วยสาเหตุและแนวทางแก้ไข',
+    },
+    zh: {
+      title: '报联相之“汇报”（報告）：结论先行与延误预警',
+      culturalNote: '日本职场报告奉行“结论先行”（PREP法），遇到延误隐患必须在到达截止期前尽早汇报。',
+    },
+    ko: {
+      title: '호렌소의 기본 "보고(報告)": 결론 우선 및 지연 사전 경고',
+      culturalNote: '보고는 반드시 결론부터 전달하고, 납기 지연이 예상되는 시점에 즉시 공유해야 합니다.',
+    },
+  },
+};
+
 // ----------------------------------------------------------------------------
 // Localized Retrieval Helpers
 // ----------------------------------------------------------------------------
 
-export function getLocalizedBusinessUnit(unit: BusinessUnit, lang: SupportedLanguage): { title: string; description: string } {
+export function getLocalizedBusinessUnit(
+  unit: BusinessUnit,
+  lang: SupportedLanguage
+): { title: string; description: string } {
   const i18n = BUSINESS_UNITS_I18N[unit.id];
-  if (!i18n) {
-    return { title: unit.titleEn, description: unit.description };
+  const multi = BUSINESS_UNITS_MULTILINGUAL[unit.id];
+
+  // 1. Japanese native
+  if (lang === 'ja') {
+    return {
+      title: unit.titleJp || (i18n ? i18n.titleEn : ''),
+      description: unit.description || (i18n ? i18n.descriptionEn : ''),
+    };
   }
+
+  // 2. Burmese localization
   if (lang === 'my') {
-    return { title: i18n.titleMy, description: i18n.descriptionMy };
+    if (i18n) {
+      return { title: i18n.titleMy, description: i18n.descriptionMy };
+    }
   }
-  return { title: i18n.titleEn, description: i18n.descriptionEn };
+
+  // 3. Multilingual registry match (th, zh, ko, es, fr, vi, id, de, pt, tr, etc.)
+  if (multi && multi[lang]) {
+    return {
+      title: multi[lang]!.title,
+      description: multi[lang]!.description,
+    };
+  }
+
+  // 4. Fallback to English
+  if (i18n) {
+    return { title: i18n.titleEn, description: i18n.descriptionEn };
+  }
+  return { title: unit.titleEn, description: unit.description };
 }
 
-export function getLocalizedBusinessLesson(lesson: BusinessLesson, lang: SupportedLanguage): {
+export function getLocalizedBusinessLesson(
+  lesson: BusinessLesson,
+  lang: SupportedLanguage
+): {
   title: string;
   learningObjectives: string[];
   culturalNote: string;
@@ -604,26 +1067,59 @@ export function getLocalizedBusinessLesson(lesson: BusinessLesson, lang: Support
   etiquetteRules?: string[];
 } {
   const i18n = BUSINESS_LESSONS_I18N[lesson.id];
-  if (!i18n) {
+  const multi = BUSINESS_LESSONS_MULTILINGUAL[lesson.id];
+
+  // 1. Japanese native
+  if (lang === 'ja') {
     return {
-      title: lesson.titleEn,
+      title: lesson.titleJp,
       learningObjectives: lesson.learningObjectives || [],
-      culturalNote: lesson.culturalNote || '',
+      culturalNote: lesson.culturalNote || (i18n ? i18n.culturalNoteEn : ''),
+      scenarioOverview: lesson.culturalNote,
+      officeContext: 'オフィス',
     };
   }
+
+  // 2. Burmese localization
   if (lang === 'my') {
+    if (i18n) {
+      return {
+        title: i18n.titleMy,
+        learningObjectives: i18n.learningObjectivesMy || lesson.learningObjectives || [],
+        culturalNote: i18n.culturalNoteMy || lesson.culturalNote || '',
+        scenarioOverview: i18n.scenarioOverviewMy,
+        officeContext: i18n.officeContextMy,
+        etiquetteRules: i18n.etiquetteRulesMy,
+      };
+    }
+  }
+
+  // 3. Multilingual match (th, zh, ko, es, fr, vi, id, de, etc.)
+  if (multi && multi[lang]) {
+    const m = multi[lang]!;
     return {
-      title: i18n.titleMy,
-      learningObjectives: i18n.learningObjectivesMy || lesson.learningObjectives || [],
-      culturalNote: i18n.culturalNoteMy || lesson.culturalNote || '',
-      scenarioOverview: i18n.scenarioOverviewMy,
-      officeContext: i18n.officeContextMy,
-      etiquetteRules: i18n.etiquetteRulesMy,
+      title: m.title,
+      learningObjectives: (i18n && i18n.learningObjectivesEn) || lesson.learningObjectives || [],
+      culturalNote: m.culturalNote || (i18n && i18n.culturalNoteEn) || lesson.culturalNote || '',
+      scenarioOverview: m.scenarioOverview || (i18n && i18n.scenarioOverviewMy),
+      officeContext: m.officeContext || (i18n && i18n.officeContextMy),
+      etiquetteRules: i18n && i18n.etiquetteRulesMy,
     };
   }
+
+  // 4. Fallback to English
+  if (i18n) {
+    return {
+      title: i18n.titleEn,
+      learningObjectives: i18n.learningObjectivesEn || lesson.learningObjectives || [],
+      culturalNote: i18n.culturalNoteEn || lesson.culturalNote || '',
+    };
+  }
+
   return {
-    title: i18n.titleEn,
-    learningObjectives: i18n.learningObjectivesEn || lesson.learningObjectives || [],
-    culturalNote: i18n.culturalNoteEn || lesson.culturalNote || '',
+    title: lesson.titleEn,
+    learningObjectives: lesson.learningObjectives || [],
+    culturalNote: lesson.culturalNote || '',
   };
 }
+

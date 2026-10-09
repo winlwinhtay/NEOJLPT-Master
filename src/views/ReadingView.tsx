@@ -20,12 +20,16 @@ import { RubyText } from '../components/common/RubyText';
 import { AudioButton } from '../components/common/AudioButton';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { ReadingLesson } from '../types';
+import { SupportedLanguage } from '../types/i18n';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
+import { getLocalizedReadingPassage } from '../data/translations/mediaContentI18n';
+import { translateExampleSentence } from '../data/translations/multilingualEngine';
 
 export const ReadingView: React.FC = () => {
   const { activeLevel } = useApp();
   const { profile, logActivity, addXP } = useUser();
   const { t, language } = useI18n();
+  const activeLang = ((profile.translationLanguage || language || 'en') as SupportedLanguage);
 
   const levelReadings = ContentService.reading.getReadingsByLevel(activeLevel);
   const [selectedReading, setSelectedReading] = useState<ReadingLesson>(
@@ -166,11 +170,19 @@ export const ReadingView: React.FC = () => {
 
           {/* Translation reveal */}
           {showTranslation && (
-            <div className="mt-6 p-4 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed animate-fade-in">
+            <div className="mt-6 p-4 rounded-xl bg-white dark:bg-slate-900 border border-amber-200 dark:border-slate-800 text-xs sm:text-sm text-slate-600 dark:text-slate-300 leading-relaxed animate-fade-in space-y-2">
               <span className="font-bold text-amber-600 dark:text-amber-400 uppercase text-[10px] block mb-1">
-                {t('common.translation')}:
+                {t('common.translation')} ({activeLang.toUpperCase()}):
               </span>
-              {selectedReading.translationEn}
+              <p className={`whitespace-pre-line leading-relaxed ${activeLang === 'my' ? 'font-myanmar' : ''}`}>
+                {getLocalizedReadingPassage(selectedReading.id, activeLang, selectedReading.translationEn)}
+              </p>
+              {activeLang !== 'en' && activeLang !== 'ja' && selectedReading.translationEn && (
+                <div className="pt-2 border-t border-slate-100 dark:border-slate-800/80 text-xs text-slate-400 whitespace-pre-line leading-relaxed">
+                  <span className="font-bold text-[10px] uppercase text-slate-400 block mb-0.5">EN (Reference):</span>
+                  {selectedReading.translationEn}
+                </div>
+              )}
             </div>
           )}
         </div>

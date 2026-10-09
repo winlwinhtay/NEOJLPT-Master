@@ -31,6 +31,7 @@ import { useI18n } from '../../i18n/I18nContext';
 import { useUser } from '../../context/UserContext';
 import { useSRS } from '../../context/SRSContext';
 import { ViewType } from '../../types';
+import { isSuperAdminEmail } from '../../services/entitlementService';
 
 export const Sidebar: React.FC = () => {
   const {
@@ -92,7 +93,9 @@ export const Sidebar: React.FC = () => {
     { id: 'login', label: isGuest ? 'Sign In / Plans' : 'Account & Plans', icon: <CreditCard size={20} /> },
     { id: 'profile', label: t('nav.profile', 'Profile'), icon: <User size={20} /> },
     { id: 'settings', label: t('nav.settings', 'Settings'), icon: <Settings size={20} /> },
-    { id: 'admin', label: t('nav.admin', 'Admin Studio'), icon: <ShieldAlert size={20} /> },
+    ...(!isGuest && isSuperAdminEmail(profile?.email)
+      ? [{ id: 'admin' as ViewType, label: 'Admin Console', icon: <ShieldAlert size={20} /> }]
+      : []),
   ];
 
   const handleSelectView = (view: ViewType) => {

@@ -1,6 +1,7 @@
 import { JLPTLevel } from '../types';
 import { AIConversationTopic, AIMessage, ConversationSession } from '../types/ai';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
+import { AdminService } from './adminService';
 
 export class AIService {
   /**
@@ -412,6 +413,7 @@ Output STRICT JSON:
   "suggestedReplies": ["short Japanese reply 1", "short Japanese reply 2"]
 }`;
 
+    const callStartTime = Date.now();
     const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
     const res = await fetch(url, {
       method: 'POST',
@@ -426,10 +428,37 @@ Output STRICT JSON:
       }),
     });
 
-    if (!res.ok) return null;
+    const durationMs = Date.now() - callStartTime;
+
+    if (!res.ok) {
+      AdminService.trackAiUsage({
+        feature: 'ai_conversation',
+        model: 'gemini-2.5-flash',
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheHit: false,
+        status: 'error',
+        durationMs,
+      }).catch(() => {});
+      return null;
+    }
+
     const json = await res.json();
     const raw = json.candidates?.[0]?.content?.parts?.[0]?.text;
     if (!raw) return null;
+
+    const inputTokens = json.usageMetadata?.promptTokenCount || 200;
+    const outputTokens = json.usageMetadata?.candidatesTokenCount || 150;
+
+    AdminService.trackAiUsage({
+      feature: 'ai_conversation',
+      model: 'gemini-2.5-flash',
+      inputTokens,
+      outputTokens,
+      cacheHit: false,
+      status: 'success',
+      durationMs,
+    }).catch(() => {});
 
     const parsed = JSON.parse(raw);
     return {

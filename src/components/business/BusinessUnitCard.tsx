@@ -1,6 +1,7 @@
 // ============================================================================
 // BUSINESS JAPANESE (ビジネス日本語) UNIT CARD COMPONENT
 // Collapsible Unit Accordion with Lessons, Objectives & Cultural Notes
+// Full Multilingual Support (Myanmar & English)
 // ============================================================================
 
 import React, { useState } from 'react';
@@ -13,8 +14,18 @@ import {
   Sparkles,
   ArrowRight,
   ShieldAlert,
+  Languages,
+  Eye,
+  EyeOff,
 } from 'lucide-react';
 import { BusinessUnit, BusinessLesson } from '../../types/business';
+import { useUser } from '../../context/UserContext';
+import { useI18n } from '../../i18n/I18nContext';
+import {
+  getLocalizedBusinessUnit,
+  getLocalizedBusinessLesson,
+} from '../../data/translations/businessCurriculumI18n';
+import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 interface BusinessUnitCardProps {
   unit: BusinessUnit;
@@ -29,6 +40,11 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
   onToggleCompleteLesson,
   onSelectPractice,
 }) => {
+  const { profile } = useUser();
+  const { language } = useI18n();
+  const activeLang = profile.translationLanguage || language || 'en';
+  const showTranslation = profile.showTranslation !== false;
+
   const [isExpanded, setIsExpanded] = useState(true);
 
   const completedInUnit = unit.lessons.filter((l) =>
@@ -36,6 +52,8 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
   ).length;
   const isUnitCompleted =
     unit.lessons.length > 0 && completedInUnit === unit.lessons.length;
+
+  const localizedUnit = getLocalizedBusinessUnit(unit, activeLang);
 
   return (
     <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden transition-all">
@@ -55,24 +73,37 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
             {isUnitCompleted ? <CheckCircle2 size={22} /> : `U${unit.unitNumber}`}
           </div>
 
-          <div>
+          <div className="space-y-0.5">
             <div className="flex items-center gap-2">
               <span className="text-xs font-bold text-slate-400 uppercase tracking-wider">
                 Unit {unit.unitNumber}
               </span>
               <span className="text-xs text-slate-400">•</span>
               <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                {completedInUnit}/{unit.lessons.length} Completed
+                {completedInUnit}/{unit.lessons.length} {activeLang === 'my' ? 'ပြီးစီးပြီး' : 'Completed'}
               </span>
             </div>
             <h3 className="text-base sm:text-lg font-black text-slate-900 dark:text-white font-japanese">
               {unit.titleJp}
             </h3>
-            <div className="text-xs text-slate-500 dark:text-slate-400">{unit.titleEn}</div>
+            {showTranslation ? (
+              <div className="flex items-center gap-2 flex-wrap text-xs">
+                <span className="font-semibold text-slate-700 dark:text-slate-300 font-myanmar">
+                  {localizedUnit.title}
+                </span>
+                {activeLang === 'my' && unit.titleEn && (
+                  <span className="text-slate-400">({unit.titleEn})</span>
+                )}
+              </div>
+            ) : (
+              <span className="text-[11px] text-slate-400 italic">
+                {activeLang === 'my' ? 'ဘာသာပြန် ပိတ်ထားသည်' : 'Translation hidden'}
+              </span>
+            )}
           </div>
         </div>
 
-        <div className="flex items-center gap-3 shrink-0">
+        <div className="flex items-center gap-2 shrink-0">
           <button
             type="button"
             className="p-2 rounded-xl text-slate-400 hover:text-slate-700 dark:hover:text-slate-200"
@@ -85,13 +116,16 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
       {/* Expanded Lessons List */}
       {isExpanded && (
         <div className="px-5 pb-6 sm:px-6 space-y-4 border-t border-slate-100 dark:border-slate-800/80 pt-4">
-          <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
-            {unit.description}
-          </p>
+          {showTranslation && (
+            <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed font-myanmar">
+              {localizedUnit.description}
+            </p>
+          )}
 
           <div className="space-y-3">
             {unit.lessons.map((lesson) => {
               const isCompleted = completedLessonIds.includes(lesson.id);
+              const localizedLesson = getLocalizedBusinessLesson(lesson, activeLang);
 
               return (
                 <div
@@ -132,7 +166,16 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                         <h4 className="text-sm font-bold font-japanese text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 transition-colors">
                           {lesson.titleJp}
                         </h4>
-                        <div className="text-xs text-slate-500">{lesson.titleEn}</div>
+                        {showTranslation && (
+                          <div className="text-xs text-slate-600 dark:text-slate-400 font-myanmar">
+                            {localizedLesson.title}
+                            {activeLang === 'my' && lesson.titleEn && (
+                              <span className="text-[11px] text-slate-400 ml-1.5 font-normal">
+                                ({lesson.titleEn})
+                              </span>
+                            )}
+                          </div>
+                        )}
                       </div>
                     </div>
 
@@ -145,22 +188,22 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                       <button
                         type="button"
                         onClick={() => onSelectPractice && onSelectPractice(lesson)}
-                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-indigo-200 dark:shadow-none transition-all cursor-pointer"
+                        className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-indigo-600 to-indigo-700 hover:from-indigo-500 hover:to-indigo-600 text-white font-bold text-xs flex items-center gap-1.5 shadow-sm shadow-indigo-200 dark:shadow-none transition-all cursor-pointer font-myanmar"
                       >
                         <BookOpen size={13} />
-                        <span>Study Lesson (学習)</span>
+                        <span>{activeLang === 'my' ? 'သင်ခန်းစာလေ့လာရန် (学習)' : 'Study Lesson (学習)'}</span>
                       </button>
                     </div>
                   </div>
 
                   {/* Learning Objectives */}
-                  {lesson.learningObjectives && lesson.learningObjectives.length > 0 && (
+                  {localizedLesson.learningObjectives && localizedLesson.learningObjectives.length > 0 && showTranslation && (
                     <div className="pl-9 space-y-1">
-                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block">
-                        Learning Outcomes:
+                      <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block font-myanmar">
+                        {activeLang === 'my' ? 'သင်ယူမှု ရလဒ်များ (Learning Outcomes):' : 'Learning Outcomes:'}
                       </span>
-                      <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-0.5 list-disc list-inside">
-                        {lesson.learningObjectives.map((obj, oIdx) => (
+                      <ul className="text-xs text-slate-600 dark:text-slate-300 space-y-0.5 list-disc list-inside font-myanmar">
+                        {localizedLesson.learningObjectives.map((obj, oIdx) => (
                           <li key={oIdx}>{obj}</li>
                         ))}
                       </ul>
@@ -183,9 +226,10 @@ export const BusinessUnitCard: React.FC<BusinessUnitCardProps> = ({
                   )}
 
                   {/* Cultural Note */}
-                  {lesson.culturalNote && (
-                    <div className="ml-9 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed">
-                      💡 <strong>Cultural Insight:</strong> {lesson.culturalNote}
+                  {localizedLesson.culturalNote && showTranslation && (
+                    <div className="ml-9 p-3 rounded-xl bg-amber-50/60 dark:bg-amber-950/20 border border-amber-200/60 dark:border-amber-900/40 text-[11px] text-slate-700 dark:text-slate-300 leading-relaxed font-myanmar">
+                      💡 <strong>{activeLang === 'my' ? 'လုပ်ငန်းခွင် ယဉ်ကျေးမှု (Cultural Insight):' : 'Cultural Insight:'}</strong>{' '}
+                      {localizedLesson.culturalNote}
                     </div>
                   )}
                 </div>

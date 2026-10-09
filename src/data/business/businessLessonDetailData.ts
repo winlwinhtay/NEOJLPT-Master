@@ -50,9 +50,12 @@ export interface BusinessLessonQuizItem {
   id: string;
   promptJp: string;
   promptEn: string;
+  promptMy?: string;
   options: string[];
+  optionsMy?: string[];
   correctAnswer: number;
   explanation: string;
+  explanationMy?: string;
 }
 
 export interface BusinessLessonDetail {
@@ -68,6 +71,7 @@ export interface BusinessLessonDetail {
     phraseJp: string;
     reading: string;
     meaningEn: string;
+    meaningMy?: string;
   }[];
   studioShortcut?: {
     tabId: 'keigo' | 'email' | 'horenso' | 'career_hub' | 'resume_coach' | 'interview_sim' | 'culture';
@@ -221,6 +225,7 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         id: 'q-f1-1',
         promptJp: '朝、オフィスに出社したとき、同僚や上司に対して最も適切な挨拶はどれですか。',
         promptEn: 'Which is the most appropriate morning greeting when arriving at the office?',
+        promptMy: 'မနက်ခင်း ရုံးသို့ရောက်ရှိချိန်တွင် လုပ်ဖော်ကိုင်ဖက်များနှင့် အထက်လူကြီးများအား မည်သို့ နှုတ်ဆက်သင့်သနည်း။',
         options: [
           'こんにちは！',
           'おはようございます。',
@@ -230,11 +235,14 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           '「おはようございます」 is the standard morning office greeting. 「こんにちは」 is too casual, and 「ご苦労様です」 is only used by superiors toward subordinates.',
+        explanationMy:
+          '「おはようございます」 သည် မနက်ခင်း ရုံးတက်ချိန်တွင် သုံးစွဲရမည့် စံနှုန်းသတ်မှတ် နှုတ်ခွန်းဆက်စကား ဖြစ်ပါသည်။ 「こんにちは」 သည် ပေါ့ပေါ့ပါးပါးဆန်လွန်းပြီး၊ 「ご苦労様です」 သည် အထက်လူကြီးက လက်အောက်ငယ်သားကိုသာ ပြောခွင့်ရှိပါသည်။',
       },
       {
         id: 'q-f1-2',
         promptJp: '仕事が終わって先にオフィスを出るとき、残っている同僚に言う適切な挨拶はどれですか。',
         promptEn: 'When finishing work and leaving the office before others, what should you say?',
+        promptMy: 'အလုပ်ပြီး၍ အခြားသူများထက် အရင် ရုံးမှပြန်ဆင်းချိန်တွင် ကျန်ရှိနေသော လုပ်ဖော်ကိုင်ဖက်များအား မည်သို့ နှုတ်ဆက်သင့်သနည်း။',
         options: [
           'さようなら、バイバイ。',
           'お先に失礼いたします。',
@@ -244,11 +252,14 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           '「お先に失礼いたします」 (or お先に失礼します) acknowledges that colleagues are still working and excuses your early departure.',
+        explanationMy:
+          '「お先に失礼いたします」 သည် အခြားသူများ အလုပ်လုပ်နေဆဲဖြစ်ကြောင်း အသိအမှတ်ပြုပြီး မိမိက အရင်ပြန်ခွင့်ပြုပါရန် ယဉ်ကျေးစွာ ခွင့်ပန်သော အသုံးဖြစ်ပါသည်။',
       },
       {
         id: 'q-f1-3',
         promptJp: '社内（ウチ）と社外（ソト）のルールとして、社外のクライアントに対して自分の上司を呼ぶとき正しいものはどれですか。',
         promptEn: 'When talking to an external client, how should you refer to your own manager (Manager Sato)?',
+        promptMy: 'ကုမ္ပဏီတွင်း (ウチ) နှင့် ပြင်ပ (ソト) စည်းမျဉ်းအရ၊ ပြင်ပဖောက်သည်နှင့် စကားပြောရာတွင် မိမိ၏ မန်နေဂျာ (ဆာတိုးမန်နေဂျာ) ကို မည်သို့ ရည်ညွှန်းခေါ်ဆိုရမည်နည်း။',
         options: [
           '佐藤部長様',
           '佐藤さん',
@@ -258,6 +269,8 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 2,
         explanation:
           'In Japanese business etiquette (ウチ/ソト rule), your company is the "in-group". You NEVER use honorifics or titles (like 部長 or さん) for your own manager when talking to clients. Refer to him simply as 「佐藤」.',
+        explanationMy:
+          'ဂျပန်စီးပွားရေးကျင့်ဝတ် (ウチ/ソト စည်းမျဉ်း) အရ မိမိကုမ္ပဏီသည် အတွင်းအုပ်စု (ウチ) ဖြစ်သည်။ ပြင်ပဖောက်သည်နှင့် ပြောဆိုရာတွင် မိမိအထက်လူကြီးအတွက် 部長 သို့မဟုတ် さん စသော ချီးမွမ်းဂုဏ်ပုဒ်များကို လုံးဝ (လုံးဝ) မသုံးရပါ။ မျိုးရိုးအမည်သက်သက် 「佐藤」 ဟုသာ ခေါ်ဆိုရပါမည်။',
       },
     ],
     typingPracticePhrases: [
@@ -265,16 +278,19 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         phraseJp: 'おはようございます。',
         reading: 'おはようございます。',
         meaningEn: 'Good morning.',
+        meaningMy: 'မင်္ဂလာနံနက်ခင်းပါခင်ဗျာ။',
       },
       {
         phraseJp: 'よろしくご指導のほどお願いいたします。',
         reading: 'よろしくごしどうのほどおねがいいたします。',
         meaningEn: 'I sincerely ask for your favorable guidance.',
+        meaningMy: 'လမ်းညွှန်သင်ကြားပေးပါရန် ရိုသေစွာ မေတ္တာရပ်ခံအပ်ပါသည်။',
       },
       {
         phraseJp: 'お先に失礼いたします。',
         reading: 'おさきにしつれいいたします。',
         meaningEn: 'Pardon me for leaving before you.',
+        meaningMy: 'ခွင့်ပြုပါဦးခင်ဗျာ (အရင်ပြန်ပါရစေ)။',
       },
     ],
     studioShortcut: {
@@ -417,6 +433,7 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         id: 'q-f1-2-1',
         promptJp: '社内で営業部の田中部長を呼ぶとき、最も自然で正しい敬称はどれですか。',
         promptEn: 'Inside the company, how should you address Sales General Manager Tanaka?',
+        promptMy: 'ကုမ္ပဏီအတွင်း အရောင်းဌာနမှူး တာနာကာကို ခေါ်ဆိုရာတွင် အသဘာဝအကျဆုံးနှင့် အမှန်ကန်ဆုံး ခေါ်ဝေါ်မှုပုံစံမှာ မည်သည့်အရာနည်း။',
         options: [
           '田中部長さん',
           '田中部長',
@@ -426,11 +443,14 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           'In Japanese business, the managerial title itself serves as the respectful honorific. You call them 「田中部長」. Attaching "さん" or "様" is double-honorific and unnatural.',
+        explanationMy:
+          'ဂျပန်စီးပွားရေးလုပ်ငန်းခွင်တွင် ရာထူးအမည်ကိုယ်တိုင်က လေးစားသမှု ဂုဏ်ပုဒ်ဖြစ်ပါသည်။ ထို့ကြောင့် 「田中部長」 ဟုသာ ခေါ်ဆိုရမည်ဖြစ်ပြီး "さん" သို့မဟုတ် "様" ကို ထပ်မံပေါင်းစပ်ခေါ်ဆိုခြင်းသည် မလိုအပ်သော နှစ်ထပ်ဂုဏ်ပြုစကား ဖြစ်သွားသဖြင့် မမှန်ကန်ပါ။',
       },
       {
         id: 'q-f1-2-2',
         promptJp: '上司から仕事の指示を受けたとき、「分かりました」の代わりに言うべき最も適切なビジネス表現はどれですか。',
         promptEn: 'When receiving work instructions from your superior, what is the most appropriate response instead of "分かりました"?',
+        promptMy: 'အထက်လူကြီးထံမှ အလုပ်တာဝန် ညွှန်ကြားချက်ရရှိသောအခါ 「分かりました」 အစား သုံးစွဲရမည့် အသင့်တော်ဆုံး စီးပွားရေးသုံးစကားမှာ မည်သည့်အရာနည်း။',
         options: [
           '了解です！',
           'OKです。',
@@ -440,6 +460,8 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 2,
         explanation:
           '「承知いたしました」 or 「かしこまりました」 are the humble acknowledgments expected in Japanese business. 「了解です」 should only be used toward peers or subordinates.',
+        explanationMy:
+          '「承知いたしました」 သို့မဟုတ် 「かしこまりました」 သည် ဂျပန်လုပ်ငန်းခွင်တွင် အထက်လူကြီးထံ နှိမ့်ချလေးစားစွာဖြင့် နားလည်ကြောင်း တုံ့ပြန်ရာတွင် သုံးစွဲရမည့် စကားဖြစ်ပါသည်။ 「了解です」 ကို ရာထူးတူ သို့မဟုတ် အောက်လက်ငယ်သားများထံတွင်သာ သုံးစွဲသင့်ပါသည်။',
       },
     ],
     typingPracticePhrases: [
@@ -447,16 +469,19 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         phraseJp: '承知いたしました。',
         reading: 'しょうちいたしました。',
         meaningEn: 'Certainly, understood.',
+        meaningMy: 'နားလည်သဘောပေါက်ပါပြီခင်ဗျာ။',
       },
       {
         phraseJp: 'かしこまりました。',
         reading: 'かしこまりました。',
         meaningEn: 'Certainly, I will comply.',
+        meaningMy: 'လက်ခံဆောင်ရွက်ပေးပါမည်ခင်ဗျာ။',
       },
       {
         phraseJp: '田中部長、ご確認をお願いいたします。',
         reading: 'たなかぶちょう、ごかくにんをおねがいいたします。',
         meaningEn: 'Manager Tanaka, please review this.',
+        meaningMy: 'ဌာနမှူး တာနာကာခင်ဗျာ၊ စစ်ဆေးကြည့်ရှုပေးပါရန် မေတ္တာရပ်ခံပါသည်။',
       },
     ],
     studioShortcut: {
@@ -575,6 +600,7 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         id: 'q-f1-3-1',
         promptJp: '業務中、廊下であなたの課長とすれ違いました。何と声をかけるのが最も適切ですか。',
         promptEn: 'You pass your Section Chief in the office corridor during the workday. What should you say?',
+        promptMy: 'အလုပ်ချိန်အတွင်း ရုံးစင်္ကြံလမ်း၌ မိမိ၏ ဌာနမှူးနှင့် မျက်နှာချင်းဆိုင် တွေ့ဆုံသောအခါ မည်သို့ နှုတ်ဆက်သင့်သနည်း။',
         options: [
           'ご苦労様です！',
           'お疲れ様です。',
@@ -584,11 +610,14 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           '「お疲れ様です」 is the universal workplace greeting. You must NEVER say 「ご苦労様です」 to your superior, as it is strictly used from superiors to subordinates.',
+        explanationMy:
+          '「お疲れ様です」 သည် လုပ်ငန်းခွင်အတွင်း အချိန်မရွေး သုံးစွဲရမည့် စံနှုန်းသတ်မှတ် နှုတ်ခွန်းဆက်စကား ဖြစ်ပါသည်။ အထက်လူကြီးအား 「ご苦労様です」 ဟု လုံးဝ မပြောသင့်ပါ (ယင်းသည် အထက်လူကြီးက အောက်လက်ငယ်သားအား ချီးကျူးသည့် စကားဖြစ်သောကြောင့် ဖြစ်ပါသည်)။',
       },
       {
         id: 'q-f1-3-2',
         promptJp: '仕事中の先輩に話しかけるとき、最初に添える「クッション言葉」として最もふさわしいのはどれですか。',
         promptEn: 'When approaching a busy senior colleague, what is the best cushion phrase to open with?',
+        promptMy: 'အလုပ်များနေသော စီနီယာ (လုပ်ဖော်ကိုင်ဖက်) ထံသို့ စကားပြောဆိုရန် သွားရောက်ချိန်တွင် အစဦး၌ ထည့်သွင်းရမည့် အကောင်းဆုံး စကားပလ္လင်ခံ (Cushion phrase) မှာ မည်သည့်အရာနည်း။',
         options: [
           'おい、ちょっといい？',
           'お忙しいところ恐れ入りますが、今よろしいでしょうか。',
@@ -598,6 +627,8 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           '「お忙しいところ恐れ入りますが、今よろしいでしょうか」 softens the disruption and shows consideration for the colleague\'s time.',
+        explanationMy:
+          '「お忙しいところ恐れ入りますが、今よろしいでしょうか」 သည် တစ်ဖက်သား၏ အချိန်နှင့် အခြေအနေကို အလေးထားစဉ်းစားပေးကြောင်း ဖော်ပြပြီး စကားပြောဆိုခွင့် တောင်းခံသော အလွန်ယဉ်ကျေးသည့် အသုံးအနှုန်း ဖြစ်ပါသည်။',
       },
     ],
     typingPracticePhrases: [
@@ -605,16 +636,19 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         phraseJp: 'お疲れ様です。',
         reading: 'おつかれさまです。',
         meaningEn: 'Thank you for your hard work.',
+        meaningMy: 'ပင်ပန်းသွားပါပြီခင်ဗျာ။',
       },
       {
         phraseJp: '少々お時間よろしいでしょうか。',
         reading: 'しょうしょうおじかんよろしいでしょうか。',
         meaningEn: 'Do you have a moment?',
+        meaningMy: 'အခု အချိန်ခဏလောက် အဆင်ပြေနိုင်မလားခင်ဗျာ။',
       },
       {
         phraseJp: 'ご相談させていただきたく存じます。',
         reading: 'ごそうだんさせていただきたくぞんじます。',
         meaningEn: 'I would humbly like to consult with you.',
+        meaningMy: 'တိုင်ပင်ဆွေးနွေးလိုသည့် ကိစ္စလေးတစ်ခု ရှိပါသည်ခင်ဗျာ။',
       },
     ],
     studioShortcut: {
@@ -726,6 +760,7 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         id: 'q-f2-1-1',
         promptJp: '自己紹介の結びとして、最も品格があり礼儀正しいフレーズはどれですか。',
         promptEn: 'Which is the most dignified and polite closing phrase for a business self-introduction?',
+        promptMy: 'မိမိကိုယ်ကို မိတ်ဆက်ရာတွင် နိဂုံးချုပ်အနေဖြင့် အသိမ်မွေ့ဆုံးနှင့် အယဉ်ကျေးဆုံး စကားစုမှာ မည်သည့်အရာဖြစ်သနည်း။',
         options: [
           'じゃあ、よろしく！',
           'ご指導ご鞭撻のほど、よろしくお願い申し上げます。',
@@ -735,6 +770,8 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           '「ご指導ご鞭撻のほど、よろしくお願い申し上げます」 is the classic, highly respected gold-standard phrase for Japanese business self-introductions.',
+        explanationMy:
+          '「ご指導ご鞭撻のほど、よろしくお願い申し上げます」 သည် ဂျပန်စီးပွားရေးလုပ်ငန်းခွင် မိတ်ဆက်စကားများတွင် အထူးပင် လေးစားသမှုရှိသော ဂန္တဝင် ရွှေစံနှုန်း စကားစု ဖြစ်ပါသည်။',
       },
     ],
     typingPracticePhrases: [
@@ -742,11 +779,13 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         phraseJp: 'よろしくお願い申し上げます。',
         reading: 'よろしくおねがいもうしあげます。',
         meaningEn: 'I humbly request your favorable cooperation.',
+        meaningMy: 'အထူးပင် ကျေးဇူးတင်ရှိပြီး ဆက်လက်ကူညီပါရန် မေတ္တာရပ်ခံအပ်ပါသည်။',
       },
       {
         phraseJp: 'ご指導ご鞭撻のほどお願いいたします。',
         reading: 'ごしどうごべんたつのほどおねがいいたします。',
         meaningEn: 'I ask for your mentorship and guidance.',
+        meaningMy: 'သွန်သင်လမ်းညွှန်မှုပေးပါရန် ရိုသေစွာ မေတ္တာရပ်ခံအပ်ပါသည်။',
       },
     ],
     studioShortcut: {
@@ -851,6 +890,7 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         id: 'q-f2-2-1',
         promptJp: '相手から名刺を受け取るとき、最もふさわしいマナーはどれですか。',
         promptEn: 'What is the most appropriate etiquette when receiving a business card from a client?',
+        promptMy: 'ဖောက်သည်ထံမှ လိပ်စာကတ် (名刺) ကို လက်ခံရယူရာတွင် အသင့်တော်ဆုံး ယဉ်ကျေးမှု ကျင့်ဝတ်မှာ မည်သည့်အရာနည်း။',
         options: [
           '片手ですぐに受け取り、ポケットにしまう。',
           '両手で胸の高さで受け取り、「頂戴いたします」とお礼を言って名前を確認する。',
@@ -860,6 +900,8 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           'Always receive meishi with both hands at chest height, say 「頂戴いたします」, and confirm their name. Never write on their card or put it away in front of them!',
+        explanationMy:
+          'လိပ်စာကတ် (名刺) ကို အမြဲတမ်း ရင်ဘတ်အမြင့်တွင် လက်နှစ်ဖက်ဖြင့် ကိုင်တွယ်လက်ခံရမည်ဖြစ်ပြီး 「頂戴いたします」 ဟု ပြောကာ အမည်ကို သေချာဖတ်ရှု အတည်ပြုရပါမည်။ ၎င်းတို့ရှေ့တွင် ကတ်ပေါ်သို့ ဘောပင်ဖြင့် ရေးခြစ်ခြင်း သို့မဟုတ် အိတ်ကပ်ထဲ ချက်ချင်းထိုးထည့်ခြင်းကို လုံးဝ မပြုလုပ်ရပါ။',
       },
     ],
     typingPracticePhrases: [
@@ -867,11 +909,13 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         phraseJp: '頂戴いたします。',
         reading: 'ちょうだいいたします。',
         meaningEn: 'I gratefully receive it.',
+        meaningMy: 'ကျေးဇူးတင်စွာဖြင့် လက်ခံရယူပါသည်ခင်ဗျာ။',
       },
       {
         phraseJp: 'お名刺を頂戴いたします。',
         reading: 'おめいしをちょうだいいたします。',
         meaningEn: 'I gratefully receive your business card.',
+        meaningMy: 'လိပ်စာကတ်ကို ကျေးဇူးတင်စွာဖြင့် လက်ခံရယူပါသည်ခင်ဗျာ။',
       },
     ],
     studioShortcut: {
@@ -974,6 +1018,7 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         id: 'q-f3-1-1',
         promptJp: 'クライアントに急ぎの書類確認をお願いするとき、文頭に置く最も適切なクッション言葉はどれですか。',
         promptEn: 'When asking a client for an urgent document review, what is the best cushion phrase?',
+        promptMy: 'ဖောက်သည်ထံသို့ အရေးကြီးသော စာရွက်စာတမ်း အမြန်စစ်ဆေးပေးရန် မေတ္တာရပ်ခံရာတွင် ဝါကျအစ၌ ထားရှိရမည့် အကောင်းဆုံး စကားပလ္လင်ခံ (Cushion phrase) မှာ မည်သည့်အရာနည်း။',
         options: [
           '早くしてください！',
           '大変恐れ入りますが、',
@@ -983,6 +1028,8 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           '「大変恐れ入りますが、」 cushions the urgency and shows professional respect, preventing the client from feeling pressured or disrespected.',
+        explanationMy:
+          '「大変恐れ入りますが、」 သည် အရေးတကြီး တောင်းဆိုရခြင်းကြောင့် ဖြစ်ပေါ်လာမည့် ဖိအားကို လျော့ပါးစေပြီး ဖောက်သည်အား လေးစားသမှုရှိစွာဖြင့် တောင်းဆိုသော အသုံးအနှုန်း ဖြစ်ပါသည်။',
       },
     ],
     typingPracticePhrases: [
@@ -990,11 +1037,13 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         phraseJp: '恐れ入りますが、',
         reading: 'おそれいりますが、',
         meaningEn: 'Pardon the imposition, but...',
+        meaningMy: 'အားနာပါသည်၊ သို့သော်...',
       },
       {
         phraseJp: 'お手数をおかけいたしますが、よろしくお願いいたします。',
         reading: 'おてすうをおかけいたしますが、よろしくおねがいいたします。',
         meaningEn: 'I apologize for the trouble, and thank you for your kind assistance.',
+        meaningMy: 'အလုပ်ရှုပ်စေမိသည့်အတွက် အားနာပါသည်၊ ကူညီဆောင်ရွက်ပေးပါရန် မေတ္တာရပ်ခံပါသည်။',
       },
     ],
     studioShortcut: {
@@ -1104,6 +1153,7 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         id: 'q-f4-1-1',
         promptJp: 'クライアントから電話があり、「山田課長をお願いします」と言われたとき、保留にする前の正しい返答はどれですか。',
         promptEn: 'When an outside client calls asking for "Section Chief Yamada", what is the correct response before putting them on hold?',
+        promptMy: 'ပြင်ပဖောက်သည်ထံမှ ဖုန်းဝင်လာပြီး "ဌာနမှူး ယာမာဒါနှင့် ပြောလိုပါသည်" ဟု မေးမြန်းလာပါက ဖုန်းမလွှဲပြောင်းမီ မှန်ကန်သော တုံ့ပြန်ပြောဆိုပုံမှာ မည်သည့်အရာနည်း။',
         options: [
           '山田課長にお繋ぎしますので待ってください。',
           '山田にお取次ぎいたしますので、少々お待ちください。',
@@ -1113,6 +1163,8 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         correctAnswer: 1,
         explanation:
           'When speaking to an outside client, your own manager is in-group (ウチ). You must strip the title "課長" and say 「山田にお取次ぎいたしますので、少々お待ちください」.',
+        explanationMy:
+          'ပြင်ပဖောက်သည်နှင့် စကားပြောရာတွင် မိမိ၏ ဌာနမှူးသည် အတွင်းအုပ်စု (ウチ) ဖြစ်သောကြောင့် ရာထူး "課長" ကို ဖြုတ်ပယ်၍ မျိုးရိုးအမည်သက်သက်ဖြင့် 「山田にお取次ぎいたしますので、少々お待ちください」 ဟု ပြောဆိုရပါမည်။',
       },
     ],
     typingPracticePhrases: [
@@ -1120,16 +1172,19 @@ export const BUSINESS_LESSON_DETAILS: Record<string, BusinessLessonDetail> = {
         phraseJp: 'お電話ありがとうございます。',
         reading: 'おでんわありがとうございます。',
         meaningEn: 'Thank you for calling.',
+        meaningMy: 'ဖုန်းဆက်သွယ်ပေးသည့်အတွက် ကျေးဇူးတင်ရှိပါသည်။',
       },
       {
         phraseJp: '少々お待ちください。',
         reading: 'しょうしょうおまちください。',
         meaningEn: 'Please hold for a moment.',
+        meaningMy: 'ခဏလောက် စောင့်ဆိုင်းပေးနိုင်မလားခင်ဗျာ။',
       },
       {
         phraseJp: '担当にお取次ぎいたします。',
         reading: 'たんとうにおとりつぎいたします。',
         meaningEn: 'I will connect you to the person in charge.',
+        meaningMy: 'တာဝန်ခံပုဂ္ဂိုလ်ထံသို့ လွှဲပြောင်းပေးပါမည်ခင်ဗျာ။',
       },
     ],
     studioShortcut: {
@@ -1211,6 +1266,7 @@ export function getBusinessLessonDetail(lesson: BusinessLesson): BusinessLessonD
       id: `${lesson.id}-q1`,
       promptJp: `本レッスン「${lesson.titleJp}」において、最も重視されるビジネスマナーはどれですか。`,
       promptEn: `In this lesson "${lesson.titleEn}", which business practice is most essential?`,
+      promptMy: `ဤသင်ခန်းစာ "${lesson.titleJp}" တွင် အဓိက အလေးထားရမည့် စီးပွားရေးလုပ်ငန်းခွင် ကျင့်ဝတ်မှာ မည်သည့်အရာဖြစ်သနည်း။`,
       options: [
         '相手の立場と社内外の境界（ウチ・ソト）を意識して敬語を正しく使い分ける。',
         '親しみを込めてタメ口（友達言葉）で話す。',
@@ -1220,11 +1276,14 @@ export function getBusinessLessonDetail(lesson: BusinessLesson): BusinessLessonD
       correctAnswer: 0,
       explanation:
         'In Japanese professional environments, properly discerning in-group vs out-group (ウチ/ソト) boundaries and honoring the other party with polite language is fundamental to business trust.',
+      explanationMy:
+        'ဂျပန်စီးပွားရေးလုပ်ငန်းခွင်တွင် ကုမ္ပဏီတွင်း/ပြင် (ウチ/ソト) နယ်နိမိတ်ကို ခွဲခြားသိမြင်ပြီး ယဉ်ကျေးသော ရုံးသုံးစကား (敬語) ကို မှန်ကန်စွာ ခွဲခြားသုံးစွဲခြင်းသည် လုပ်ငန်းခွင် ယုံကြည်မှုအတွက် အခြေခံအကျဆုံး ဖြစ်ပါသည်။',
     },
     {
       id: `${lesson.id}-q2`,
       promptJp: `本単元で学ぶ表現「${lesson.keyGrammarPatterns?.[0] || '承知いたしました'}」の使い方として適切なものはどれですか。`,
       promptEn: `What is the proper application of the core lesson pattern?`,
+      promptMy: `ဤသင်ခန်းစာတွင် လေ့လာခဲ့သော အသုံးအနှုန်း "${lesson.keyGrammarPatterns?.[0] || '承知いたしました'}" ၏ မှန်ကန်သော အသုံးပြုပုံမှာ အဘယ်နည်း။`,
       options: [
         '上司や取引先の要望・指示に対して丁寧に応答する際に使用する。',
         'クレームを受けたときに反論する際に使用する。',
@@ -1234,6 +1293,8 @@ export function getBusinessLessonDetail(lesson: BusinessLesson): BusinessLessonD
       correctAnswer: 0,
       explanation:
         'Standard business phrases convey respect, professional diligence, and accountability when replying to instructions or requests.',
+      explanationMy:
+        'ရုံးသုံးစကားများသည် အထက်လူကြီး သို့မဟုတ် ဖောက်သည်များထံမှ ညွှန်ကြားချက် သို့မဟုတ် တောင်းဆိုချက်များကို တာဝန်ယူမှုအပြည့်ဖြင့် လေးစားစွာ တုံ့ပြန်ရာတွင် မရှိမဖြစ် အရေးကြီးပါသည်။',
     },
   ];
 
@@ -1241,6 +1302,7 @@ export function getBusinessLessonDetail(lesson: BusinessLesson): BusinessLessonD
     phraseJp: `${pat}。`,
     reading: `${pat}。`,
     meaningEn: `Key phrase from ${lesson.titleEn}`,
+    meaningMy: `${lesson.titleJp} မှ အဓိက သုံးစွဲရမည့် စကားစု - ${pat}`,
   }));
 
   // Determine relevant studio shortcut

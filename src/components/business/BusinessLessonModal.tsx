@@ -40,6 +40,7 @@ import { useUser } from '../../context/UserContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { useJapaneseKeyboard } from '../../context/JapaneseKeyboardContext';
 import { TranslationToggleButton } from '../common/TranslationToggleButton';
+import { getLocalizedBusinessLesson } from '../../data/translations/businessCurriculumI18n';
 
 interface BusinessLessonModalProps {
   lesson: BusinessLesson | null;
@@ -173,13 +174,16 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
     setQuizSubmitted(false);
   };
 
+  const isMy = activeLang === 'my';
+  const localizedLesson = lesson ? getLocalizedBusinessLesson(lesson, activeLang) : null;
+
   const tabs: { id: typeof activeTab; label: string; icon: React.ReactNode }[] = [
-    { id: 'overview', label: '📖 概要・ルール', icon: <BookOpen size={15} /> },
-    { id: 'dialogue', label: '💬 実践対話', icon: <MessageSquare size={15} /> },
-    { id: 'vocab', label: '🔤 重要語彙', icon: <Award size={15} /> },
-    { id: 'grammar', label: '📐 敬語・文型', icon: <ShieldCheck size={15} /> },
-    { id: 'quiz', label: '🎯 確認テスト', icon: <HelpCircle size={15} /> },
-    { id: 'typing', label: '⌨️ タイピング練習', icon: <Keyboard size={15} /> },
+    { id: 'overview', label: isMy ? '📖 အကျဉ်းချုပ်/စည်းမျဉ်း' : '📖 概要・ルール', icon: <BookOpen size={15} /> },
+    { id: 'dialogue', label: isMy ? '💬 စကားပြောခန်း' : '💬 実践対話', icon: <MessageSquare size={15} /> },
+    { id: 'vocab', label: isMy ? '🔤 အဓိကဝေါဟာရ' : '🔤 重要語彙', icon: <Award size={15} /> },
+    { id: 'grammar', label: isMy ? '📐 သဒ္ဒါ/ယဉ်ကျေးစကား' : '📐 敬語・文型', icon: <ShieldCheck size={15} /> },
+    { id: 'quiz', label: isMy ? '🎯 စစ်ဆေးမှု မေးခွန်း' : '🎯 確認テスト', icon: <HelpCircle size={15} /> },
+    { id: 'typing', label: isMy ? '⌨️ လက်ကွက်လေ့ကျင့်ခန်း' : '⌨️ タイピング練習', icon: <Keyboard size={15} /> },
   ];
 
   return (
@@ -203,21 +207,22 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
             <div className="min-w-0">
               <div className="flex items-center gap-2 flex-wrap">
                 <span className="text-[11px] font-mono font-bold text-slate-400 uppercase">
-                  Lesson {lesson.lessonNumber}
+                  {isMy ? `သင်ခန်းစာ ${lesson.lessonNumber}` : `Lesson ${lesson.lessonNumber}`}
                 </span>
                 <span className="px-2 py-0.5 rounded-md bg-indigo-100 dark:bg-indigo-950/70 text-indigo-700 dark:text-indigo-300 text-[10px] font-bold font-mono">
                   JLPT {lesson.prerequisiteJpLevel}
                 </span>
                 <span className="text-slate-400 text-xs">•</span>
-                <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                  <Clock size={12} /> {lesson.estimatedMinutes} mins
+                <span className="text-[11px] text-slate-500 dark:text-slate-400 flex items-center gap-1 font-myanmar">
+                  <Clock size={12} /> {lesson.estimatedMinutes} {isMy ? 'မိနစ်' : 'mins'}
                 </span>
               </div>
               <h2 className="text-base sm:text-lg font-black text-slate-900 dark:text-white truncate font-japanese">
                 {lesson.titleJp}
               </h2>
-              <p className="text-xs text-slate-500 dark:text-slate-400 truncate">
-                {lesson.titleEn}
+              <p className="text-xs text-slate-500 dark:text-slate-400 truncate font-myanmar">
+                {isMy && localizedLesson?.title ? localizedLesson.title : lesson.titleEn}
+                {isMy && lesson.titleEn ? ` (${lesson.titleEn})` : ''}
               </p>
             </div>
           </div>
@@ -228,14 +233,14 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
             <button
               type="button"
               onClick={handleCompleteLessonWithReward}
-              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm ${
+              className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-sm font-myanmar ${
                 isCompleted
                   ? 'bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 border border-emerald-300 dark:border-emerald-800'
                   : 'bg-indigo-600 hover:bg-indigo-700 text-white shadow-indigo-200 dark:shadow-none'
               }`}
             >
               <CheckCircle2 size={15} />
-              <span>{isCompleted ? 'Completed ✓' : 'Mark Done (+50 XP)'}</span>
+              <span>{isCompleted ? (isMy ? 'ပြီးမြောက်ပြီး ✓' : 'Completed ✓') : (isMy ? 'ပြီးမြောက်ကြောင်း မှတ်သားမည် (+50 XP)' : 'Mark Done (+50 XP)')}</span>
             </button>
 
             <button
@@ -282,33 +287,41 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
               {/* Situation Briefing Card */}
               <div className="p-5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 space-y-2">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700 dark:text-indigo-300">
-                    Corporate Scenario & Context
+                  <span className="text-[10px] uppercase font-bold tracking-wider text-indigo-700 dark:text-indigo-300 font-myanmar">
+                    {isMy ? 'လုပ်ငန်းခွင် အခြေအနေနှင့် နောက်ခံ (Context)' : 'Corporate Scenario & Context'}
                   </span>
                   <AudioButton text={lesson.titleJp} size="sm" />
                 </div>
                 <h3 className="text-base font-bold text-slate-900 dark:text-white font-japanese">
                   {lesson.titleJp}
                 </h3>
-                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed">
-                  {detail.scenarioOverview}
+                <p className="text-xs text-slate-700 dark:text-slate-300 leading-relaxed font-myanmar">
+                  {isMy && localizedLesson?.scenarioOverview
+                    ? localizedLesson.scenarioOverview
+                    : detail.scenarioOverview}
                 </p>
-                <div className="pt-2 text-[11px] text-slate-500 dark:text-slate-400 border-t border-indigo-100/80 dark:border-indigo-900/40">
-                  🏢 <strong>Environment:</strong> {detail.officeContext}
+                <div className="pt-2 text-[11px] text-slate-500 dark:text-slate-400 border-t border-indigo-100/80 dark:border-indigo-900/40 font-myanmar">
+                  🏢 <strong>{isMy ? 'လုပ်ငန်းခွင် ဝန်းကျင်:' : 'Environment:'}</strong>{' '}
+                  {isMy && localizedLesson?.officeContext
+                    ? localizedLesson.officeContext
+                    : detail.officeContext}
                 </div>
               </div>
 
               {/* 3 Golden Etiquette Rules */}
               <div className="space-y-3">
-                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5">
+                <h4 className="text-xs font-black uppercase tracking-wider text-slate-400 flex items-center gap-1.5 font-myanmar">
                   <ShieldCheck size={16} className="text-emerald-500" />
-                  <span>Key Professional Etiquette Rules</span>
+                  <span>{isMy ? 'လိုက်နာရမည့် အဓိက ကျင့်ဝတ်စည်းမျဉ်းများ' : 'Key Professional Etiquette Rules'}</span>
                 </h4>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {detail.etiquetteRules.map((rule, idx) => (
+                  {(isMy && localizedLesson?.etiquetteRules && localizedLesson.etiquetteRules.length > 0
+                    ? localizedLesson.etiquetteRules
+                    : detail.etiquetteRules
+                  ).map((rule, idx) => (
                     <div
                       key={idx}
-                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300"
+                      className="p-3.5 rounded-2xl bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-800 flex items-start gap-2.5 text-xs text-slate-700 dark:text-slate-300 font-myanmar"
                     >
                       <div className="w-5 h-5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-600 dark:text-emerald-400 flex items-center justify-center shrink-0 font-bold text-[10px]">
                         {idx + 1}
@@ -320,14 +333,14 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
               </div>
 
               {/* Cultural Insight Callout */}
-              {lesson.culturalNote && (
+              {(localizedLesson?.culturalNote || lesson.culturalNote) && (
                 <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200 dark:border-amber-900/40 space-y-1 text-xs">
-                  <div className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5">
+                  <div className="font-bold text-amber-800 dark:text-amber-300 flex items-center gap-1.5 font-myanmar">
                     <Lightbulb size={16} />
-                    <span>Workplace Cultural Insight (商習慣)</span>
+                    <span>{isMy ? 'ဂျပန်လုပ်ငန်းခွင် ယဉ်ကျေးမှုဆိုင်ရာ သိကောင်းစရာ (商習慣)' : 'Workplace Cultural Insight (商習慣)'}</span>
                   </div>
-                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-[11px]">
-                    {lesson.culturalNote}
+                  <p className="text-slate-700 dark:text-slate-300 leading-relaxed text-[11px] font-myanmar">
+                    {localizedLesson?.culturalNote || lesson.culturalNote}
                   </p>
                 </div>
               )}
@@ -337,10 +350,12 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                 <div className="p-4 rounded-2xl bg-gradient-to-r from-indigo-900 to-slate-900 text-white flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-sm">
                   <div>
                     <span className="text-[10px] font-bold uppercase tracking-wider text-indigo-300">
-                      Dedicated Studio Practice
+                      {isMy ? 'သီးသန့် လေ့ကျင့်ခန်း Studio' : 'Dedicated Studio Practice'}
                     </span>
-                    <p className="text-xs font-semibold text-white">
-                      Practice this lesson interactively with our specialized tools!
+                    <p className="text-xs font-semibold text-white font-myanmar">
+                      {isMy
+                        ? 'ဤသင်ခန်းစာကို ကျွန်ုပ်တို့၏ သီးသန့် Studio ကိရိယာများဖြင့် လက်တွေ့လေ့ကျင့်ပါ!'
+                        : 'Practice this lesson interactively with our specialized tools!'}
                     </p>
                   </div>
                   <button
@@ -351,9 +366,21 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                         onOpenStudioTab(detail.studioShortcut.tabId);
                       }
                     }}
-                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer self-start sm:self-auto"
+                    className="px-4 py-2 bg-indigo-500 hover:bg-indigo-600 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 shadow-sm transition-all cursor-pointer self-start sm:self-auto font-myanmar"
                   >
-                    <span>{detail.studioShortcut.buttonText}</span>
+                    <span>
+                      {isMy
+                        ? (detail.studioShortcut.tabId === 'email'
+                            ? 'Business Email Studio ဖွင့်မည်'
+                            : detail.studioShortcut.tabId === 'horenso'
+                            ? 'ဖုန်းနှင့် အစည်းအဝေး Studio သို့ သွားမည်'
+                            : detail.studioShortcut.tabId === 'keigo'
+                            ? 'Keigo Studio တွင် လေ့ကျင့်မည်'
+                            : detail.studioShortcut.tabId === 'interview_sim'
+                            ? 'အင်တာဗျူး Simulator ဖွင့်မည်'
+                            : 'လုပ်ငန်းခွင် ယဉ်ကျေးမှု လမ်းညွှန် ဖွင့်မည်')
+                        : detail.studioShortcut.buttonText}
+                    </span>
                     <ExternalLink size={13} />
                   </button>
                 </div>
@@ -365,11 +392,13 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
           {activeTab === 'dialogue' && (
             <div className="space-y-4">
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
-                <span className="text-xs text-slate-500 dark:text-slate-400">
-                  Listen to the native voice audio and analyze the speech patterns line by line.
+                <span className="text-xs text-slate-500 dark:text-slate-400 font-myanmar">
+                  {isMy
+                    ? 'ဂျပန်ဇာတိ အသံထွက်ကို နားထောင်ပြီး စကားပြောပုံစံများကို တစ်ကြောင်းချင်း လေ့လာပါ။'
+                    : 'Listen to the native voice audio and analyze the speech patterns line by line.'}
                 </span>
-                <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400">
-                  {detail.dialogue.length} dialogue turns
+                <span className="text-xs font-mono font-bold text-indigo-600 dark:text-indigo-400 font-myanmar">
+                  {detail.dialogue.length} {isMy ? 'ကြောင်း' : 'dialogue turns'}
                 </span>
               </div>
 
@@ -402,20 +431,20 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
 
                     {profile.showTranslation !== false || revealedItems[line.id] ? (
                       <div className="pt-2 border-t border-slate-200/60 dark:border-slate-700/50 space-y-1 text-xs">
-                        {activeLang === 'my' && line.myanmar ? (
-                          <p className="text-slate-800 dark:text-slate-200 font-medium">
+                        {isMy && line.myanmar ? (
+                          <p className="text-slate-800 dark:text-slate-200 font-medium font-myanmar">
                             <span className="font-bold text-[10px] uppercase text-emerald-600 dark:text-emerald-400 mr-1.5">MY</span>
                             {line.myanmar}
                           </p>
                         ) : null}
                         {line.english && (
-                          <p className={activeLang === 'my' && line.myanmar ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300 font-medium'}>
+                          <p className={isMy && line.myanmar ? 'text-slate-500 dark:text-slate-400' : 'text-slate-700 dark:text-slate-300 font-medium'}>
                             <span className="font-bold text-[10px] uppercase text-indigo-500 mr-1.5">EN</span>
                             {line.english}
                           </p>
                         )}
-                        {activeLang !== 'my' && line.myanmar && (
-                          <p className="text-slate-500 dark:text-slate-400">
+                        {!isMy && line.myanmar && (
+                          <p className="text-slate-500 dark:text-slate-400 font-myanmar">
                             <span className="font-bold text-[10px] uppercase text-emerald-600 dark:text-emerald-400 mr-1.5">MY</span>
                             {line.myanmar}
                           </p>
@@ -423,14 +452,16 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                       </div>
                     ) : (
                       <div className="pt-1.5 flex items-center justify-between text-[11px]">
-                        <span className="text-slate-400 italic">Translation hidden for immersion</span>
+                        <span className="text-slate-400 italic font-myanmar">
+                          {isMy ? 'လေ့ကျင့်မှုအတွက် ဘာသာပြန်ကို ဖျောက်ထားပါသည်' : 'Translation hidden for immersion'}
+                        </span>
                         <button
                           type="button"
                           onClick={() => toggleReveal(line.id)}
-                          className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 cursor-pointer hover:underline"
+                          className="text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 cursor-pointer hover:underline font-myanmar"
                         >
                           <Eye size={12} />
-                          <span>Peek Translation</span>
+                          <span>{isMy ? 'ဘာသာပြန် ကြည့်ရှုမည်' : 'Peek Translation'}</span>
                         </button>
                       </div>
                     )}
@@ -471,9 +502,9 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     <div className="text-xs space-y-1">
                       {profile.showTranslation !== false || revealedItems[`vocab-${idx}`] ? (
                         <>
-                          {activeLang === 'my' && v.meaningMy ? (
+                          {isMy && v.meaningMy ? (
                             <>
-                              <p className="font-bold text-slate-800 dark:text-slate-200">
+                              <p className="font-bold text-slate-800 dark:text-slate-200 font-myanmar">
                                 {v.meaningMy}
                               </p>
                               {v.meaningEn && (
@@ -486,7 +517,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                                 {v.meaningEn}
                               </p>
                               {v.meaningMy && (
-                                <p className="text-slate-500 dark:text-slate-400">{v.meaningMy}</p>
+                                <p className="text-slate-500 dark:text-slate-400 font-myanmar">{v.meaningMy}</p>
                               )}
                             </>
                           )}
@@ -498,10 +529,10 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                         <button
                           type="button"
                           onClick={() => toggleReveal(`vocab-${idx}`)}
-                          className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline cursor-pointer py-1"
+                          className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline cursor-pointer py-1 font-myanmar"
                         >
                           <Eye size={12} />
-                          <span>Reveal Meaning (Active Recall)</span>
+                          <span>{isMy ? 'အဓိပ္ပာယ် ကြည့်ရှုမည် (Active Recall)' : 'Reveal Meaning (Active Recall)'}</span>
                         </button>
                       )}
                     </div>
@@ -533,16 +564,16 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     <AudioButton text={g.pattern} size="sm" />
                   </div>
 
-                  <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-mono font-bold text-indigo-800 dark:text-indigo-300">
-                    Structure: {g.structure}
+                  <div className="p-2.5 rounded-xl bg-indigo-50/70 dark:bg-indigo-950/40 text-xs font-mono font-bold text-indigo-800 dark:text-indigo-300 font-myanmar">
+                    {isMy ? 'ဖွဲ့စည်းပုံ:' : 'Structure:'} {g.structure}
                   </div>
 
                   <div className="text-xs space-y-1 text-slate-700 dark:text-slate-300">
                     {profile.showTranslation !== false || revealedItems[`grammar-${idx}`] ? (
                       <>
-                        {activeLang === 'my' && g.meaningMy ? (
+                        {isMy && g.meaningMy ? (
                           <>
-                            <p>
+                            <p className="font-myanmar">
                               <strong>အဓိပ္ပာယ်:</strong> {g.meaningMy}
                             </p>
                             {g.meaningEn && (
@@ -557,44 +588,44 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                               <strong>Meaning:</strong> {g.meaningEn}
                             </p>
                             {g.meaningMy && (
-                              <p className="text-slate-500 dark:text-slate-400">
+                              <p className="text-slate-500 dark:text-slate-400 font-myanmar">
                                 <strong>MY:</strong> {g.meaningMy}
                               </p>
                             )}
                           </>
                         )}
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400">
-                          Rule: {g.usageRule}
+                        <p className="text-[11px] text-slate-600 dark:text-slate-400 font-myanmar">
+                          {isMy ? 'အသုံးပြုပုံ စည်းမျဉ်း:' : 'Rule:'} {g.usageRule}
                         </p>
                       </>
                     ) : (
                       <button
                         type="button"
                         onClick={() => toggleReveal(`grammar-${idx}`)}
-                        className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline cursor-pointer py-1"
+                        className="text-[11px] text-indigo-600 dark:text-indigo-400 font-bold flex items-center gap-1 hover:underline cursor-pointer py-1 font-myanmar"
                       >
                         <Eye size={12} />
-                        <span>Reveal Grammar Meaning</span>
+                        <span>{isMy ? 'သဒ္ဒါအဓိပ္ပာယ် ကြည့်ရှုမည်' : 'Reveal Grammar Meaning'}</span>
                       </button>
                     )}
                   </div>
 
                   {g.comparison && (
                     <div className="p-3 rounded-xl bg-amber-50 dark:bg-amber-950/20 border border-amber-200/80 dark:border-amber-900/40 space-y-1.5 text-xs">
-                      <span className="font-bold text-amber-800 dark:text-amber-300 block text-[11px] uppercase">
-                        ⚠️ Common Etiquette Pitfall
+                      <span className="font-bold text-amber-800 dark:text-amber-300 block text-[11px] uppercase font-myanmar">
+                        {isMy ? '⚠️ သတိပြုရမည့် အသုံးအနှုန်း အမှားများ (商習慣)' : '⚠️ Common Etiquette Pitfall'}
                       </span>
                       <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 text-xs">
-                        <div className="p-2 bg-rose-50 dark:bg-rose-950/30 rounded-lg text-rose-800 dark:text-rose-300">
-                          <span className="font-bold block">❌ Avoid:</span>
+                        <div className="p-2 bg-rose-50 dark:bg-rose-950/30 rounded-lg text-rose-800 dark:text-rose-300 font-myanmar">
+                          <span className="font-bold block">{isMy ? '❌ ရှောင်ကြဉ်ရန်:' : '❌ Avoid:'}</span>
                           {g.comparison.incorrectOrRude}
                         </div>
-                        <div className="p-2 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg text-emerald-800 dark:text-emerald-300">
-                          <span className="font-bold block">✓ Use:</span>
+                        <div className="p-2 bg-emerald-50 dark:bg-emerald-950/30 rounded-lg text-emerald-800 dark:text-emerald-300 font-myanmar">
+                          <span className="font-bold block">{isMy ? '✓ သုံးစွဲရန်:' : '✓ Use:'}</span>
                           {g.comparison.correctBusiness}
                         </div>
                       </div>
-                      <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1">
+                      <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-1 font-myanmar">
                         {g.comparison.reason}
                       </p>
                     </div>
@@ -602,8 +633,8 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
 
                   {/* Examples */}
                   <div className="space-y-2 pt-1">
-                    <span className="text-[11px] font-bold uppercase text-slate-400 block">
-                      Authentic Examples:
+                    <span className="text-[11px] font-bold uppercase text-slate-400 block font-myanmar">
+                      {isMy ? 'လက်တွေ့ ဥပမာ ဝါကျများ:' : 'Authentic Examples:'}
                     </span>
                     {g.examples.map((ex, eIdx) => (
                       <div
@@ -615,7 +646,14 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                             {ex.japanese}
                           </p>
                           <p className="text-[11px] text-slate-400 font-japanese">{ex.reading}</p>
-                          <p className="text-slate-600 dark:text-slate-300">{ex.english}</p>
+                          {isMy && ex.myanmar ? (
+                            <p className="text-slate-800 dark:text-slate-200 font-myanmar">{ex.myanmar}</p>
+                          ) : null}
+                          {ex.english && (
+                            <p className={isMy && ex.myanmar ? 'text-slate-500 dark:text-slate-400 text-[11px]' : 'text-slate-600 dark:text-slate-300'}>
+                              {ex.english}
+                            </p>
+                          )}
                         </div>
                         <AudioButton text={ex.japanese} size="sm" />
                       </div>
@@ -631,11 +669,15 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
             <div className="space-y-6">
               <div className="flex items-center justify-between pb-2 border-b border-slate-200 dark:border-slate-800">
                 <div>
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white">
-                    Workplace Comprehension Check ({detail.quiz.length} Questions)
+                  <h3 className="text-sm font-bold text-slate-900 dark:text-white font-myanmar">
+                    {isMy
+                      ? `လုပ်ငန်းခွင် နားလည်သဘောပေါက်မှု စစ်ဆေးခြင်း (${detail.quiz.length} ပုစ္ဆာ)`
+                      : `Workplace Comprehension Check (${detail.quiz.length} Questions)`}
                   </h3>
-                  <p className="text-xs text-slate-500 dark:text-slate-400">
-                    Test your understanding of in-group rules, proper cushion phrases, and business honorifics.
+                  <p className="text-xs text-slate-500 dark:text-slate-400 font-myanmar">
+                    {isMy
+                      ? 'လုပ်ငန်းတွင်း/ပြင် စည်းမျဉ်းများ၊ ယဉ်ကျေးချေငေါ့သော စကားအသုံးအနှုန်းများနှင့် ရုံးသုံးစကားများကို စစ်ဆေးပါ။'
+                      : 'Test your understanding of in-group rules, proper cushion phrases, and business honorifics.'}
                   </p>
                 </div>
                 {quizSubmitted && (
@@ -645,10 +687,10 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                       setSelectedQuizAnswers({});
                       setQuizSubmitted(false);
                     }}
-                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer"
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-semibold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 flex items-center gap-1 cursor-pointer font-myanmar"
                   >
                     <RotateCcw size={12} />
-                    <span>Retake Quiz</span>
+                    <span>{isMy ? 'ပြန်လည်ဖြေဆိုမည်' : 'Retake Quiz'}</span>
                   </button>
                 )}
               </div>
@@ -670,7 +712,10 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                         </h4>
                         <AudioButton text={q.promptJp} size="sm" />
                       </div>
-                      <p className="text-xs text-slate-500 dark:text-slate-400">{q.promptEn}</p>
+                      <p className="text-xs text-slate-500 dark:text-slate-400 font-myanmar">
+                        {isMy && q.promptMy ? q.promptMy : q.promptEn}
+                        {isMy && q.promptMy && q.promptEn ? ` (${q.promptEn})` : ''}
+                      </p>
 
                       <div className="grid grid-cols-1 gap-2 pt-1">
                         {q.options.map((opt, optIdx) => {
@@ -710,16 +755,16 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
 
                       {quizSubmitted && (
                         <div
-                          className={`p-3 rounded-xl text-xs leading-relaxed ${
+                          className={`p-3 rounded-xl text-xs leading-relaxed font-myanmar ${
                             isCorrect
                               ? 'bg-emerald-50/80 dark:bg-emerald-950/30 text-emerald-900 dark:text-emerald-300 border border-emerald-200 dark:border-emerald-900/40'
                               : 'bg-rose-50/80 dark:bg-rose-950/30 text-rose-900 dark:text-rose-300 border border-rose-200 dark:border-rose-900/40'
                           }`}
                         >
                           <span className="font-bold block mb-0.5">
-                            {isCorrect ? '✓ Correct!' : '❌ Incorrect'}
+                            {isCorrect ? (isMy ? '✓ မှန်ကန်ပါသည်!' : '✓ Correct!') : (isMy ? '❌ မှားယွင်းပါသည်' : '❌ Incorrect')}
                           </span>
-                          {q.explanation}
+                          {isMy && q.explanationMy ? q.explanationMy : q.explanation}
                         </div>
                       )}
                     </div>
@@ -733,9 +778,9 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     type="button"
                     onClick={handleCheckQuiz}
                     disabled={Object.keys(selectedQuizAnswers).length === 0}
-                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50"
+                    className="w-full py-3 bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs rounded-xl shadow-md transition-all cursor-pointer disabled:opacity-50 font-myanmar"
                   >
-                    Submit Answers & Check Etiquette
+                    {isMy ? 'အဖြေများစစ်ဆေးမည်' : 'Submit Answers & Check Etiquette'}
                   </button>
                 </div>
               ) : (
@@ -743,10 +788,10 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                   <button
                     type="button"
                     onClick={handleRetakeQuiz}
-                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer"
+                    className="px-4 py-2 bg-slate-100 dark:bg-slate-800 hover:bg-slate-200 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-300 font-bold text-xs rounded-xl transition-all inline-flex items-center gap-1.5 cursor-pointer font-myanmar"
                   >
                     <RotateCcw size={14} />
-                    Retake Quiz
+                    {isMy ? 'ပြန်လည်ဖြေဆိုမည်' : 'Retake Quiz'}
                   </button>
                 </div>
               )}
@@ -758,8 +803,8 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
             <div className="space-y-6">
               <div className="p-5 rounded-2xl bg-indigo-50/60 dark:bg-indigo-950/30 border border-indigo-100 dark:border-indigo-900/40 space-y-3">
                 <div className="flex items-center justify-between">
-                  <span className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-300">
-                    Practice Typing Japanese Business Phrases
+                  <span className="text-[10px] uppercase font-bold text-indigo-700 dark:text-indigo-300 font-myanmar">
+                    {isMy ? 'ဂျပန်စီးပွားရေးသုံး စကားစုများကို ရိုက်နှိပ်လေ့ကျင့်ပါ' : 'Practice Typing Japanese Business Phrases'}
                   </span>
                   <div className="flex items-center gap-1.5">
                     {detail.typingPracticePhrases.map((_, idx) => (
@@ -790,7 +835,10 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     <span className="text-xs text-indigo-600 dark:text-indigo-400 font-japanese font-semibold">
                       {currentPhrase.reading}
                     </span>
-                    <p className="text-xs text-slate-500 mt-1">{currentPhrase.meaningEn}</p>
+                    <p className="text-xs text-slate-500 mt-1 font-myanmar">
+                      {isMy && currentPhrase.meaningMy ? currentPhrase.meaningMy : currentPhrase.meaningEn}
+                      {isMy && currentPhrase.meaningMy && currentPhrase.meaningEn ? ` (${currentPhrase.meaningEn})` : ''}
+                    </p>
                   </div>
                   <AudioButton text={currentPhrase.phraseJp} size="md" />
                 </div>
@@ -798,16 +846,18 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                 {/* Typing Input with Virtual Keyboard Trigger */}
                 <div className="space-y-2 pt-2">
                   <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300">
-                      Type the phrase above (use physical keyboard or virtual keyboard):
+                    <label className="text-xs font-bold text-slate-700 dark:text-slate-300 font-myanmar">
+                      {isMy
+                        ? 'အထက်ပါ စကားစုကို ရိုက်ထည့်ပါ (Keyboard သို့မဟုတ် Virtual Keyboard သုံးနိုင်ပါသည်):'
+                        : 'Type the phrase above (use physical keyboard or virtual keyboard):'}
                     </label>
                     <button
                       type="button"
                       onClick={() => openKeyboard()}
-                      className="px-3 py-1 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer"
+                      className="px-3 py-1 rounded-xl bg-indigo-100 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 text-xs font-bold hover:bg-indigo-200 transition-colors flex items-center gap-1.5 cursor-pointer font-myanmar"
                     >
                       <Keyboard size={14} />
-                      <span>⌨ 日本語キーボード</span>
+                      <span>{isMy ? '⌨ ဂျပန်ကီးဘုတ်' : '⌨ 日本語キーボード'}</span>
                     </button>
                   </div>
 
@@ -817,7 +867,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                       type="text"
                       value={typedInput}
                       onChange={(e) => setTypedInput(e.target.value)}
-                      placeholder="ここに入力してください (Type here)..."
+                      placeholder={isMy ? 'ဤနေရာတွင် ရိုက်ထည့်ပါ (Type here)...' : 'ここに入力してください (Type here)...'}
                       className={`w-full px-4 py-3 text-base rounded-xl font-japanese border outline-none transition-all ${
                         isTypingExactMatch
                           ? 'border-emerald-500 bg-emerald-50/40 dark:bg-emerald-950/20 text-emerald-900 dark:text-emerald-100'
@@ -826,18 +876,20 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                     />
 
                     {isTypingExactMatch && (
-                      <span className="absolute right-3 top-3 px-2 py-0.5 rounded-md bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-xs animate-bounce">
+                      <span className="absolute right-3 top-3 px-2 py-0.5 rounded-md bg-emerald-500 text-white text-xs font-bold flex items-center gap-1 shadow-xs animate-bounce font-myanmar">
                         <Check size={13} />
-                        <span>正解！ (Matched)</span>
+                        <span>{isMy ? 'မှန်ကန်ပါသည်!' : '正解！ (Matched)'}</span>
                       </span>
                     )}
                   </div>
                 </div>
 
                 {isTypingExactMatch && (
-                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-200 animate-fade-in">
+                  <div className="p-3 rounded-xl bg-emerald-50 dark:bg-emerald-950/40 border border-emerald-200 dark:border-emerald-800 flex items-center justify-between text-xs text-emerald-800 dark:text-emerald-200 animate-fade-in font-myanmar">
                     <span>
-                      🎉 Great typing! You earned +15 XP for practicing authentic Japanese typing!
+                      {isMy
+                        ? '🎉 အလွန်ကောင်းမွန်ပါသည်! ဂျပန်စာရိုက်နှိပ်လေ့ကျင့်မှုအတွက် +15 XP ရရှိပါသည်!'
+                        : '🎉 Great typing! You earned +15 XP for practicing authentic Japanese typing!'}
                     </span>
                     {activePhraseIndex + 1 < detail.typingPracticePhrases.length && (
                       <button
@@ -846,9 +898,9 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
                           setActivePhraseIndex((prev) => prev + 1);
                           setTypedInput('');
                         }}
-                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer flex items-center gap-1"
+                        className="px-3 py-1 bg-emerald-600 hover:bg-emerald-700 text-white font-bold rounded-lg cursor-pointer flex items-center gap-1 font-myanmar"
                       >
-                        <span>Next Phrase</span>
+                        <span>{isMy ? 'နောက်စကားစု' : 'Next Phrase'}</span>
                         <ChevronRight size={13} />
                       </button>
                     )}
@@ -862,7 +914,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
         {/* ================================================================= */}
         {/* FOOTER BAR (NAVIGATION & COMPLETION) */}
         {/* ================================================================= */}
-        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between gap-3">
+        <div className="px-6 py-4 border-t border-slate-200 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-800/40 flex items-center justify-between gap-3 font-myanmar">
           <button
             type="button"
             onClick={onSelectPrevLesson}
@@ -870,7 +922,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
             className="px-3.5 py-2 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
             <ChevronLeft size={16} />
-            <span>Prev Lesson</span>
+            <span>{isMy ? 'ယခင်သင်ခန်းစာ' : 'Prev Lesson'}</span>
           </button>
 
           <div className="flex items-center gap-2">
@@ -884,7 +936,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
               }`}
             >
               <CheckCircle2 size={16} />
-              <span>{isCompleted ? 'Completed ✓ (+50 XP)' : 'Mark Lesson Complete (+50 XP)'}</span>
+              <span>{isCompleted ? (isMy ? 'ပြီးမြောက်ပြီး ✓ (+50 XP)' : 'Completed ✓ (+50 XP)') : (isMy ? 'ပြီးမြောက်ကြောင်း မှတ်သားမည် (+50 XP)' : 'Mark Lesson Complete (+50 XP)')}</span>
             </button>
           </div>
 
@@ -894,7 +946,7 @@ export const BusinessLessonModal: React.FC<BusinessLessonModalProps> = ({
             disabled={!hasNextLesson}
             className="px-3.5 py-2 rounded-xl bg-slate-900 dark:bg-white text-white dark:text-slate-900 text-xs font-bold hover:opacity-90 transition-opacity flex items-center gap-1 cursor-pointer disabled:opacity-40 disabled:cursor-not-allowed"
           >
-            <span>Next Lesson</span>
+            <span>{isMy ? 'နောက်သင်ခန်းစာ' : 'Next Lesson'}</span>
             <ChevronRight size={16} />
           </button>
         </div>

@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Volume2, VolumeX, Loader2 } from 'lucide-react';
+import { Volume2, VolumeX } from 'lucide-react';
 import { speechService } from '../../services/speechService';
 import { useUser } from '../../context/UserContext';
 
@@ -21,24 +21,32 @@ export const AudioButton: React.FC<AudioButtonProps> = ({
   const [isPlaying, setIsPlaying] = useState(false);
   const { profile } = useUser();
 
-  const handlePlay = (e: React.MouseEvent) => {
+  const handlePlay = async (e: React.MouseEvent) => {
     e.stopPropagation();
+    e.preventDefault();
+
     if (isPlaying) {
       speechService.stop();
       setIsPlaying(false);
       return;
     }
 
+    if (!text || !text.trim()) return;
+
     setIsPlaying(true);
-    speechService.speakJapanese(text, {
-      rate: speed || profile.speechSpeed || 1.0,
-      onEnd: () => setIsPlaying(false),
-      onError: () => setIsPlaying(false),
-    });
+    try {
+      await speechService.speakJapanese(text, {
+        rate: speed || profile?.speechSpeed || 1.0,
+        onEnd: () => setIsPlaying(false),
+        onError: () => setIsPlaying(false),
+      });
+    } catch {
+      setIsPlaying(false);
+    }
   };
 
   const sizeClasses = {
-    sm: 'p-1 text-xs',
+    sm: 'p-1.5 text-xs',
     md: 'p-2 text-sm',
     lg: 'p-3 text-base',
   };
@@ -54,14 +62,14 @@ export const AudioButton: React.FC<AudioButtonProps> = ({
       type="button"
       onClick={handlePlay}
       title="Listen to Japanese pronunciation"
-      className={`inline-flex items-center justify-center gap-1.5 rounded-full transition-all duration-150 ${
+      className={`inline-flex items-center justify-center gap-1.5 rounded-full transition-all duration-150 cursor-pointer select-none active:scale-95 ${
         isPlaying
-          ? 'bg-brand-500 text-white shadow-md animate-pulse'
+          ? 'bg-brand-500 text-white shadow-md ring-2 ring-brand-400/50 animate-pulse'
           : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200'
       } ${sizeClasses[size]} ${className}`}
     >
       <Volume2 size={iconSizes[size]} className={isPlaying ? 'animate-bounce' : ''} />
-      {showLabel && <span className="font-medium text-xs">Audio</span>}
+      {showLabel && <span className="font-semibold text-xs">{isPlaying ? 'Playing...' : 'Audio'}</span>}
     </button>
   );
 };

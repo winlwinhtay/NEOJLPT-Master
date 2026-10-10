@@ -89,13 +89,16 @@ export const Sidebar: React.FC = () => {
     { id: 'dictionary', label: t('nav.dictionary', 'Dictionary'), icon: <BookA size={20} /> },
   ];
 
-  const systemNavItems: { id: ViewType; label: string; icon: React.ReactNode }[] = [
+  const systemNavItems: { id: ViewType; label: string; icon: React.ReactNode; badge?: string }[] = [
     { id: 'login', label: isGuest ? 'Sign In / Plans' : 'Account & Plans', icon: <CreditCard size={20} /> },
     { id: 'profile', label: t('nav.profile', 'Profile'), icon: <User size={20} /> },
     { id: 'settings', label: t('nav.settings', 'Settings'), icon: <Settings size={20} /> },
-    ...(!isGuest && isSuperAdminEmail(profile?.email)
-      ? [{ id: 'admin' as ViewType, label: 'Admin Console', icon: <ShieldAlert size={20} /> }]
-      : []),
+    {
+      id: 'admin' as ViewType,
+      label: 'Admin Console (管理者)',
+      icon: <ShieldAlert size={20} />,
+      badge: isSuperAdminEmail(profile?.email) ? 'SuperAdmin' : undefined,
+    },
   ];
 
   const handleSelectView = (view: ViewType) => {
@@ -247,16 +250,29 @@ export const Sidebar: React.FC = () => {
                   key={item.id}
                   type="button"
                   onClick={() => handleSelectView(item.id)}
-                  className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
+                  className={`w-full flex items-center justify-between px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${
                     isActive
                       ? 'bg-brand-500 text-white shadow-md shadow-brand-500/20 font-semibold'
                       : 'text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800/60 hover:text-slate-900 dark:hover:text-white'
                   }`}
                 >
-                  <span className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'}>
-                    {item.icon}
-                  </span>
-                  <span>{item.label}</span>
+                  <div className="flex items-center gap-3">
+                    <span className={isActive ? 'text-white' : 'text-slate-400 dark:text-slate-500'}>
+                      {item.icon}
+                    </span>
+                    <span>{item.label}</span>
+                  </div>
+                  {item.badge && (
+                    <span
+                      className={`px-2 py-0.5 rounded-full text-[10px] font-bold ${
+                        isActive
+                          ? 'bg-white text-purple-600'
+                          : 'bg-purple-100 dark:bg-purple-950/60 text-purple-600 dark:text-purple-400'
+                      }`}
+                    >
+                      {item.badge}
+                    </span>
+                  )}
                 </button>
               );
             })}

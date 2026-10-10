@@ -15,6 +15,8 @@ import {
   LogIn,
   LogOut,
   User,
+  ShieldCheck,
+  ShieldAlert,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
@@ -23,6 +25,7 @@ import { useJapaneseKeyboard } from '../../context/JapaneseKeyboardContext';
 import { JLPT_LEVELS } from '../../data/jlptLevels';
 import { SupportedLanguage } from '../../types/i18n';
 import { TranslationToggleButton } from '../common/TranslationToggleButton';
+import { isSuperAdminEmail } from '../../services/entitlementService';
 
 export const Navbar: React.FC = () => {
   const {
@@ -296,6 +299,20 @@ export const Navbar: React.FC = () => {
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
           </button>
 
+          {/* Admin Console Quick Trigger (Prominently visible when SuperAdmin is logged in) */}
+          {isSuperAdminEmail(profile?.email) && (
+            <button
+              type="button"
+              onClick={() => setActiveView('admin')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 transition-all cursor-pointer ring-1 ring-purple-400/40"
+              title="Open Master Administrator Console (管理者コンソール)"
+            >
+              <ShieldCheck size={15} />
+              <span>Admin Console</span>
+              <span className="text-[9px] bg-white/20 px-1 py-0.2 rounded font-mono hidden md:inline">SUPER</span>
+            </button>
+          )}
+
           {/* Subscription Plans Quick Trigger */}
           <button
             type="button"
@@ -310,16 +327,18 @@ export const Navbar: React.FC = () => {
 
           {/* Profile Avatar or Prominent Sign In */}
           {isGuest ? (
-            <button
-              type="button"
-              onClick={() => openLoginView('auth')}
-              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm shadow-brand-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
-              title="Sign in with Supabase email for AI features and sync"
-            >
-              <LogIn size={14} />
-              <span>Log In</span>
-              <span className="text-[10px] opacity-80 hidden sm:inline font-japanese">ログイン</span>
-            </button>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                onClick={() => openLoginView('auth')}
+                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm shadow-brand-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                title="Sign in with Supabase email for AI features and sync"
+              >
+                <LogIn size={14} />
+                <span>Log In</span>
+                <span className="text-[10px] opacity-80 hidden sm:inline font-japanese">ログイン</span>
+              </button>
+            </div>
           ) : (
             <div className="flex items-center gap-2">
               <button
@@ -353,11 +372,23 @@ export const Navbar: React.FC = () => {
                     <p className="text-[11px] font-bold text-slate-400 uppercase tracking-wider">Signed in as</p>
                     <p className="text-xs font-bold text-slate-900 dark:text-white truncate">{profile.email || profile.name}</p>
                     <span className="inline-block mt-1 px-2 py-0.5 rounded text-[10px] font-bold bg-brand-50 dark:bg-brand-950/40 text-brand-600 dark:text-brand-300 border border-brand-200 dark:border-brand-800">
-                      {entitlements.accountType === 'ADMIN' ? '🛡️ SuperAdmin' : entitlements.subscriptionPlan + ' Plan'}
+                      {isSuperAdminEmail(profile.email) ? '🛡️ SuperAdmin' : entitlements.accountType === 'ADMIN' ? '🛡️ Administrator' : entitlements.subscriptionPlan + ' Plan'}
                     </span>
                   </div>
 
                   <div className="py-1">
+                    {/* Admin Console Entry in User Menu */}
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setUserMenuOpen(false);
+                        setActiveView('admin');
+                      }}
+                      className="w-full text-left px-4 py-2 text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 flex items-center gap-2 font-bold cursor-pointer"
+                    >
+                      <ShieldCheck size={14} /> Admin Console (管理者)
+                    </button>
+
                     <button
                       type="button"
                       onClick={() => {

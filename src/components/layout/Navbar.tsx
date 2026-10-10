@@ -299,23 +299,19 @@ export const Navbar: React.FC = () => {
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
           </button>
 
-          {/* Admin Console Quick Trigger (Always visible on Top Navbar) */}
-          <button
-            type="button"
-            onClick={() => setActiveView('admin')}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl font-bold text-xs shadow-md transition-all cursor-pointer ring-1 ${
-              isSuperAdminEmail(profile?.email)
-                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white shadow-purple-500/20 ring-purple-400/40'
-                : 'bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-purple-600 dark:text-purple-400 ring-purple-300/30'
-            }`}
-            title="Admin Console (စီမံခန့်ခွဲသူ / 管理者コンソール)"
-          >
-            <ShieldCheck size={15} className={isSuperAdminEmail(profile?.email) ? 'text-amber-300' : 'text-purple-500'} />
-            <span className="font-bold">Admin Console</span>
-            {isSuperAdminEmail(profile?.email) && (
+          {/* Admin Console Quick Trigger (Exclusively visible for SuperAdmin) */}
+          {!isGuest && isSuperAdminEmail(profile?.email) && (
+            <button
+              type="button"
+              onClick={() => setActiveView('admin')}
+              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 transition-all cursor-pointer ring-1 ring-purple-400/40"
+              title="Admin Console (စီမံခန့်ခွဲသူ / 管理者コンソール)"
+            >
+              <ShieldCheck size={15} className="text-amber-300" />
+              <span className="font-bold">Admin Console</span>
               <span className="text-[9px] bg-white/20 px-1 py-0.2 rounded font-mono hidden md:inline">SUPER</span>
-            )}
-          </button>
+            </button>
+          )}
 
           {/* Subscription Plans Quick Trigger */}
           <button
@@ -381,17 +377,19 @@ export const Navbar: React.FC = () => {
                   </div>
 
                   <div className="py-1">
-                    {/* Admin Console Entry in User Menu */}
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setUserMenuOpen(false);
-                        setActiveView('admin');
-                      }}
-                      className="w-full text-left px-4 py-2 text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 flex items-center gap-2 font-bold cursor-pointer"
-                    >
-                      <ShieldCheck size={14} /> Admin Console (管理者)
-                    </button>
+                    {/* Admin Console Entry in User Menu (Only for Superadmin) */}
+                    {isSuperAdminEmail(profile.email) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setUserMenuOpen(false);
+                          setActiveView('admin');
+                        }}
+                        className="w-full text-left px-4 py-2 text-xs text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-950/30 flex items-center gap-2 font-bold cursor-pointer"
+                      >
+                        <ShieldCheck size={14} /> Admin Console (管理者)
+                      </button>
+                    )}
 
                     <button
                       type="button"

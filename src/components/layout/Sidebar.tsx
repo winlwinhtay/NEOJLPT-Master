@@ -53,6 +53,12 @@ export const Sidebar: React.FC = () => {
   const mainNavItems: { id: ViewType; label: string; icon: React.ReactNode; badge?: string | number }[] = [
     { id: 'dashboard', label: t('nav.dashboard', 'Dashboard'), icon: <LayoutDashboard size={20} /> },
     {
+      id: 'admin' as ViewType,
+      label: 'Admin Console (စီမံခန့်ခွဲသူ)',
+      icon: <ShieldAlert size={20} className="text-purple-500" />,
+      badge: isSuperAdminEmail(profile?.email) ? 'SUPER' : 'ADMIN',
+    },
+    {
       id: 'active-learning',
       label: 'AI Active Learning',
       icon: <Sparkles size={20} />,
@@ -193,6 +199,25 @@ export const Sidebar: React.FC = () => {
               </>
             )}
           </div>
+
+          {/* Quick Admin Console Access Banner inside Top Card */}
+          <button
+            type="button"
+            onClick={() => handleSelectView('admin')}
+            className={`w-full py-2 px-3 rounded-xl font-bold text-xs shadow-xs flex items-center justify-between transition-all cursor-pointer ${
+              activeView === 'admin'
+                ? 'bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-purple-500/20'
+                : 'bg-purple-50 hover:bg-purple-100 dark:bg-purple-950/40 dark:hover:bg-purple-900/50 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800/60'
+            }`}
+          >
+            <div className="flex items-center gap-2">
+              <ShieldAlert size={15} className="text-purple-600 dark:text-purple-400" />
+              <span>Admin Console (စီမံခန့်ခွဲသူ)</span>
+            </div>
+            <span className="text-[10px] bg-purple-200 dark:bg-purple-900/80 px-1.5 py-0.5 rounded font-mono font-black">
+              {isSuperAdminEmail(profile?.email) ? 'SUPER' : 'OPEN'}
+            </span>
+          </button>
         </div>
 
         {/* Study Navigation Group */}

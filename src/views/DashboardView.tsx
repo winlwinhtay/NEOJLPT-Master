@@ -17,6 +17,7 @@ import {
   Award,
   ChevronRight,
   Briefcase,
+  ShieldAlert,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -28,6 +29,7 @@ import { RecommendationService } from '../services/recommendationService';
 import { StorageService } from '../services/storageService';
 import { ActiveLearningCard } from '../components/activeLearning/ActiveLearningCard';
 import { AdBanner } from '../components/common/AdBanner';
+import { isSuperAdminEmail } from '../services/entitlementService';
 
 export const DashboardView: React.FC = () => {
   const { activeLevel, setActiveView, setLevelSelectorOpen, navigateToLesson } = useApp();
@@ -101,25 +103,43 @@ export const DashboardView: React.FC = () => {
             </p>
           </div>
 
-          {/* Prominent Continue Learning Button */}
-          {nextLesson && (
+          <div className="flex flex-wrap items-center gap-3 shrink-0">
+            {/* Direct Admin Console Trigger Button */}
             <button
-              onClick={() => navigateToLesson(nextLesson.id)}
-              className="group relative inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-500 via-rose-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:scale-105 transition-all shrink-0"
+              type="button"
+              onClick={() => setActiveView('admin')}
+              className="inline-flex items-center gap-2 px-4 py-3.5 rounded-2xl bg-white/10 hover:bg-white/20 border border-white/20 text-white font-bold text-xs sm:text-sm backdrop-blur-sm shadow-md transition-all hover:scale-105 cursor-pointer"
+              title="Open Admin Console (စီမံခန့်ခွဲသူ)"
             >
-              <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
-                <Play size={20} className="fill-white ml-0.5" />
-              </div>
-              <div className="text-left">
-                <span className="text-[11px] font-bold text-rose-100 uppercase tracking-wider block">
-                  {t('dashboard.continueLearning', 'Continue Learning')}
+              <ShieldAlert size={18} className="text-amber-300" />
+              <span>Admin Console</span>
+              {isSuperAdminEmail(profile?.email) && (
+                <span className="text-[10px] bg-purple-500 text-white px-1.5 py-0.5 rounded font-mono font-bold">
+                  SUPER
                 </span>
-                <span className="text-sm sm:text-base truncate max-w-[200px] block">
-                  {nextLesson.title}
-                </span>
-              </div>
+              )}
             </button>
-          )}
+
+            {/* Prominent Continue Learning Button */}
+            {nextLesson && (
+              <button
+                onClick={() => navigateToLesson(nextLesson.id)}
+                className="group relative inline-flex items-center gap-3 px-6 py-4 rounded-2xl bg-gradient-to-r from-brand-500 via-rose-500 to-indigo-600 hover:from-brand-600 hover:to-indigo-700 text-white font-extrabold text-sm sm:text-base shadow-lg shadow-brand-500/30 hover:shadow-brand-500/50 hover:scale-105 transition-all shrink-0"
+              >
+                <div className="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center text-white group-hover:rotate-12 transition-transform">
+                  <Play size={20} className="fill-white ml-0.5" />
+                </div>
+                <div className="text-left">
+                  <span className="text-[11px] font-bold text-rose-100 uppercase tracking-wider block">
+                    {t('dashboard.continueLearning', 'Continue Learning')}
+                  </span>
+                  <span className="text-sm sm:text-base truncate max-w-[200px] block">
+                    {nextLesson.title}
+                  </span>
+                </div>
+              </button>
+            )}
+          </div>
         </div>
       </div>
 

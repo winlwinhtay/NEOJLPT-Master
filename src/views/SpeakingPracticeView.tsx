@@ -28,42 +28,11 @@ export const SpeakingPracticeView: React.FC = () => {
   const { profile, entitlements, logActivity, addXP } = useUser();
   const isEligible = isUserEligibleForLiveAI(profile, entitlements);
 
-  const getInitialTab = (): 'interactive' | 'drills' => {
-    if (typeof window !== 'undefined') {
-      const hash = window.location.hash.toLowerCase();
-      if (hash.includes('drill')) return 'drills';
-      if (hash.includes('interactive') || hash.includes('yuki') || hash.includes('chat')) return 'interactive';
-      const search = new URLSearchParams(window.location.search);
-      const tabParam = search.get('tab');
-      if (tabParam === 'drills') return 'drills';
-      if (tabParam === 'interactive') return 'interactive';
-    }
-    return 'interactive';
-  };
-
-  const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>(getInitialTab);
-
-  useEffect(() => {
-    const handleHashChange = () => {
-      const hash = window.location.hash.toLowerCase();
-      if (hash.includes('drill')) {
-        setActiveStudioTab('drills');
-      } else if (hash.includes('interactive') || hash.includes('yuki')) {
-        setActiveStudioTab('interactive');
-      }
-    };
-    window.addEventListener('hashchange', handleHashChange);
-    return () => window.removeEventListener('hashchange', handleHashChange);
-  }, []);
+  // Always default to 'interactive' (🌸 Yuki) so that logged-in users NEVER get kicked to drills
+  const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>('interactive');
 
   const handleTabChange = (tab: 'interactive' | 'drills') => {
     setActiveStudioTab(tab);
-    try {
-      localStorage.setItem('jlpt_speaking_active_tab', tab);
-      if (typeof window !== 'undefined') {
-        window.location.hash = tab === 'drills' ? '#drills' : '#interactive';
-      }
-    } catch {}
   };
   const [selectedSpeakingLevel, setSelectedSpeakingLevel] = useState<JLPTLevel>(activeLevel || 'N5');
 

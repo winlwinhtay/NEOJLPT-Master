@@ -36,12 +36,14 @@ import { isUserEligibleForLiveAI } from '../services/entitlementService';
 import { AIAccessGateModal } from '../components/auth/AIAccessGateModal';
 import { AIConversationTopic, AIMessage } from '../types/ai';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
+import { InteractiveSpeakingStudio } from '../components/speaking/InteractiveSpeakingStudio';
 
 export const AIConversationView: React.FC = () => {
   const { activeLevel, setActiveView } = useApp();
   const { profile, entitlements, logActivity } = useUser();
   const isEligible = isUserEligibleForLiveAI(profile, entitlements);
 
+  const [conversationMode, setConversationMode] = useState<'yuki' | 'roleplay'>('yuki');
   const [selectedTopic, setSelectedTopic] = useState<AIConversationTopic>('restaurant');
   const [japaneseOnly, setJapaneseOnly] = useState(false);
   const [messages, setMessages] = useState<AIMessage[]>([]);
@@ -362,37 +364,93 @@ export const AIConversationView: React.FC = () => {
         </div>
       </div>
 
-      {/* 🌸 Live Yuki Voice Partner Banner */}
-      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-rose-500/10 via-pink-500/10 to-indigo-500/10 border border-rose-300 dark:border-rose-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
-        <div className="flex items-center gap-3.5">
-          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-brand-500 text-white flex items-center justify-center text-2xl shadow-md shrink-0">
-            🌸
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-wider">
-                Interactive Voice Studio
-              </span>
-              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">စကားပြောဖော် AI</span>
-            </div>
-            <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white mt-0.5">
-              🌸 Yuki (ユキ) နှင့် အသံဖြင့် အပြန်အလှန် စကားပြောဆိုမည်
-            </h3>
-            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
-              မိတ်ဆွေ Yuki နှင့် Live Voice အပြန်အလှန် စကားပြောခန်း (Speaking Studio) သို့ ဝင်ရောက်ရန်
-            </p>
-          </div>
-        </div>
+      {/* Prominent Mode Switcher: 🌸 Yuki Live Voice Studio vs 💬 Topic Roleplay Dialogue */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-700/80 shadow-xs">
+        {/* Option 1: Yuki Live Voice Studio */}
         <button
           type="button"
-          onClick={() => setActiveView('speaking')}
-          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-brand-600 hover:opacity-95 text-white font-bold text-xs shrink-0 shadow-md cursor-pointer flex items-center justify-center gap-2"
+          onClick={() => setConversationMode('yuki')}
+          className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl text-left transition-all cursor-pointer flex items-center gap-3 relative ${
+            conversationMode === 'yuki'
+              ? 'bg-gradient-to-r from-rose-500 to-brand-600 text-white shadow-md ring-2 ring-rose-400/40'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800'
+          }`}
         >
-          <Mic size={16} />
-          <span>Yuki နှင့် စကားပြောမည်</span>
-          <ArrowRight size={15} />
+          <div
+            className={`w-10 h-10 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl shrink-0 ${
+              conversationMode === 'yuki' ? 'bg-white/20 text-white' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-500'
+            }`}
+          >
+            🌸
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-black text-xs sm:text-sm truncate">
+                1. 🌸 Yuki နှင့် စကားပြောခန်း
+              </span>
+              {conversationMode === 'yuki' && (
+                <span className="px-1.5 py-0.2 rounded-full bg-white/25 text-[9px] font-extrabold uppercase shrink-0">
+                  ✓ Active
+                </span>
+              )}
+            </div>
+            <p
+              className={`text-[11px] truncate mt-0.5 ${
+                conversationMode === 'yuki' ? 'text-white/90' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              လူတစ်ယောက်လို အပြန်အလှန် စကားပြောဖော် (Voice & Chat)
+            </p>
+          </div>
+        </button>
+
+        {/* Option 2: Topic Roleplay Dialogue */}
+        <button
+          type="button"
+          onClick={() => setConversationMode('roleplay')}
+          className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl text-left transition-all cursor-pointer flex items-center gap-3 relative ${
+            conversationMode === 'roleplay'
+              ? 'bg-gradient-to-r from-indigo-600 to-purple-600 text-white shadow-md ring-2 ring-indigo-400/40'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800'
+          }`}
+        >
+          <div
+            className={`w-10 h-10 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl shrink-0 ${
+              conversationMode === 'roleplay' ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500'
+            }`}
+          >
+            💬
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-black text-xs sm:text-sm truncate">
+                2. အခြေအနေအလိုက် အမေးအဖြေ (Roleplay)
+              </span>
+              {conversationMode === 'roleplay' && (
+                <span className="px-1.5 py-0.2 rounded-full bg-white/25 text-[9px] font-extrabold uppercase shrink-0">
+                  ✓ Active
+                </span>
+              )}
+            </div>
+            <p
+              className={`text-[11px] truncate mt-0.5 ${
+                conversationMode === 'roleplay' ? 'text-white/90' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              စားသောက်ဆိုင်၊ ဈေးဝယ်၊ ဟိုတယ် စသည့် အခန်းကဏ္ဍများ
+            </p>
+          </div>
         </button>
       </div>
+
+      {/* 🌸 Mode 1: Interactive Speaking Studio (🌸 Yuki) */}
+      {conversationMode === 'yuki' && (
+        <InteractiveSpeakingStudio onSwitchToDrills={() => setActiveView('speaking')} />
+      )}
+
+      {/* 💬 Mode 2: Topic Roleplay Dialogue */}
+      {conversationMode === 'roleplay' && (
+        <div className="space-y-6 animate-fade-in">
 
       {/* Topic Switcher Pills */}
       <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
@@ -804,6 +862,8 @@ export const AIConversationView: React.FC = () => {
             <p className="text-slate-700 dark:text-slate-300">{summaryReport.motivationalNote}</p>
           </div>
         </div>
+      )}
+      </div>
       )}
 
       {/* AI Access Gate Modal */}

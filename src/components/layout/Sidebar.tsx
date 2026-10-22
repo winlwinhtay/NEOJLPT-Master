@@ -80,7 +80,7 @@ export const Sidebar: React.FC = () => {
     { id: 'ai-conversation', label: t('nav.aiConversation', 'AI Conversation'), icon: <Bot size={20} /> },
     {
       id: 'speaking',
-      label: 'Speaking Practice (🌸 Yuki)',
+      label: t('nav.speaking', 'Speaking Practice (🌸 Yuki)'),
       icon: <Mic size={20} />,
       badge: 'Live',
     },

@@ -22,6 +22,7 @@ import {
   ArrowLeft,
   CheckCircle2,
   AlertTriangle,
+  Layers,
 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useApp } from '../context/AppContext';
@@ -42,6 +43,7 @@ import { AdminContentPanel } from '../components/admin/AdminContentPanel';
 import { AdminSystemHealthPanel } from '../components/admin/AdminSystemHealthPanel';
 import { AdminAuditLogsPanel } from '../components/admin/AdminAuditLogsPanel';
 import { AdminSecurityPanel } from '../components/admin/AdminSecurityPanel';
+import { AdminExamBlueprintPanel } from '../components/admin/AdminExamBlueprintPanel';
 
 export type AdminConsoleTab =
   | 'overview'
@@ -54,6 +56,7 @@ export type AdminConsoleTab =
   | 'settings'
   | 'analytics'
   | 'content'
+  | 'exam-blueprints'
   | 'system-health'
   | 'audit-logs'
   | 'security';
@@ -136,6 +139,7 @@ export const AdminView: React.FC = () => {
       title: 'Curriculum & Config',
       items: [
         { id: 'content', label: 'Content Management', icon: <BookOpen size={18} /> },
+        { id: 'exam-blueprints', label: 'JLPT Exam Blueprints', icon: <Layers size={18} />, badge: 'Official' },
         { id: 'settings', label: 'Plan & Feature Settings', icon: <Sliders size={18} /> },
       ],
     },
@@ -249,6 +253,8 @@ export const AdminView: React.FC = () => {
         return <AdminLearningAnalyticsPanel />;
       case 'content':
         return <AdminContentPanel />;
+      case 'exam-blueprints':
+        return <AdminExamBlueprintPanel />;
       case 'system-health':
         return <AdminSystemHealthPanel />;
       case 'audit-logs':

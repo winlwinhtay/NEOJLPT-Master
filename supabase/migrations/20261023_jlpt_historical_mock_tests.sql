@@ -92,11 +92,61 @@ CREATE INDEX IF NOT EXISTS idx_mock_attempts_test ON public.mock_test_attempts(t
 CREATE INDEX IF NOT EXISTS idx_mock_attempts_level ON public.mock_test_attempts(jlpt_level);
 
 -- ----------------------------------------------------------
--- 4. Row Level Security Policies
+-- 4. Official Examination Blueprints Table
+-- ----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.exam_blueprints (
+  id TEXT PRIMARY KEY,                       -- e.g. 'blueprint-N5', 'blueprint-N1'
+  jlpt_level TEXT NOT NULL UNIQUE CHECK (jlpt_level IN ('N5', 'N4', 'N3', 'N2', 'N1')),
+  version TEXT NOT NULL DEFAULT '2020–2025 Official Standard',
+  title TEXT NOT NULL,
+  description TEXT,
+  total_time_minutes INTEGER NOT NULL,
+  total_max_score INTEGER NOT NULL DEFAULT 180,
+  passing_score INTEGER NOT NULL,
+  sectional_hurdle INTEGER NOT NULL DEFAULT 19,
+  sections_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+-- ----------------------------------------------------------
+-- 5. Active Examination Simulation Sessions Table
+-- ----------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.exam_simulation_sessions (
+  id TEXT PRIMARY KEY,                       -- e.g. 'sim-N5-timestamp'
+  user_id UUID REFERENCES auth.users(id) ON DELETE CASCADE,
+  test_id TEXT NOT NULL REFERENCES public.mock_tests(id) ON DELETE CASCADE,
+  jlpt_level TEXT NOT NULL,
+  exam_mode TEXT NOT NULL DEFAULT 'full_simulation' CHECK (exam_mode IN ('full_simulation', 'practice')),
+  current_section_index INTEGER NOT NULL DEFAULT 0,
+  is_transitioning BOOLEAN NOT NULL DEFAULT FALSE,
+  is_completed BOOLEAN NOT NULL DEFAULT FALSE,
+  sections_json JSONB NOT NULL DEFAULT '[]'::jsonb,
+  created_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL,
+  updated_at TIMESTAMPTZ DEFAULT TIMEZONE('utc'::text, NOW()) NOT NULL
+);
+
+CREATE INDEX IF NOT EXISTS idx_sim_sessions_user ON public.exam_simulation_sessions(user_id);
+CREATE INDEX IF NOT EXISTS idx_sim_sessions_test ON public.exam_simulation_sessions(test_id);
+
+-- ----------------------------------------------------------
+-- 6. Row Level Security Policies
 -- ----------------------------------------------------------
 ALTER TABLE public.mock_tests ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mock_test_questions ENABLE ROW LEVEL SECURITY;
 ALTER TABLE public.mock_test_attempts ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.exam_blueprints ENABLE ROW LEVEL SECURITY;
+ALTER TABLE public.exam_simulation_sessions ENABLE ROW LEVEL SECURITY;
+
+CREATE POLICY "Public read published exam blueprints"
+  ON public.exam_blueprints FOR SELECT
+  USING (true);
+
+CREATE POLICY "Users can manage their own simulation sessions"
+  ON public.exam_simulation_sessions FOR ALL
+  TO authenticated
+  USING (auth.uid() = user_id)
+  WITH CHECK (auth.uid() = user_id);
 
 -- Public read for published mock tests & questions
 CREATE POLICY "Public read published mock tests"

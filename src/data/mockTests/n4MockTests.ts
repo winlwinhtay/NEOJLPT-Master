@@ -14,15 +14,15 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 55,
+    totalTimeMinutes: 115,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N4 practice set modeled on 2020–2021 question patterns. Focuses on everyday Kanji compounds, contextual word selection, conditional and potential forms, email inquiries, and spoken conversational tasks.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 25,
         totalQuestions: 6,
         passingScore: 30,
@@ -111,8 +111,8 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 55,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -195,7 +195,7 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 35,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -245,15 +245,15 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 55,
+    totalTimeMinutes: 115,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N4 practice set modeled on 2021–2022 examinations. Features transitive/intransitive verbs, polite advice (〜ほうがいい), travel instructions, and real-world audio dialogues.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 25,
         totalQuestions: 6,
         passingScore: 30,
@@ -342,8 +342,8 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 55,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -426,7 +426,7 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 35,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -476,15 +476,15 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 55,
+    totalTimeMinutes: 115,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N4 practice set modeled on 2022–2023 exam patterns. Covers conditional 〜たら, passive expressions, polite requests (〜ていただけませんか), and office communication.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 25,
         totalQuestions: 6,
         passingScore: 30,
@@ -573,8 +573,8 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 55,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -657,7 +657,7 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 35,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -707,15 +707,15 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 55,
+    totalTimeMinutes: 115,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N4 practice set modeled on 2023–2024 testing structures. Tests volition form, nominalization (〜こと/〜の), situational etiquette, and community announcements.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 25,
         totalQuestions: 6,
         passingScore: 30,
@@ -804,8 +804,8 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 55,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -883,7 +883,7 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 35,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -933,15 +933,15 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 55,
+    totalTimeMinutes: 115,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N4 practice set modeled on 2024–2025 examinations. Emphasizes honorifics (お〜になる / お〜する), simultaneous actions (〜ながら), transportation directions, and task comprehension.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 25,
         totalQuestions: 6,
         passingScore: 30,
@@ -1030,8 +1030,8 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 55,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -1114,7 +1114,7 @@ export const N4_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 35,
         totalQuestions: 2,
         passingScore: 30,
         questions: [

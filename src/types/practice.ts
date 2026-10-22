@@ -50,7 +50,7 @@ export interface MatchingPairItem {
 }
 
 export interface MockTestSection {
-  id: 'vocab_kanji' | 'grammar_reading' | 'listening';
+  id: 'vocab_kanji' | 'vocabulary' | 'grammar_reading' | 'language_knowledge_reading' | 'listening';
   title: string;
   timeLimitMinutes: number;
   totalQuestions: number;

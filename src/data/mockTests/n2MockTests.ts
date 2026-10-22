@@ -14,18 +14,18 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 70,
+    totalTimeMinutes: 155,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N2 practice set modeled on 2020–2021 examinations. Features high-frequency academic Kanji compounds, formal grammatical constructions (〜に際して, 〜ざるを得ない), analytical editorial reading, and workplace audio dialogues.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 30,
-        totalQuestions: 6,
-        passingScore: 30,
+        id: 'language_knowledge_reading',
+        title: 'Section 1: Language Knowledge (Vocabulary/Grammar) & Reading (言語知識・文字・語彙・文法・読解)',
+        timeLimitMinutes: 105,
+        totalQuestions: 11,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s1-v1',
@@ -194,10 +194,10 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'listening',
-        title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        title: 'Section 2: Listening Comprehension (聴解)',
+        timeLimitMinutes: 50,
         totalQuestions: 2,
-        passingScore: 30,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s1-l1',
@@ -245,18 +245,18 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 70,
+    totalTimeMinutes: 155,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N2 practice set modeled on 2021–2022 exam patterns. Assesses negative potential (〜っこない), continuous simultaneous actions (〜つつも), corporate ethics reading, and workplace audio scenarios.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 30,
-        totalQuestions: 6,
-        passingScore: 30,
+        id: 'language_knowledge_reading',
+        title: 'Section 1: Language Knowledge (Vocabulary/Grammar) & Reading (言語知識・文字・語彙・文法・読解)',
+        timeLimitMinutes: 105,
+        totalQuestions: 11,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s2-v1',
@@ -425,10 +425,10 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'listening',
-        title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        title: 'Section 2: Listening Comprehension (聴解)',
+        timeLimitMinutes: 50,
         totalQuestions: 2,
-        passingScore: 30,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s2-l1',
@@ -476,18 +476,18 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 70,
+    totalTimeMinutes: 155,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N2 practice set modeled on 2022–2023 exam formats. Tests negative consequence conditionals (〜かねない), appearance nuances (〜げ), sociolinguistic reading passages, and quick-response audio prompts.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 30,
-        totalQuestions: 6,
-        passingScore: 30,
+        id: 'language_knowledge_reading',
+        title: 'Section 1: Language Knowledge (Vocabulary/Grammar) & Reading (言語知識・文字・語彙・文法・読解)',
+        timeLimitMinutes: 105,
+        totalQuestions: 11,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s3-v1',
@@ -656,10 +656,10 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'listening',
-        title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        title: 'Section 2: Listening Comprehension (聴解)',
+        timeLimitMinutes: 50,
         totalQuestions: 2,
-        passingScore: 30,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s3-l1',
@@ -707,18 +707,18 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 70,
+    totalTimeMinutes: 155,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N2 practice set modeled on 2023–2024 testing structures. Focuses on negative volition (〜まい), necessity (〜ざるを得ない), contemporary behavioral psychology, and organizational meeting listening.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 30,
-        totalQuestions: 6,
-        passingScore: 30,
+        id: 'language_knowledge_reading',
+        title: 'Section 1: Language Knowledge (Vocabulary/Grammar) & Reading (言語知識・文字・語彙・文法・読解)',
+        timeLimitMinutes: 105,
+        totalQuestions: 11,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s4-v1',
@@ -887,10 +887,10 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'listening',
-        title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        title: 'Section 2: Listening Comprehension (聴解)',
+        timeLimitMinutes: 50,
         totalQuestions: 2,
-        passingScore: 30,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s4-l1',
@@ -938,18 +938,18 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 70,
+    totalTimeMinutes: 155,
     totalMaxScore: 180,
     passingScore: 90,
     description:
       'JLPT N2 practice set modeled on 2024–2025 examinations. Highlights advanced conjuncts (〜にとどまらず), degree markers (〜極まりない), digital ethics and environmental essays, and high-context listening.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 30,
-        totalQuestions: 6,
-        passingScore: 30,
+        id: 'language_knowledge_reading',
+        title: 'Section 1: Language Knowledge (Vocabulary/Grammar) & Reading (言語知識・文字・語彙・文法・読解)',
+        timeLimitMinutes: 105,
+        totalQuestions: 11,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s5-v1',
@@ -1118,10 +1118,10 @@ export const N2_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'listening',
-        title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        title: 'Section 2: Listening Comprehension (聴解)',
+        timeLimitMinutes: 50,
         totalQuestions: 2,
-        passingScore: 30,
+        passingScore: 60,
         questions: [
           {
             id: 'n2-s5-l1',

@@ -14,15 +14,15 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 50,
+    totalTimeMinutes: 90,
     totalMaxScore: 180,
     passingScore: 80,
     description:
       'JLPT N5 practice set modeled on 2020–2021 question patterns. Covers daily life Kanji readings, basic word choices, particle mastery, sentence ordering, email reading, and foundational listening.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 20,
         totalQuestions: 6,
         passingScore: 30,
@@ -106,8 +106,8 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 40,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -180,7 +180,7 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 30,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -230,15 +230,15 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 50,
+    totalTimeMinutes: 90,
     totalMaxScore: 180,
     passingScore: 80,
     description:
       'JLPT N5 practice set modeled on 2021–2022 question styles. Features transportation vocabulary, time expressions, verb conjugations, everyday email notes, and auditory decision-making.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 20,
         totalQuestions: 6,
         passingScore: 30,
@@ -322,8 +322,8 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 40,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -396,7 +396,7 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 30,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -446,15 +446,15 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 50,
+    totalTimeMinutes: 90,
     totalMaxScore: 180,
     passingScore: 80,
     description:
       'JLPT N5 practice set modeled on 2022–2023 question patterns. Covers shopping dialogue Kanji, adjective inflections, location particles, campus notice reading, and directional listening.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 20,
         totalQuestions: 6,
         passingScore: 30,
@@ -538,8 +538,8 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 40,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -612,7 +612,7 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 30,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -662,15 +662,15 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 50,
+    totalTimeMinutes: 90,
     totalMaxScore: 180,
     passingScore: 80,
     description:
       'JLPT N5 practice set modeled on 2023–2024 question patterns. Examines time and season vocabulary, family terms, comparison grammar, weather forecast notices, and shopping instructions.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 20,
         totalQuestions: 6,
         passingScore: 30,
@@ -754,8 +754,8 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 40,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -828,7 +828,7 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 30,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -878,15 +878,15 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 50,
+    totalTimeMinutes: 90,
     totalMaxScore: 180,
     passingScore: 80,
     description:
       'JLPT N5 practice set modeled on 2024–2025 question styles. Focuses on modern digital communication, train schedules, verb conjugation variety, shop sign reading, and comprehensive task listening.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
         timeLimitMinutes: 20,
         totalQuestions: 6,
         passingScore: 30,
@@ -970,8 +970,8 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 20,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 40,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -1044,7 +1044,7 @@ export const N5_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 10,
+        timeLimitMinutes: 30,
         totalQuestions: 2,
         passingScore: 30,
         questions: [

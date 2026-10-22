@@ -14,16 +14,16 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 65,
+    totalTimeMinutes: 140,
     totalMaxScore: 180,
     passingScore: 95,
     description:
       'JLPT N3 practice set modeled on 2020–2021 examination formats. Tests intermediate Kanji readings, nuanced functional grammar (〜わけにはいかない, 〜うちに), business email comprehension, and conversational task listening.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 25,
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
+        timeLimitMinutes: 30,
         totalQuestions: 6,
         passingScore: 30,
         questions: [
@@ -111,8 +111,8 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 25,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 70,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -195,7 +195,7 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        timeLimitMinutes: 40,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -245,16 +245,16 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 65,
+    totalTimeMinutes: 140,
     totalMaxScore: 180,
     passingScore: 95,
     description:
       'JLPT N3 practice set modeled on 2021–2022 tests. Covers contrast markers (〜に対して, 〜反面), cause-and-effect expressions, workplace notifications, and conversational dialogues.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 25,
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
+        timeLimitMinutes: 30,
         totalQuestions: 6,
         passingScore: 30,
         questions: [
@@ -342,8 +342,8 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 25,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 70,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -426,7 +426,7 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        timeLimitMinutes: 40,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -476,16 +476,16 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 65,
+    totalTimeMinutes: 140,
     totalMaxScore: 180,
     passingScore: 95,
     description:
       'JLPT N3 practice set modeled on 2022–2023 testing criteria. Covers tendencies (〜ぎみ, 〜っぽい), supposition (〜に違いない), social passages, and workplace dialogues.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 25,
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
+        timeLimitMinutes: 30,
         totalQuestions: 6,
         passingScore: 30,
         questions: [
@@ -573,8 +573,8 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 25,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 70,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -657,7 +657,7 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        timeLimitMinutes: 40,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -707,16 +707,16 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 65,
+    totalTimeMinutes: 140,
     totalMaxScore: 180,
     passingScore: 95,
     description:
       'JLPT N3 practice set modeled on 2023–2024 exams. Highlights compound particles (〜に基づいて, 〜をめぐって), nuanced passives/causatives, technical workplace communications, and rapid comprehension.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 25,
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
+        timeLimitMinutes: 30,
         totalQuestions: 6,
         passingScore: 30,
         questions: [
@@ -804,8 +804,8 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 25,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 70,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -888,7 +888,7 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        timeLimitMinutes: 40,
         totalQuestions: 2,
         passingScore: 30,
         questions: [
@@ -938,16 +938,16 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
     sourceLabel: 'JLPT-Style Practice — Based on 2020–2025 examination formats',
     qualityStatus: 'published',
     contentVersion: '2026.1',
-    totalTimeMinutes: 65,
+    totalTimeMinutes: 140,
     totalMaxScore: 180,
     passingScore: 95,
     description:
       'JLPT N3 practice set modeled on 2024–2025 test structures. Explores advanced conditional nuances (〜ないことには), intended targets (〜向け vs 〜向き), societal editorial reading, and conversational deliberation.',
     sections: [
       {
-        id: 'vocab_kanji',
-        title: 'Section 1: Vocabulary & Kanji (言語知識・文字・語彙)',
-        timeLimitMinutes: 25,
+        id: 'vocabulary',
+        title: 'Section 1: Language Knowledge (Vocabulary) (言語知識・文字・語彙)',
+        timeLimitMinutes: 30,
         totalQuestions: 6,
         passingScore: 30,
         questions: [
@@ -1035,8 +1035,8 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       },
       {
         id: 'grammar_reading',
-        title: 'Section 2: Grammar & Reading (言語知識・文法・読解)',
-        timeLimitMinutes: 25,
+        title: 'Section 2: Language Knowledge (Grammar) & Reading (言語知識・文法・読解)',
+        timeLimitMinutes: 70,
         totalQuestions: 5,
         passingScore: 30,
         questions: [
@@ -1119,7 +1119,7 @@ export const N3_MOCK_TESTS: Record<string, MockTest> = {
       {
         id: 'listening',
         title: 'Section 3: Listening Comprehension (聴解)',
-        timeLimitMinutes: 15,
+        timeLimitMinutes: 40,
         totalQuestions: 2,
         passingScore: 30,
         questions: [

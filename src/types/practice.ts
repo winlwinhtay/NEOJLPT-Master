@@ -1,4 +1,5 @@
 import { JLPTLevel } from './index';
+export type { JLPTLevel };
 
 export type QuestionType =
   | 'multiple_choice'
@@ -7,6 +8,7 @@ export type QuestionType =
   | 'sentence_order'
   | 'kanji_reading'
   | 'vocab_meaning'
+  | 'vocab_usage'
   | 'grammar_select'
   | 'reading_comprehension'
   | 'listening_comprehension';
@@ -24,11 +26,20 @@ export interface PracticeQuestion {
   options: string[]; // For multiple choice & sentence ordering tokens
   correctAnswer: string | number | number[]; // index, string, or ordered array of indexes
   explanation: string;
+  explanationMy?: string;
+  translationEn?: string;
+  translationMy?: string;
   wrongExplanations?: Record<string, string>; // reason why specific option is wrong
   relatedLessonId?: string;
   relatedGrammarId?: string;
   relatedVocabId?: string;
   tags: string[];
+  setNumber?: number;
+  historicalYearStyle?: string;
+  sourceType?: 'official_sample' | 'licensed_historical' | 'original_jlpt_style' | 'legacy' | 'admin_imported';
+  sourceLabel?: string;
+  qualityStatus?: 'draft' | 'needs_review' | 'validated' | 'published' | 'rejected';
+  contentVersion?: string;
 }
 
 export interface MatchingPairItem {
@@ -51,6 +62,12 @@ export interface MockTest {
   id: string;
   title: string;
   level: JLPTLevel;
+  setNumber: number;
+  historicalYearStyle?: string;
+  sourceType: 'official_sample' | 'licensed_historical' | 'original_jlpt_style' | 'legacy' | 'admin_imported';
+  sourceLabel: string;
+  qualityStatus: 'draft' | 'needs_review' | 'validated' | 'published';
+  contentVersion: string;
   totalTimeMinutes: number;
   totalMaxScore: number;
   passingScore: number;

@@ -14,7 +14,7 @@ export function adaptMockTestQuestions(mockTest: MockTest): SessionQuestion[] {
         options: [...q.options],
         correctAnswer: q.correctAnswer,
         explanation: q.explanation,
-        audioText: (q as any).audioScript || (q as any).audioPrompt || q.promptJp,
+        audioText: (q as any).audioText || (q as any).audioScript || (q as any).audioPrompt || q.promptJp,
         level: q.level,
         category: q.category,
         sectionId: section.id,
@@ -26,6 +26,11 @@ export function adaptMockTestQuestions(mockTest: MockTest): SessionQuestion[] {
           sectionTitle: section.title,
           tags: (q as any).tags,
           readingPrompt: (q as any).readingPrompt,
+          explanationMy: (q as any).explanationMy,
+          audioText: (q as any).audioText,
+          sourceType: (q as any).sourceType || mockTest.sourceType,
+          sourceLabel: (q as any).sourceLabel || mockTest.sourceLabel,
+          historicalYear: (q as any).historicalYear || mockTest.historicalYearStyle,
         },
       });
     });

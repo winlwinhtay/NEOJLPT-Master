@@ -13,19 +13,25 @@ import {
   Volume2,
   Flag,
   Share2,
+  Layers,
+  Calendar,
+  ShieldCheck,
+  Headphones,
+  BookOpen,
+  ArrowLeft,
 } from 'lucide-react';
 import confetti from 'canvas-confetti';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
 import { useSRS } from '../context/SRSContext';
 import { useI18n } from '../i18n/I18nContext';
-import { ContentService } from '../services/content';
 import { AudioButton } from '../components/common/AudioButton';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
 import { StorageService } from '../services/storageService';
-import { MockTestAttempt, PracticeQuestion } from '../types/practice';
+import { MockTest, MockTestAttempt, PracticeQuestion, JLPTLevel } from '../types/practice';
 import { adaptMockTestQuestions } from '../session/adapters/mockTestAdapter';
 import { useLearningSession } from '../session/hooks/useLearningSession';
+import { getMockTestsByLevel, getMockTestById, ALL_MOCK_TESTS } from '../data/mockTests';
 
 export const MockTestView: React.FC = () => {
   const { activeLevel } = useApp();
@@ -33,19 +39,52 @@ export const MockTestView: React.FC = () => {
   const { rateItem } = useSRS();
   const { t } = useI18n();
 
-  const testKey = `mock-${activeLevel.toLowerCase()}-01`;
-  const mockTest = ContentService.questions.getMockTest(testKey) || ContentService.questions.getMockTest('mock-n5-01')!;
+  // Selected level for browsing sets (defaults to user's active level)
+  const [selectedLevel, setSelectedLevel] = useState<JLPTLevel>(activeLevel as JLPTLevel);
 
-  // Test state
+  // Selected mock test ID (defaults to set 1 of selected level)
+  const [activeTestId, setActiveTestId] = useState<string>(`mock-${activeLevel.toLowerCase()}-01`);
+
+  // Active mock test object
+  const currentMockTest: MockTest = useMemo(() => {
+    return (
+      getMockTestById(activeTestId) ||
+      getMockTestById(`mock-${selectedLevel.toLowerCase()}-01`) ||
+      ALL_MOCK_TESTS['mock-n5-01']
+    );
+  }, [activeTestId, selectedLevel]);
+
+  // Load previous test attempts to show past scores on set cards
+  const [attempts, setAttempts] = useState<MockTestAttempt[]>([]);
+  useEffect(() => {
+    setAttempts(StorageService.loadMockAttempts());
+  }, []);
+
+  const bestAttemptsByTestId = useMemo(() => {
+    const map: Record<string, MockTestAttempt> = {};
+    attempts.forEach((att) => {
+      if (!map[att.testId] || att.estimatedScaledScore > map[att.testId].estimatedScaledScore) {
+        map[att.testId] = att;
+      }
+    });
+    return map;
+  }, [attempts]);
+
+  // Test session state
   const [isStarted, setIsStarted] = useState(false);
-  const [timeLeftSeconds, setTimeLeftSeconds] = useState(mockTest.totalTimeMinutes * 60);
+  const [timeLeftSeconds, setTimeLeftSeconds] = useState(currentMockTest.totalTimeMinutes * 60);
   const [srsQueued, setSrsQueued] = useState(false);
   const [reportingQuestion, setReportingQuestion] = useState<PracticeQuestion | null>(null);
 
-  // Adapt all questions across mock test sections into normalized SessionQuestion[]
+  // When changing mock test, reset time
+  useEffect(() => {
+    setTimeLeftSeconds(currentMockTest.totalTimeMinutes * 60);
+  }, [currentMockTest]);
+
+  // Adapt questions for learning session engine
   const sessionQuestions = useMemo(() => {
-    return adaptMockTestQuestions(mockTest);
-  }, [mockTest]);
+    return adaptMockTestQuestions(currentMockTest);
+  }, [currentMockTest]);
 
   // Shared Learning Session Engine
   const {
@@ -64,21 +103,21 @@ export const MockTestView: React.FC = () => {
     completeSession,
     restartSession,
   } = useLearningSession({
-    sessionId: mockTest.id,
+    sessionId: currentMockTest.id,
     mode: 'mock_test',
     questions: sessionQuestions,
     instantFeedback: false,
     autoSubmitOnSelect: false,
   });
 
-  // Calculate current section and section-relative question index
+  // Calculate section indices
   const { activeSectionIndex, activeQuestionIndex, sectionQuestionOffsetMap } = useMemo(() => {
     let cumulative = 0;
     let secIdx = 0;
     let qIdx = 0;
     const offsetMap: number[][] = [];
 
-    mockTest.sections.forEach((sec, sIndex) => {
+    currentMockTest.sections.forEach((sec, sIndex) => {
       const indices: number[] = [];
       sec.questions.forEach((_, qIndex) => {
         const absIdx = cumulative + qIndex;
@@ -97,9 +136,9 @@ export const MockTestView: React.FC = () => {
       activeQuestionIndex: qIdx,
       sectionQuestionOffsetMap: offsetMap,
     };
-  }, [mockTest.sections, currentIndex]);
+  }, [currentMockTest.sections, currentIndex]);
 
-  const activeSection = mockTest.sections[activeSectionIndex] || mockTest.sections[0];
+  const activeSection = currentMockTest.sections[activeSectionIndex] || currentMockTest.sections[0];
   const activeQuestion = activeSection?.questions[activeQuestionIndex] || activeSection?.questions[0];
 
   // Timer countdown
@@ -118,11 +157,15 @@ export const MockTestView: React.FC = () => {
     return () => clearInterval(interval);
   }, [isStarted, isCompleted]);
 
-  const handleStartTest = () => {
+  const handleStartTest = (testId?: string) => {
+    if (testId && testId !== activeTestId) {
+      setActiveTestId(testId);
+    }
     restartSession();
     setIsStarted(true);
     setSrsQueued(false);
-    setTimeLeftSeconds(mockTest.totalTimeMinutes * 60);
+    const targetTest = testId ? getMockTestById(testId) || currentMockTest : currentMockTest;
+    setTimeLeftSeconds(targetTest.totalTimeMinutes * 60);
   };
 
   const handleSelectAnswer = (optIndex: number) => {
@@ -154,7 +197,7 @@ export const MockTestView: React.FC = () => {
     let totalCorrect = 0;
     let totalQCount = 0;
 
-    const sectionScores = mockTest.sections.map((sec) => {
+    const sectionScores = currentMockTest.sections.map((sec) => {
       let secCorrect = 0;
       sec.questions.forEach((q) => {
         totalQCount += 1;
@@ -179,17 +222,17 @@ export const MockTestView: React.FC = () => {
     });
 
     const scaledScore = Math.round((totalCorrect / Math.max(1, totalQCount)) * 180);
-    const passed = scaledScore >= mockTest.passingScore && !anySectionFailedHurdle;
+    const passed = scaledScore >= currentMockTest.passingScore && !anySectionFailedHurdle;
 
     if (passed) {
       try {
         confetti({
-          particleCount: 100,
-          spread: 80,
+          particleCount: 120,
+          spread: 90,
           origin: { y: 0.5 },
         });
       } catch (e) {}
-      addXP(100, 'Passed JLPT Mock Exam');
+      addXP(100, `Passed ${currentMockTest.title}`);
     }
 
     const simpleAnswers: Record<string, number> = {};
@@ -199,10 +242,10 @@ export const MockTestView: React.FC = () => {
 
     const attempt: MockTestAttempt = {
       id: 'attempt-' + Date.now(),
-      testId: mockTest.id,
-      level: mockTest.level,
+      testId: currentMockTest.id,
+      level: currentMockTest.level,
       date: new Date().toISOString(),
-      timeSpentSeconds: mockTest.totalTimeMinutes * 60 - timeLeftSeconds,
+      timeSpentSeconds: currentMockTest.totalTimeMinutes * 60 - timeLeftSeconds,
       sectionScores,
       totalScore: totalCorrect,
       totalMaxScore: totalQCount,
@@ -211,14 +254,15 @@ export const MockTestView: React.FC = () => {
       answers: simpleAnswers,
       flaggedQuestionIds: Object.keys(flaggedQuestionIds).filter((k) => flaggedQuestionIds[k]),
       weakCategories: ['listening'],
-      recommendedLessonIds: ['n5-u1-l2'],
+      recommendedLessonIds: [`${currentMockTest.level.toLowerCase()}-u1-l2`],
     };
 
     StorageService.saveMockAttempt(attempt);
+    setAttempts(StorageService.loadMockAttempts());
   };
 
   const handleQueueMistakesToSRS = () => {
-    mockTest.sections.forEach((sec) => {
+    currentMockTest.sections.forEach((sec) => {
       sec.questions.forEach((q) => {
         const userAns = answers[q.id]?.rawAnswer;
         if (userAns !== q.correctAnswer) {
@@ -238,84 +282,194 @@ export const MockTestView: React.FC = () => {
     setSrsQueued(true);
   };
 
+  const handleBackToSetList = () => {
+    setIsStarted(false);
+    restartSession();
+    setTimeLeftSeconds(currentMockTest.totalTimeMinutes * 60);
+  };
+
   const minutes = Math.floor(timeLeftSeconds / 60);
   const seconds = timeLeftSeconds % 60;
   const isLastQuestionOverall = currentIndex >= totalQuestions - 1;
 
-  // Render Start Screen
-  if (!isStarted) {
+  // Available levels
+  const levels: JLPTLevel[] = ['N5', 'N4', 'N3', 'N2', 'N1'];
+  const setsForSelectedLevel = useMemo(() => {
+    return getMockTestsByLevel(selectedLevel);
+  }, [selectedLevel]);
+
+  // =========================================================================
+  // VIEW 1: Set Selection Hub (When test is not running)
+  // =========================================================================
+  if (!isStarted && !isCompleted) {
     return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-8 animate-fade-in">
-        <div className="bg-white dark:bg-slate-900 rounded-3xl p-8 sm:p-12 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-6">
-          <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-amber-500 to-rose-600 text-white flex items-center justify-center mx-auto shadow-lg shadow-amber-500/20">
-            <Award size={40} />
-          </div>
+      <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-8 animate-fade-in">
+        {/* Header Hero Banner */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white rounded-3xl p-6 sm:p-10 border border-indigo-900/40 shadow-xl relative overflow-hidden">
+          <div className="absolute right-0 top-0 w-96 h-96 bg-brand-500/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="relative z-10 max-w-3xl space-y-4">
+            <div className="flex items-center gap-2">
+              <span className="px-3 py-1 rounded-full bg-brand-500/20 text-brand-300 border border-brand-500/30 text-xs font-black uppercase tracking-wider">
+                Historical Series (2020–2025)
+              </span>
+              <span className="px-3 py-1 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/30 text-xs font-black">
+                25 Complete Sets
+              </span>
+            </div>
 
-          <div className="space-y-2">
-            <span className="px-3 py-1 rounded-full bg-amber-50 dark:bg-amber-950 text-amber-600 dark:text-amber-400 text-xs font-black uppercase tracking-wider">
-              {mockTest.level} {t('mock.badge')}
-            </span>
-            <h1 className="text-2xl sm:text-4xl font-black text-slate-900 dark:text-white">
-              {mockTest.title}
+            <h1 className="text-2xl sm:text-4xl font-black tracking-tight">
+              JLPT Mock Examination Hub
             </h1>
-            <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 max-w-xl mx-auto leading-relaxed">
-              {t('mock.subtitle')}
+
+            <p className="text-sm sm:text-base text-slate-300 leading-relaxed">
+              Master official JLPT formats with 5 independent practice sets per level. Each set covers
+              Vocabulary & Kanji, Grammar & Reading, and native Japanese listening with standard
+              19/60 sectional hurdles and comprehensive explanations in English and Burmese.
             </p>
           </div>
+        </div>
 
-          {/* Test Specifications */}
-          <div className="grid grid-cols-2 sm:grid-cols-4 gap-4 max-w-2xl mx-auto pt-4 text-left">
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Duration</span>
-              <div className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
-                {mockTest.totalTimeMinutes} Mins
-              </div>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Total Score</span>
-              <div className="text-lg font-black text-slate-900 dark:text-white mt-0.5">
-                {mockTest.totalMaxScore} pts
-              </div>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Passing Score</span>
-              <div className="text-lg font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
-                {mockTest.passingScore}+ pts
-              </div>
-            </div>
-            <div className="p-4 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700">
-              <span className="text-[10px] font-bold text-slate-400 uppercase">Sections</span>
-              <div className="text-lg font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
-                {mockTest.sections.length} Parts
-              </div>
-            </div>
+        {/* Level Switcher Tabs */}
+        <div className="flex items-center justify-between flex-wrap gap-3">
+          <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700">
+            {levels.map((lvl) => {
+              const isSelected = selectedLevel === lvl;
+              return (
+                <button
+                  key={lvl}
+                  onClick={() => setSelectedLevel(lvl)}
+                  className={`px-4 sm:px-6 py-2 rounded-xl text-xs sm:text-sm font-black transition-all cursor-pointer ${
+                    isSelected
+                      ? 'bg-brand-600 text-white shadow-md shadow-brand-500/20'
+                      : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+                  }`}
+                >
+                  {lvl}
+                </button>
+              );
+            })}
           </div>
 
-          <div className="pt-4">
-            <button
-              onClick={handleStartTest}
-              className="px-10 py-4 rounded-2xl bg-gradient-to-r from-brand-600 via-rose-600 to-indigo-600 hover:opacity-95 text-white font-extrabold text-base shadow-xl shadow-brand-500/25 transition-all cursor-pointer"
-            >
-              {t('mock.startExam')}
-            </button>
-            <p className="text-[11px] text-slate-400 mt-3">
-              {t('mock.disclaimer')}
-            </p>
+          <div className="text-xs font-bold text-slate-400 flex items-center gap-1.5">
+            <ShieldCheck size={16} className="text-emerald-500" />
+            <span>5 Sets Available for {selectedLevel}</span>
           </div>
+        </div>
+
+        {/* 5 Set Cards Grid */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {setsForSelectedLevel.map((test) => {
+            const bestAttempt = bestAttemptsByTestId[test.id];
+            const isPassed = bestAttempt?.passed;
+
+            return (
+              <div
+                key={test.id}
+                className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 p-6 flex flex-col justify-between hover:border-brand-500 dark:hover:border-brand-500 transition-all shadow-sm group"
+              >
+                <div className="space-y-4">
+                  {/* Top badges */}
+                  <div className="flex items-center justify-between gap-2">
+                    <span className="px-3 py-1 rounded-full bg-indigo-50 dark:bg-indigo-950/60 text-indigo-600 dark:text-indigo-400 font-black text-xs">
+                      Set {test.setNumber}
+                    </span>
+
+                    <span className="text-[11px] font-bold text-slate-400 dark:text-slate-500 flex items-center gap-1">
+                      <Calendar size={12} />
+                      {test.historicalYearStyle} Style
+                    </span>
+                  </div>
+
+                  {/* Title & Description */}
+                  <div>
+                    <h3 className="text-lg font-black text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                      {test.title}
+                    </h3>
+                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-2 line-clamp-3 leading-relaxed">
+                      {test.description}
+                    </p>
+                  </div>
+
+                  {/* Provenance Label */}
+                  <div className="p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/50 border border-slate-100 dark:border-slate-800 text-[10px] text-slate-500 dark:text-slate-400 font-medium">
+                    {test.sourceLabel}
+                  </div>
+
+                  {/* Test Specs Chips */}
+                  <div className="grid grid-cols-3 gap-2 pt-1 text-center">
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[9px] uppercase font-bold text-slate-400">Time</span>
+                      <div className="text-xs font-black text-slate-800 dark:text-slate-200 mt-0.5">
+                        {test.totalTimeMinutes}m
+                      </div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[9px] uppercase font-bold text-slate-400">Passing</span>
+                      <div className="text-xs font-black text-emerald-600 dark:text-emerald-400 mt-0.5">
+                        {test.passingScore}+
+                      </div>
+                    </div>
+                    <div className="p-2 rounded-xl bg-slate-50 dark:bg-slate-800 border border-slate-100 dark:border-slate-800">
+                      <span className="text-[9px] uppercase font-bold text-slate-400">Parts</span>
+                      <div className="text-xs font-black text-indigo-600 dark:text-indigo-400 mt-0.5">
+                        {test.sections.length} Sec
+                      </div>
+                    </div>
+                  </div>
+
+                  {/* Previous Attempt Summary if exists */}
+                  {bestAttempt && (
+                    <div
+                      className={`p-3 rounded-2xl border flex items-center justify-between text-xs ${
+                        isPassed
+                          ? 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/50 dark:bg-emerald-950/20'
+                          : 'border-rose-200 dark:border-rose-900/40 bg-rose-50/50 dark:bg-rose-950/20'
+                      }`}
+                    >
+                      <span className="font-bold text-slate-600 dark:text-slate-300">
+                        Best Score: {bestAttempt.estimatedScaledScore}/180
+                      </span>
+                      <span
+                        className={`font-black flex items-center gap-1 ${
+                          isPassed ? 'text-emerald-600' : 'text-rose-600'
+                        }`}
+                      >
+                        {isPassed ? <CheckCircle2 size={13} /> : <XCircle size={13} />}
+                        {isPassed ? '合格 Passed' : '不合格 Failed'}
+                      </span>
+                    </div>
+                  )}
+                </div>
+
+                {/* Launch Button */}
+                <div className="pt-6">
+                  <button
+                    onClick={() => handleStartTest(test.id)}
+                    className="w-full py-3 px-4 rounded-2xl bg-slate-900 hover:bg-brand-600 dark:bg-white dark:hover:bg-brand-500 text-white dark:text-slate-900 dark:hover:text-white font-black text-xs transition-all shadow-sm flex items-center justify-center gap-2 cursor-pointer"
+                  >
+                    <span>{bestAttempt ? 'Retake Exam' : 'Start Exam'}</span>
+                    <ChevronRight size={14} />
+                  </button>
+                </div>
+              </div>
+            );
+          })}
         </div>
       </div>
     );
   }
 
-  // Render Result Screen
+  // =========================================================================
+  // VIEW 2: Examination Results & Question Review
+  // =========================================================================
   if (isCompleted) {
     const SECTIONAL_HURDLE = 19;
     let anySectionFailedHurdle = false;
-    let failedSectionTitles: string[] = [];
+    const failedSectionTitles: string[] = [];
     let totalCorrect = 0;
     let totalQCount = 0;
 
-    mockTest.sections.forEach((s) => {
+    currentMockTest.sections.forEach((s) => {
       let secCorrect = 0;
       s.questions.forEach((q) => {
         totalQCount += 1;
@@ -331,32 +485,48 @@ export const MockTestView: React.FC = () => {
     });
 
     const scaledScore = Math.round((totalCorrect / Math.max(1, totalQCount)) * 180);
-    const passed = scaledScore >= mockTest.passingScore && !anySectionFailedHurdle;
+    const passed = scaledScore >= currentMockTest.passingScore && !anySectionFailedHurdle;
 
     return (
       <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-8 animate-fade-in">
+        {/* Navigation Bar back to Set list */}
+        <div className="flex items-center justify-between">
+          <button
+            onClick={handleBackToSetList}
+            className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white cursor-pointer transition-colors"
+          >
+            <ArrowLeft size={16} />
+            <span>Back to All Test Sets</span>
+          </button>
+          <span className="text-xs font-black text-brand-600 uppercase tracking-wider">
+            {currentMockTest.title}
+          </span>
+        </div>
+
         {/* Result Hero Banner */}
         <div
           className={`p-8 sm:p-12 rounded-3xl text-white shadow-xl relative overflow-hidden ${
             passed
-              ? 'bg-gradient-to-br from-emerald-600 to-teal-700'
-              : 'bg-gradient-to-br from-rose-600 to-amber-700'
+              ? 'bg-gradient-to-br from-emerald-600 via-teal-700 to-emerald-800'
+              : 'bg-gradient-to-br from-rose-600 via-amber-700 to-rose-800'
           }`}
         >
           <div className="relative z-10 flex flex-col sm:flex-row sm:items-center justify-between gap-6">
             <div className="space-y-2">
               <span className="px-3 py-1 rounded-full bg-white/20 text-white text-xs font-black uppercase tracking-wider backdrop-blur-sm">
-                Official Simulated Result
+                Official Simulated Result ({currentMockTest.historicalYearStyle})
               </span>
               <h1 className="text-3xl sm:text-5xl font-black">
                 {passed ? '合格 (PASSED!)' : '不合格 (NOT PASSED)'}
               </h1>
-              <p className="text-sm text-white/90 max-w-md">
+              <p className="text-sm text-white/90 max-w-md leading-relaxed">
                 {passed
-                  ? `Congratulations! You scored ${scaledScore}/180 and cleared all sectional minimum thresholds.`
+                  ? `Congratulations! You scored ${scaledScore}/180 and cleared all sectional hurdles (≥19/60).`
                   : anySectionFailedHurdle
-                  ? `Sectional Hurdle Failed (<19/60 in ${failedSectionTitles.join(', ')}). Even with a high total, JLPT requires clearing each section.`
-                  : `Score: ${scaledScore}/180 (Passing: ${mockTest.passingScore}/180). Keep practicing to reach the passing standard.`}
+                  ? `Sectional Hurdle Failed (<19/60 in ${failedSectionTitles.join(
+                      ', '
+                    )}). Official JLPT rules require clearing each section.`
+                  : `Score: ${scaledScore}/180 (Passing: ${currentMockTest.passingScore}/180). Keep practicing to reach the passing standard.`}
               </p>
             </div>
 
@@ -385,7 +555,7 @@ export const MockTestView: React.FC = () => {
           </div>
 
           <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-            {mockTest.sections.map((sec) => {
+            {currentMockTest.sections.map((sec) => {
               let secCorrect = 0;
               sec.questions.forEach((q) => {
                 if (answers[q.id]?.rawAnswer === q.correctAnswer) secCorrect += 1;
@@ -405,12 +575,12 @@ export const MockTestView: React.FC = () => {
                   <div className="flex items-center justify-between text-xs font-bold text-slate-500 mb-2">
                     <span className="truncate">{sec.title.split(':')[0]}</span>
                     {hurdleMet ? (
-                      <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1">
-                        <CheckCircle2 size={14} /> Hurdle Cleared
+                      <span className="text-emerald-600 dark:text-emerald-400 flex items-center gap-1 font-bold">
+                        <CheckCircle2 size={14} /> Cleared
                       </span>
                     ) : (
                       <span className="text-rose-600 dark:text-rose-400 flex items-center gap-1 font-bold">
-                        <AlertTriangle size={14} /> Below 19 Hurdle
+                        <AlertTriangle size={14} /> Below 19
                       </span>
                     )}
                   </div>
@@ -436,30 +606,40 @@ export const MockTestView: React.FC = () => {
               {srsQueued ? '✅ Mistakes Added to SRS Review!' : 'Queue Mistakes to SRS Review'}
             </button>
 
-            <button
-              onClick={handleStartTest}
-              className="px-6 py-3 rounded-xl bg-slate-900 hover:bg-slate-800 dark:bg-white dark:hover:bg-slate-100 text-white dark:text-slate-900 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
-            >
-              <RotateCcw size={16} />
-              Retake Mock Exam
-            </button>
+            <div className="flex items-center gap-3">
+              <button
+                onClick={handleBackToSetList}
+                className="px-5 py-3 rounded-xl bg-slate-100 hover:bg-slate-200 dark:bg-slate-800 dark:hover:bg-slate-700 text-slate-700 dark:text-slate-200 text-xs font-bold transition-all flex items-center gap-2 cursor-pointer"
+              >
+                <Layers size={16} />
+                All Sets
+              </button>
+
+              <button
+                onClick={() => handleStartTest(currentMockTest.id)}
+                className="px-6 py-3 rounded-xl bg-brand-600 hover:bg-brand-700 text-white text-xs font-bold transition-all flex items-center gap-2 cursor-pointer shadow-md shadow-brand-500/20"
+              >
+                <RotateCcw size={16} />
+                Retake Set {currentMockTest.setNumber}
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Question-by-Question Review */}
         <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
           <h3 className="text-base font-black text-slate-900 dark:text-white">
-            Comprehensive Question Review & Explanations
+            Comprehensive Review & Explanations (EN + Myanmar)
           </h3>
 
           <div className="space-y-6">
-            {mockTest.sections.map((sec) => (
+            {currentMockTest.sections.map((sec) => (
               <div key={sec.id} className="space-y-4">
                 <h4 className="text-xs font-extrabold uppercase tracking-wider text-slate-400 pb-2 border-b border-slate-100 dark:border-slate-800">
                   {sec.title}
                 </h4>
 
-                <div className="space-y-3">
+                <div className="space-y-4">
                   {sec.questions.map((q, idx) => {
                     const userAns = answers[q.id]?.rawAnswer;
                     const isCorrect = userAns === q.correctAnswer;
@@ -467,10 +647,10 @@ export const MockTestView: React.FC = () => {
                     return (
                       <div
                         key={q.id}
-                        className={`p-4 sm:p-5 rounded-2xl border text-xs space-y-2 ${
+                        className={`p-5 rounded-2xl border text-xs space-y-3 ${
                           isCorrect
-                            ? 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/30 dark:bg-emerald-950/10'
-                            : 'border-rose-200 dark:border-rose-900/40 bg-rose-50/30 dark:bg-rose-950/10'
+                            ? 'border-emerald-200 dark:border-emerald-900/40 bg-emerald-50/20 dark:bg-emerald-950/10'
+                            : 'border-rose-200 dark:border-rose-900/40 bg-rose-50/20 dark:bg-rose-950/10'
                         }`}
                       >
                         <div className="flex items-center justify-between">
@@ -487,14 +667,40 @@ export const MockTestView: React.FC = () => {
                           </span>
                         </div>
 
+                        {/* Passage if reading */}
+                        {q.passage && (
+                          <div className="p-3.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 font-japanese text-xs leading-relaxed text-slate-700 dark:text-slate-300">
+                            {q.passage}
+                          </div>
+                        )}
+
+                        {/* Prompt */}
                         <div className="text-sm font-bold font-japanese text-slate-900 dark:text-white leading-relaxed">
                           {q.promptJp}
                         </div>
 
+                        {/* Listening Revealed Audio & Transcript */}
+                        {q.audioText && (
+                          <div className="p-3.5 rounded-xl bg-indigo-50/50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/40 space-y-2">
+                            <div className="flex items-center justify-between">
+                              <span className="text-[11px] font-black text-indigo-700 dark:text-indigo-300 flex items-center gap-1.5">
+                                <Headphones size={13} /> Audio Transcript (聴解スクリプト)
+                              </span>
+                              <AudioButton text={q.audioText} size="sm" />
+                            </div>
+                            <p className="text-xs font-japanese text-slate-800 dark:text-slate-200 whitespace-pre-line leading-relaxed">
+                              {q.audioText}
+                            </p>
+                          </div>
+                        )}
+
+                        {/* Choices compare */}
                         <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 pt-1 text-[11px]">
                           <div>
                             <span className="text-slate-400">Your choice: </span>
-                            <span className={isCorrect ? 'font-bold text-emerald-600' : 'font-bold text-rose-600'}>
+                            <span
+                              className={isCorrect ? 'font-bold text-emerald-600' : 'font-bold text-rose-600'}
+                            >
                               {userAns !== undefined ? q.options[userAns] : 'No answer'}
                             </span>
                           </div>
@@ -506,9 +712,17 @@ export const MockTestView: React.FC = () => {
                           </div>
                         </div>
 
-                        <p className="text-[11px] text-slate-600 dark:text-slate-400 pt-2 border-t border-slate-100 dark:border-slate-800 leading-relaxed">
-                          <strong>Explanation:</strong> {q.explanation}
-                        </p>
+                        {/* Explanations (EN + Myanmar) */}
+                        <div className="pt-2 border-t border-slate-100 dark:border-slate-800 space-y-1.5">
+                          <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
+                            <strong>Explanation:</strong> {q.explanation}
+                          </p>
+                          {q.explanationMy && (
+                            <p className="text-[11px] text-indigo-900 dark:text-indigo-200 leading-relaxed">
+                              <strong>ရှင်းလင်းချက်:</strong> {q.explanationMy}
+                            </p>
+                          )}
+                        </div>
                       </div>
                     );
                   })}
@@ -521,9 +735,12 @@ export const MockTestView: React.FC = () => {
     );
   }
 
-  // Active Exam Session Runner
+  // =========================================================================
+  // VIEW 3: Active Examination Runner
+  // =========================================================================
   const isFlagged = !!flaggedQuestionIds[activeQuestion?.id];
   const currentAnswer = answers[activeQuestion?.id]?.rawAnswer;
+  const isListeningQuestion = activeQuestion?.category === 'listening' || !!activeQuestion?.audioText;
 
   return (
     <div className="p-4 sm:p-6 lg:p-8 max-w-6xl mx-auto space-y-6 animate-fade-in">
@@ -531,9 +748,9 @@ export const MockTestView: React.FC = () => {
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-4 sm:p-5 border border-slate-200 dark:border-slate-800 shadow-sm flex flex-wrap items-center justify-between gap-4">
         <div className="flex items-center gap-3">
           <span className="px-3 py-1 rounded-full bg-brand-500 text-white text-xs font-black uppercase">
-            {mockTest.level} Mock Exam
+            {currentMockTest.level} Set {currentMockTest.setNumber}
           </span>
-          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 hidden sm:inline">
+          <span className="text-xs font-bold text-slate-500 dark:text-slate-400 hidden sm:inline truncate max-w-md">
             {activeSection.title}
           </span>
         </div>
@@ -601,8 +818,25 @@ export const MockTestView: React.FC = () => {
 
             {/* Reading Passage Context if present */}
             {activeQuestion.passage && (
-              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 font-japanese text-sm leading-relaxed text-slate-800 dark:text-slate-200">
+              <div className="p-4 sm:p-5 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700/60 font-japanese text-sm leading-relaxed text-slate-800 dark:text-slate-200 whitespace-pre-line">
                 {activeQuestion.passage}
+              </div>
+            )}
+
+            {/* Listening Audio Player Card (Active Exam: Strict Privacy, Transcript Hidden) */}
+            {isListeningQuestion && activeQuestion.audioText && (
+              <div className="p-5 rounded-2xl bg-indigo-50/70 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-900/60 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2 text-indigo-700 dark:text-indigo-300 font-black text-xs">
+                    <Headphones size={18} />
+                    <span>Japanese Listening Audio (聴解音声)</span>
+                  </div>
+                  <AudioButton text={activeQuestion.audioText} size="md" />
+                </div>
+                <p className="text-[11px] text-slate-500 dark:text-slate-400">
+                  Tap the speaker to listen to the Japanese dialogue. In accordance with examination
+                  standards, the dialogue transcript will be revealed during post-exam review.
+                </p>
               </div>
             )}
 
@@ -611,12 +845,6 @@ export const MockTestView: React.FC = () => {
               <div className="text-xl sm:text-2xl font-bold font-japanese text-slate-900 dark:text-white leading-relaxed">
                 {activeQuestion.promptJp}
               </div>
-
-              {activeQuestion.audioText && (
-                <div className="pt-1">
-                  <AudioButton text={activeQuestion.audioText} size="md" />
-                </div>
-              )}
             </div>
 
             {/* Answer Options */}
@@ -680,7 +908,7 @@ export const MockTestView: React.FC = () => {
 
         {/* Right Section & Question Palette (4 cols) */}
         <div className="lg:col-span-4 space-y-4">
-          {mockTest.sections.map((sec, secIdx) => {
+          {currentMockTest.sections.map((sec, secIdx) => {
             const sectionIndices = sectionQuestionOffsetMap[secIdx] || [];
 
             return (

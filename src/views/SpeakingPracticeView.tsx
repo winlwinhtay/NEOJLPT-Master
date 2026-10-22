@@ -35,9 +35,8 @@ export const SpeakingPracticeView: React.FC = () => {
       if (hash.includes('interactive') || hash.includes('yuki') || hash.includes('chat')) return 'interactive';
       const search = new URLSearchParams(window.location.search);
       const tabParam = search.get('tab');
-      if (tabParam === 'drills' || tabParam === 'interactive') return tabParam;
-      const saved = localStorage.getItem('jlpt_speaking_active_tab');
-      if (saved === 'interactive' || saved === 'drills') return saved;
+      if (tabParam === 'drills') return 'drills';
+      if (tabParam === 'interactive') return 'interactive';
     }
     return 'interactive';
   };

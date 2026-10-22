@@ -23,6 +23,7 @@ import {
   Sliders,
   Clock,
   Check,
+  ArrowRight,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -37,7 +38,7 @@ import { AIConversationTopic, AIMessage } from '../types/ai';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 
 export const AIConversationView: React.FC = () => {
-  const { activeLevel } = useApp();
+  const { activeLevel, setActiveView } = useApp();
   const { profile, entitlements, logActivity } = useUser();
   const isEligible = isUserEligibleForLiveAI(profile, entitlements);
 
@@ -359,6 +360,38 @@ export const AIConversationView: React.FC = () => {
           {/* Translation Toggle with Optional Language Selector */}
           <TranslationToggleButton />
         </div>
+      </div>
+
+      {/* 🌸 Live Yuki Voice Partner Banner */}
+      <div className="p-4 sm:p-5 rounded-3xl bg-gradient-to-r from-rose-500/10 via-pink-500/10 to-indigo-500/10 border border-rose-300 dark:border-rose-800/60 flex flex-col sm:flex-row sm:items-center justify-between gap-4 shadow-xs">
+        <div className="flex items-center gap-3.5">
+          <div className="w-12 h-12 rounded-2xl bg-gradient-to-tr from-rose-500 to-brand-500 text-white flex items-center justify-center text-2xl shadow-md shrink-0">
+            🌸
+          </div>
+          <div>
+            <div className="flex items-center gap-2">
+              <span className="px-2 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-[10px] font-black uppercase tracking-wider">
+                Interactive Voice Studio
+              </span>
+              <span className="text-xs font-bold text-slate-500 dark:text-slate-400">စကားပြောဖော် AI</span>
+            </div>
+            <h3 className="font-black text-sm sm:text-base text-slate-900 dark:text-white mt-0.5">
+              🌸 Yuki (ユキ) နှင့် အသံဖြင့် အပြန်အလှန် စကားပြောဆိုမည်
+            </h3>
+            <p className="text-xs text-slate-600 dark:text-slate-400 mt-0.5">
+              မိတ်ဆွေ Yuki နှင့် Live Voice အပြန်အလှန် စကားပြောခန်း (Speaking Studio) သို့ ဝင်ရောက်ရန်
+            </p>
+          </div>
+        </div>
+        <button
+          type="button"
+          onClick={() => setActiveView('speaking')}
+          className="px-5 py-3 rounded-2xl bg-gradient-to-r from-rose-500 to-brand-600 hover:opacity-95 text-white font-bold text-xs shrink-0 shadow-md cursor-pointer flex items-center justify-center gap-2"
+        >
+          <Mic size={16} />
+          <span>Yuki နှင့် စကားပြောမည်</span>
+          <ArrowRight size={15} />
+        </button>
       </div>
 
       {/* Topic Switcher Pills */}

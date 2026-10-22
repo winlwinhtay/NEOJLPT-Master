@@ -18,6 +18,7 @@ import {
   ChevronRight,
   Briefcase,
   ShieldAlert,
+  Mic,
 } from 'lucide-react';
 import { useApp } from '../context/AppContext';
 import { useUser } from '../context/UserContext';
@@ -122,6 +123,48 @@ export const DashboardView: React.FC = () => {
               </div>
             </button>
           )}
+        </div>
+      </div>
+
+      {/* 🌸 Live Interactive AI Voice with Yuki Hero Banner */}
+      <div className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-rose-500 via-pink-600 to-indigo-600 text-white p-5 sm:p-6 shadow-xl shadow-rose-500/20 border border-rose-400/30">
+        <div className="absolute top-0 right-0 -mt-8 -mr-8 w-48 h-48 bg-white/10 rounded-full blur-2xl pointer-events-none" />
+        <div className="relative z-10 flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div className="flex items-center gap-4 min-w-0">
+            <div className="relative shrink-0">
+              <div className="w-14 h-14 sm:w-16 sm:h-16 rounded-2xl sm:rounded-3xl bg-white/20 backdrop-blur border border-white/30 flex items-center justify-center text-3xl sm:text-4xl shadow-inner">
+                🌸
+              </div>
+              <span className="absolute -bottom-0.5 -right-0.5 w-4 h-4 rounded-full bg-emerald-400 border-2 border-white animate-pulse" />
+            </div>
+            <div className="min-w-0">
+              <div className="flex items-center gap-2 flex-wrap">
+                <span className="px-2.5 py-0.5 rounded-full bg-white/20 text-[10px] font-black uppercase tracking-wider text-rose-100">
+                  Interactive AI Voice Partner
+                </span>
+                <span className="px-2 py-0.5 rounded-full bg-emerald-400/25 text-emerald-200 border border-emerald-400/30 text-[10px] font-bold flex items-center gap-1">
+                  <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping" />
+                  Live Online
+                </span>
+              </div>
+              <h2 className="text-lg sm:text-2xl font-black text-white mt-1 truncate">
+                🌸 Yuki (ユキ) နှင့် အပြန်အလှန် စကားပြောမည်
+              </h2>
+              <p className="text-xs sm:text-sm text-rose-100/90 mt-0.5 leading-relaxed line-clamp-2">
+                ဂျပန်မိတ်ဆွေ Yuki နှင့် {activeLevel} အဆင့်အလိုက် လူတစ်ယောက်လို လွတ်လပ်စွာ အပြန်အလှန် စကားပြောလေ့ကျင့်ပါ
+              </p>
+            </div>
+          </div>
+
+          <button
+            type="button"
+            onClick={() => setActiveView('speaking')}
+            className="w-full sm:w-auto px-6 py-3.5 rounded-2xl bg-white hover:bg-rose-50 text-rose-600 hover:text-rose-700 font-black text-xs sm:text-sm shadow-lg shadow-black/10 hover:scale-105 transition-all flex items-center justify-center gap-2 shrink-0 cursor-pointer"
+          >
+            <Mic size={18} className="shrink-0" />
+            <span>Yuki နှင့် စကားစပြောမည်</span>
+            <ArrowRight size={16} className="shrink-0" />
+          </button>
         </div>
       </div>
 

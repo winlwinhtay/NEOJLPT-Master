@@ -78,7 +78,12 @@ export const Sidebar: React.FC = () => {
       badge: 'Pro',
     },
     { id: 'ai-conversation', label: t('nav.aiConversation', 'AI Conversation'), icon: <Bot size={20} /> },
-    { id: 'speaking', label: t('nav.speaking', 'Speaking Practice'), icon: <Mic size={20} /> },
+    {
+      id: 'speaking',
+      label: 'Speaking Practice (🌸 Yuki)',
+      icon: <Mic size={20} />,
+      badge: 'Live',
+    },
     {
       id: 'typing-practice',
       label: 'Typing Practice (入力練習)',

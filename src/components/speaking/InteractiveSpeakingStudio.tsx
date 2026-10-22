@@ -36,7 +36,11 @@ import { JLPTLevel } from '../../types';
 import { JapaneseInput } from '../keyboard/JapaneseInput';
 import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
-export const InteractiveSpeakingStudio: React.FC = () => {
+interface InteractiveSpeakingStudioProps {
+  onSwitchToDrills?: () => void;
+}
+
+export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps> = ({ onSwitchToDrills }) => {
   const { activeLevel } = useApp();
   const { profile, entitlements, logActivity, addXP } = useUser();
   const { t } = useI18n();
@@ -352,6 +356,19 @@ export const InteractiveSpeakingStudio: React.FC = () => {
                 <Sliders size={13} />
                 <span>Change</span>
               </button>
+
+              {/* Switch to Drills Button */}
+              {onSwitchToDrills && (
+                <button
+                  type="button"
+                  onClick={onSwitchToDrills}
+                  className="px-2 sm:px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-[11px] font-bold text-slate-200 transition-colors cursor-pointer flex items-center gap-1"
+                  title="Switch to Pronunciation Drills (အသံထွက် ဝါကျလေ့ကျင့်ခန်းသို့ ပြောင်းမည်)"
+                >
+                  <Mic size={12} className="text-rose-400" />
+                  <span className="hidden sm:inline">Drills</span>
+                </button>
+              )}
 
               {/* Reset Conversation */}
               <button

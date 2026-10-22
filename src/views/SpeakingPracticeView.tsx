@@ -28,18 +28,42 @@ export const SpeakingPracticeView: React.FC = () => {
   const { profile, entitlements, logActivity, addXP } = useUser();
   const isEligible = isUserEligibleForLiveAI(profile, entitlements);
 
-  const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>(() => {
-    try {
+  const getInitialTab = (): 'interactive' | 'drills' => {
+    if (typeof window !== 'undefined') {
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes('drill')) return 'drills';
+      if (hash.includes('interactive') || hash.includes('yuki') || hash.includes('chat')) return 'interactive';
+      const search = new URLSearchParams(window.location.search);
+      const tabParam = search.get('tab');
+      if (tabParam === 'drills' || tabParam === 'interactive') return tabParam;
       const saved = localStorage.getItem('jlpt_speaking_active_tab');
       if (saved === 'interactive' || saved === 'drills') return saved;
-    } catch {}
+    }
     return 'interactive';
-  });
+  };
+
+  const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>(getInitialTab);
+
+  useEffect(() => {
+    const handleHashChange = () => {
+      const hash = window.location.hash.toLowerCase();
+      if (hash.includes('drill')) {
+        setActiveStudioTab('drills');
+      } else if (hash.includes('interactive') || hash.includes('yuki')) {
+        setActiveStudioTab('interactive');
+      }
+    };
+    window.addEventListener('hashchange', handleHashChange);
+    return () => window.removeEventListener('hashchange', handleHashChange);
+  }, []);
 
   const handleTabChange = (tab: 'interactive' | 'drills') => {
     setActiveStudioTab(tab);
     try {
       localStorage.setItem('jlpt_speaking_active_tab', tab);
+      if (typeof window !== 'undefined') {
+        window.location.hash = tab === 'drills' ? '#drills' : '#interactive';
+      }
     } catch {}
   };
   const [selectedSpeakingLevel, setSelectedSpeakingLevel] = useState<JLPTLevel>(activeLevel || 'N5');
@@ -183,7 +207,7 @@ export const SpeakingPracticeView: React.FC = () => {
   return (
     <div className="p-3 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-3 sm:space-y-6 pb-24 lg:pb-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
         <div>
           <div className="flex items-center justify-between sm:justify-start gap-2">
             <span className="text-[11px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
@@ -200,50 +224,121 @@ export const SpeakingPracticeView: React.FC = () => {
             )}
           </div>
           <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white mt-0.5">
-            AI စကားပြောလေ့ကျင့်ခန်း
+            AI စကားပြောလေ့ကျင့်ခန်း (Speaking Studio)
           </h1>
-          <p className="hidden sm:block text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {activeStudioTab === 'interactive'
-              ? 'AI ဂျပန်မိတ်ဆွေများနှင့် အပြန်အလှန် လူတစ်ယောက်လို လွတ်လပ်စွာ စကားပြောဆို လေ့ကျင့်နိုင်ပါသည်။'
-              : 'Listen to native Japanese audio and repeat into the microphone to verify speech clarity and pitch.'}
-          </p>
-        </div>
-
-        {/* Studio View Switcher Tabs */}
-        <div className="grid grid-cols-2 sm:flex sm:items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0 shadow-xs">
-          <button
-            type="button"
-            onClick={() => handleTabChange('interactive')}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeStudioTab === 'interactive'
-                ? 'bg-gradient-to-r from-brand-600 to-rose-500 text-white shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Sparkles size={14} className="shrink-0" />
-            <span className="truncate">AI အပြန်အလှန်ပြော</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => handleTabChange('drills')}
-            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-              activeStudioTab === 'drills'
-                ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Mic size={14} className="shrink-0" />
-            <span className="truncate">အသံထွက် Drills</span>
-          </button>
         </div>
       </div>
 
+      {/* Prominent 2-Option Mode Switcher Cards (Interactive Voice vs Pronunciation Drills) */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-2.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl sm:rounded-3xl border border-slate-200 dark:border-slate-700/80 shadow-xs">
+        {/* Option 1: Interactive AI Speaking (Yuki) */}
+        <button
+          type="button"
+          onClick={() => handleTabChange('interactive')}
+          className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl text-left transition-all cursor-pointer flex items-center gap-3 relative ${
+            activeStudioTab === 'interactive'
+              ? 'bg-gradient-to-r from-rose-500 to-brand-600 text-white shadow-md ring-2 ring-rose-400/40'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800'
+          }`}
+        >
+          <div
+            className={`w-10 h-10 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl shrink-0 ${
+              activeStudioTab === 'interactive' ? 'bg-white/20 text-white' : 'bg-rose-50 dark:bg-rose-950/60 text-rose-500'
+            }`}
+          >
+            🌸
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-black text-xs sm:text-sm truncate">
+                1. AI အပြန်အလှန် စကားပြော
+              </span>
+              {activeStudioTab === 'interactive' && (
+                <span className="px-1.5 py-0.2 rounded-full bg-white/25 text-[9px] font-extrabold uppercase shrink-0">
+                  ✓ Active
+                </span>
+              )}
+            </div>
+            <p
+              className={`text-[11px] truncate mt-0.5 ${
+                activeStudioTab === 'interactive' ? 'text-white/90' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              Yuki နှင့် လူတစ်ယောက်လို အပြန်အလှန်ပြောဆိုရန်
+            </p>
+          </div>
+        </button>
+
+        {/* Option 2: Speaking Drills */}
+        <button
+          type="button"
+          onClick={() => handleTabChange('drills')}
+          className={`p-3 sm:p-4 rounded-xl sm:rounded-2xl text-left transition-all cursor-pointer flex items-center gap-3 relative ${
+            activeStudioTab === 'drills'
+              ? 'bg-gradient-to-r from-brand-600 to-indigo-600 text-white shadow-md ring-2 ring-indigo-400/40'
+              : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 hover:bg-slate-50 dark:hover:bg-slate-850 border border-slate-200 dark:border-slate-800'
+          }`}
+        >
+          <div
+            className={`w-10 h-10 rounded-xl sm:rounded-2xl flex items-center justify-center text-xl shrink-0 ${
+              activeStudioTab === 'drills' ? 'bg-white/20 text-white' : 'bg-indigo-50 dark:bg-indigo-950/60 text-indigo-500'
+            }`}
+          >
+            🎙️
+          </div>
+          <div className="flex-1 min-w-0">
+            <div className="flex items-center gap-1.5">
+              <span className="font-black text-xs sm:text-sm truncate">
+                2. အသံထွက် ဝါကျလေ့ကျင့်ခန်း
+              </span>
+              {activeStudioTab === 'drills' && (
+                <span className="px-1.5 py-0.2 rounded-full bg-white/25 text-[9px] font-extrabold uppercase shrink-0">
+                  ✓ Active
+                </span>
+              )}
+            </div>
+            <p
+              className={`text-[11px] truncate mt-0.5 ${
+                activeStudioTab === 'drills' ? 'text-white/90' : 'text-slate-500 dark:text-slate-400'
+              }`}
+            >
+              ဝါကျများ နားထောင်ပြီး အသံထွက်တိကျမှု စစ်ဆေးရန်
+            </p>
+          </div>
+        </button>
+      </div>
+
       {/* TAB 1: INTERACTIVE AI VOICE CONVERSATION */}
-      {activeStudioTab === 'interactive' && <InteractiveSpeakingStudio />}
+      {activeStudioTab === 'interactive' && (
+        <InteractiveSpeakingStudio onSwitchToDrills={() => handleTabChange('drills')} />
+      )}
 
       {/* TAB 2: PRONUNCIATION & SHADOWING DRILLS */}
       {activeStudioTab === 'drills' && (
-        <div className="space-y-6 animate-fade-in">
+        <div className="space-y-4 sm:space-y-6 animate-fade-in">
+          {/* Quick Banner to jump back to Interactive AI Yuki */}
+          <div className="p-3 sm:p-4 rounded-2xl bg-gradient-to-r from-rose-50 via-pink-50 to-amber-50 dark:from-rose-950/40 dark:via-pink-950/30 dark:to-amber-950/30 border border-rose-200 dark:border-rose-900/50 flex flex-col sm:flex-row sm:items-center justify-between gap-3 shadow-xs">
+            <div className="flex items-center gap-2.5">
+              <span className="text-2xl shrink-0">🌸</span>
+              <div>
+                <h4 className="text-xs sm:text-sm font-black text-rose-950 dark:text-rose-200">
+                  AI မိတ်ဆွေ Yuki နှင့် လူတစ်ယောက်လို အပြန်အလှန် စကားပြောလိုပါသလား?
+                </h4>
+                <p className="text-[11px] text-rose-700 dark:text-rose-300">
+                  အပြန်အလှန် စကားပြောခန်း (Interactive AI Voice) သို့ အချိန်မရွေး ပြောင်းလဲလေ့ကျင့်နိုင်ပါသည်။
+                </p>
+              </div>
+            </div>
+            <button
+              type="button"
+              onClick={() => handleTabChange('interactive')}
+              className="px-3.5 py-2 rounded-xl bg-gradient-to-r from-rose-500 to-brand-600 hover:opacity-95 text-white font-bold text-xs shrink-0 shadow-xs cursor-pointer flex items-center justify-center gap-1.5 transition-all"
+            >
+              <span>🌸 Yuki နှင့် အပြန်အလှန်ပြောမည်</span>
+              <ArrowRight size={14} />
+            </button>
+          </div>
+
           {/* Non-JLPT Disclaimer Banner */}
           <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-3 shadow-sm">
             <ShieldCheck size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />

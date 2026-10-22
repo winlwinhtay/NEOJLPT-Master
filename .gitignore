@@ -27,3 +27,7 @@ Thumbs.db
 .env
 .env.local
 
+# Firebase
+.firebase/
+
+

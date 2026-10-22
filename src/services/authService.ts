@@ -1,5 +1,5 @@
 import { supabase, isSupabaseConfigured } from './supabaseClient';
-import { isSuperAdminEmail, ADMIN_EMAILS } from './entitlementService';
+import { isSuperAdminEmail, ADMIN_EMAILS, isUserEligibleForLiveAI } from './entitlementService';
 import { GuestMigrationService } from './guestMigrationService';
 
 export interface AuthUserCheck {
@@ -38,22 +38,43 @@ export class AuthService {
 
   /**
    * Check whether the user is permitted to use live AI API features
-   * (AI Conversation, AI Personal Tutor, AI Email Proofreading, AI Interview Evaluator)
+   * Exclusively available for Administrator and PRO / PREMIUM plan members, or users with custom API key
    */
-  public static canAccessAIFeature(profile?: { id?: string; email?: string | null } | null): AuthUserCheck {
+  public static canAccessAIFeature(
+    profile?: any,
+    entitlements?: any
+  ): AuthUserCheck {
     if (this.isSuperAdmin(profile?.email)) {
       return { allowed: true };
     }
 
-    if (this.isSupabaseEmailUser(profile)) {
+    // Check custom API key override
+    try {
+      const customKey = localStorage.getItem('jlpt_gemini_api_key');
+      if (customKey && customKey.trim()) {
+        return { allowed: true };
+      }
+    } catch {}
+
+    // Check if user is Admin or Pro/Premium plan subscriber
+    if (isUserEligibleForLiveAI(profile, entitlements)) {
       return { allowed: true };
+    }
+
+    if (!this.isSupabaseEmailUser(profile)) {
+      return {
+        allowed: false,
+        reason: 'login_required',
+        message:
+          'Please sign in to your account. Live interactive AI conversation is powered by Gemini and available for Administrator and PRO / PREMIUM members.',
+      };
     }
 
     return {
       allowed: false,
-      reason: 'login_required',
+      reason: 'unsupported',
       message:
-        'Please sign in with your email connected to Supabase to access full AI API features. All core JLPT curriculum (grammar, vocabulary, kanji, listening, tests) remains 100% free with no login required.',
+        'Live interactive Gemini AI is exclusively available for Admin and PRO / PREMIUM members. Please upgrade your plan or redeem a gift code to unlock unlimited AI conversation.',
     };
   }
 

@@ -104,4 +104,5 @@ export interface SpeakingAttemptResult {
   status: 'excellent' | 'good' | 'needs_work' | 'try_again';
   pronunciationFeedback: string;
   naturalAlternative?: string;
+  isAiEvaluated?: boolean;
 }

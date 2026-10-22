@@ -31,13 +31,15 @@ import { speechService, RecognitionSessionHandle } from '../services/speechServi
 import { AudioButton } from '../components/common/AudioButton';
 import { JapaneseInput } from '../components/keyboard/JapaneseInput';
 import { AuthService } from '../services/authService';
+import { isUserEligibleForLiveAI } from '../services/entitlementService';
 import { AIAccessGateModal } from '../components/auth/AIAccessGateModal';
 import { AIConversationTopic, AIMessage } from '../types/ai';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 
 export const AIConversationView: React.FC = () => {
   const { activeLevel } = useApp();
-  const { profile, logActivity } = useUser();
+  const { profile, entitlements, logActivity } = useUser();
+  const isEligible = isUserEligibleForLiveAI(profile, entitlements);
 
   const [selectedTopic, setSelectedTopic] = useState<AIConversationTopic>('restaurant');
   const [japaneseOnly, setJapaneseOnly] = useState(false);
@@ -170,8 +172,8 @@ export const AIConversationView: React.FC = () => {
     const textToSend = customText || inputVal;
     if (!textToSend.trim() || isBotTyping) return;
 
-    // Supabase Email Authentication Check for Full AI Feature
-    const authCheck = AuthService.canAccessAIFeature(profile);
+    // Supabase Email & Plan Check for Live AI Feature (Admin & PRO / PREMIUM)
+    const authCheck = AuthService.canAccessAIFeature(profile, entitlements);
     if (!authCheck.allowed) {
       setAiGateModalOpen(true);
       return;
@@ -213,8 +215,8 @@ export const AIConversationView: React.FC = () => {
 
   // Microphone Continuous STT Recognition Controls
   const handleStartVoiceRecording = () => {
-    // Supabase Email Authentication Check for Full AI Feature
-    const authCheck = AuthService.canAccessAIFeature(profile);
+    // Supabase Email & Plan Check for Live AI Feature (Admin & PRO / PREMIUM)
+    const authCheck = AuthService.canAccessAIFeature(profile, entitlements);
     if (!authCheck.allowed) {
       setAiGateModalOpen(true);
       return;
@@ -403,10 +405,23 @@ export const AIConversationView: React.FC = () => {
                   <Sparkles size={11} className={connectionStatus?.connected ? 'text-emerald-500' : 'text-indigo-500'} />
                   <span>
                     {connectionStatus?.connected
-                      ? `${connectionStatus.provider === 'edge' ? 'Cloud Gateway' : 'Direct Cloud'} Active`
-                      : 'Smart AI Tutor (Active)'}
+                      ? `${connectionStatus.provider === 'edge' ? 'Gemini 3.8 Flash' : 'Direct Cloud'} Active`
+                      : 'Connecting AI...'}
                   </span>
                 </button>
+                {isEligible ? (
+                  <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                    {profile.role === 'admin' || profile.account_type === 'ADMIN' ? '👑 Admin Live Access' : '⭐ PRO Live Access'}
+                  </span>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => setAiGateModalOpen(true)}
+                    className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 hover:opacity-90 cursor-pointer"
+                  >
+                    🔒 Upgrade to PRO
+                  </button>
+                )}
               </div>
               <p className="text-[11px] text-slate-400">{topicMeta.description}</p>
             </div>

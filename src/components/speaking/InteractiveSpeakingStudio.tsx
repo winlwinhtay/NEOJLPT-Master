@@ -27,6 +27,9 @@ import { useUser } from '../../context/UserContext';
 import { useI18n } from '../../i18n/I18nContext';
 import { AIService } from '../../services/aiService';
 import { speechService, RecognitionSessionHandle } from '../../services/speechService';
+import { AuthService } from '../../services/authService';
+import { isUserEligibleForLiveAI } from '../../services/entitlementService';
+import { AIAccessGateModal } from '../auth/AIAccessGateModal';
 import { AI_PERSONAS, INTERACTIVE_SCENARIOS } from '../../data/interactiveSpeakingData';
 import { AIMessage, AIPersonaId } from '../../types/ai';
 import { JLPTLevel } from '../../types';
@@ -35,8 +38,10 @@ import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 export const InteractiveSpeakingStudio: React.FC = () => {
   const { activeLevel } = useApp();
-  const { profile, logActivity, addXP } = useUser();
+  const { profile, entitlements, logActivity, addXP } = useUser();
   const { t } = useI18n();
+  const isEligible = isUserEligibleForLiveAI(profile, entitlements);
+  const [aiGateModalOpen, setAiGateModalOpen] = useState(false);
 
   // Configuration States
   const [selectedPersonaId, setSelectedPersonaId] = useState<AIPersonaId>('yuki');
@@ -153,6 +158,13 @@ export const InteractiveSpeakingStudio: React.FC = () => {
       return;
     }
 
+    // Verify Admin / PRO access before opening microphone for AI partner
+    const authCheck = AuthService.canAccessAIFeature(profile, entitlements);
+    if (!authCheck.allowed) {
+      setAiGateModalOpen(true);
+      return;
+    }
+
     // Stop any ongoing AI voice before user starts speaking
     speechService.stopAudio();
     setIsAiSpeaking(false);
@@ -203,6 +215,13 @@ export const InteractiveSpeakingStudio: React.FC = () => {
   const handleSendMessage = async (textToSend: string) => {
     const trimmed = textToSend.trim();
     if (!trimmed || isAiProcessing) return;
+
+    // Verify Admin / PRO access before making Live AI API call
+    const authCheck = AuthService.canAccessAIFeature(profile, entitlements);
+    if (!authCheck.allowed) {
+      setAiGateModalOpen(true);
+      return;
+    }
 
     // 1. Add User Message to feed
     const userMsg: AIMessage = {
@@ -262,11 +281,24 @@ export const InteractiveSpeakingStudio: React.FC = () => {
       {/* 1. Interactive Studio Header & Persona Control Bar */}
       <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="space-y-1">
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 flex-wrap">
             <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
             <span className="text-[11px] font-black uppercase tracking-wider text-indigo-300">
-              Live Interactive AI Voice Partner (အပြန်အလှန် စကားပြော AI)
+              Live Interactive AI Voice Partner (Gemini 3.8 Flash)
             </span>
+            {isEligible ? (
+              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
+                {profile.role === 'admin' || profile.account_type === 'ADMIN' ? '👑 Admin Live Access' : '⭐ PRO Live Access'}
+              </span>
+            ) : (
+              <button
+                type="button"
+                onClick={() => setAiGateModalOpen(true)}
+                className="px-2.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-500/40 text-[10px] font-bold hover:bg-purple-500/50 cursor-pointer"
+              >
+                🔒 Upgrade to PRO
+              </button>
+            )}
           </div>
           <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2">
             <span>{selectedPersona.avatar}</span>
@@ -714,6 +746,9 @@ export const InteractiveSpeakingStudio: React.FC = () => {
           </div>
         </div>
       </div>
+
+      {/* PRO Plan Upgrade Gate Modal */}
+      <AIAccessGateModal isOpen={aiGateModalOpen} onClose={() => setAiGateModalOpen(false)} />
     </div>
   );
 };

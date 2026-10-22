@@ -20,6 +20,36 @@ export function isSuperAdminEmail(email?: string | null): boolean {
   return ADMIN_EMAILS.some((adminEmail) => adminEmail.toLowerCase() === normalized);
 }
 
+/**
+ * Returns true if the user is an Administrator or PRO / PREMIUM subscriber eligible for live Gemini AI
+ */
+export function isUserEligibleForLiveAI(
+  profile?: { email?: string | null; role?: string; account_type?: string; isPremium?: boolean; subscriptionPlan?: string } | null,
+  entitlements?: UserEntitlements | null
+): boolean {
+  if (!profile) return false;
+
+  // 1. Super Admin email or admin role
+  if (isSuperAdminEmail(profile.email)) return true;
+  if (profile.role === 'admin' || profile.account_type === 'ADMIN') return true;
+  if (entitlements?.accountType === 'ADMIN') return true;
+
+  // 2. Active PRO or PREMIUM Entitlements
+  if (entitlements) {
+    if (entitlements.subscriptionPlan === 'PRO' || entitlements.subscriptionPlan === 'PREMIUM') {
+      return entitlements.subscriptionStatus === 'active';
+    }
+  }
+
+  // 3. User Profile Flag (isPremium or PRO/PREMIUM plan)
+  if (profile.isPremium) return true;
+  if (profile.subscriptionPlan === 'PRO' || profile.subscriptionPlan === 'PREMIUM') {
+    return true;
+  }
+
+  return false;
+}
+
 export const ADMIN_ENTITLEMENTS: UserEntitlements = {
   accountType: 'ADMIN',
   subscriptionPlan: 'PREMIUM',

@@ -20,10 +20,13 @@ import { SpeakingAttemptResult } from '../types/ai';
 import { JLPTLevel } from '../types';
 import { SPEAKING_EXERCISES } from '../data/speakingData';
 import { InteractiveSpeakingStudio } from '../components/speaking/InteractiveSpeakingStudio';
+import { AIService } from '../services/aiService';
+import { isUserEligibleForLiveAI } from '../services/entitlementService';
 
 export const SpeakingPracticeView: React.FC = () => {
   const { activeLevel } = useApp();
-  const { logActivity, addXP } = useUser();
+  const { profile, entitlements, logActivity, addXP } = useUser();
+  const isEligible = isUserEligibleForLiveAI(profile, entitlements);
 
   const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>('interactive');
   const [selectedSpeakingLevel, setSelectedSpeakingLevel] = useState<JLPTLevel>(activeLevel || 'N5');
@@ -37,6 +40,7 @@ export const SpeakingPracticeView: React.FC = () => {
   const [practiceMode, setPracticeMode] = useState<'voice' | 'typing'>('voice');
   const [typedInput, setTypedInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
+  const [isEvaluating, setIsEvaluating] = useState(false);
   const [transcript, setTranscript] = useState('');
   const [result, setResult] = useState<SpeakingAttemptResult | null>(null);
 
@@ -111,20 +115,48 @@ export const SpeakingPracticeView: React.FC = () => {
     }
   };
 
-  const evaluateSpeech = (spoken: string) => {
-    const evalResult = speechService.evaluatePronunciation(spoken, currentEx.japaneseText);
-    setResult({
-      transcript: spoken,
-      confidenceScore: evalResult.score,
-      status: evalResult.status,
-      pronunciationFeedback: evalResult.feedback,
-      naturalAlternative:
-        evalResult.score >= 80 ? undefined : `Try saying clearly: 「${currentEx.japaneseText}」`,
-    });
+  const evaluateSpeech = async (spoken: string) => {
+    setIsEvaluating(true);
+    try {
+      if (isEligible) {
+        // Live Gemini AI Evaluation via Supabase Gateway
+        const aiEval = await AIService.evaluateSpokenSentence(
+          spoken,
+          currentEx.japaneseText,
+          selectedSpeakingLevel
+        );
+        setResult({
+          transcript: spoken,
+          confidenceScore: aiEval.score,
+          status: aiEval.score >= 80 ? 'excellent' : aiEval.score >= 60 ? 'good' : 'needs_work',
+          pronunciationFeedback: aiEval.feedback,
+          naturalAlternative: aiEval.betterAlternative,
+          isAiEvaluated: aiEval.isAiEvaluated,
+        });
 
-    if (evalResult.score >= 60) {
-      addXP(20, 'Speaking Drill Completed');
-      logActivity('practice', 1);
+        if (aiEval.score >= 60) {
+          addXP(25, 'AI Verified Speaking Drill');
+          logActivity('practice', 1);
+        }
+      } else {
+        const evalResult = speechService.evaluatePronunciation(spoken, currentEx.japaneseText);
+        setResult({
+          transcript: spoken,
+          confidenceScore: evalResult.score,
+          status: evalResult.status,
+          pronunciationFeedback: evalResult.feedback,
+          naturalAlternative:
+            evalResult.score >= 80 ? undefined : `Try saying clearly: 「${currentEx.japaneseText}」`,
+          isAiEvaluated: false,
+        });
+
+        if (evalResult.score >= 60) {
+          addXP(20, 'Speaking Drill Completed');
+          logActivity('practice', 1);
+        }
+      }
+    } finally {
+      setIsEvaluating(false);
     }
   };
 
@@ -143,9 +175,20 @@ export const SpeakingPracticeView: React.FC = () => {
           <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
             <Mic size={14} /> AI Spoken Japanese & Oral Communication
           </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            AI စကားပြောလေ့ကျင့်ခန်း (Speaking Practice)
-          </h1>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+              AI စကားပြောလေ့ကျင့်ခန်း (Speaking Practice)
+            </h1>
+            {isEligible ? (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+                {profile.role === 'admin' || profile.account_type === 'ADMIN' ? '👑 Admin Live Access' : '⭐ PRO Live Access'}
+              </span>
+            ) : (
+              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+                🔒 PRO Live Speaking
+              </span>
+            )}
+          </div>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             {activeStudioTab === 'interactive'
               ? 'AI ဂျပန်မိတ်ဆွေများနှင့် အပြန်အလှန် လူတစ်ယောက်လို လွတ်လပ်စွာ စကားပြောဆို လေ့ကျင့်နိုင်ပါသည်။'
@@ -334,13 +377,28 @@ export const SpeakingPracticeView: React.FC = () => {
           </div>
         )}
 
+        {/* Evaluating State Loader */}
+        {isEvaluating && (
+          <div className="p-4 rounded-2xl bg-indigo-50 dark:bg-indigo-950/40 border border-indigo-200 dark:border-indigo-800 text-indigo-700 dark:text-indigo-300 text-xs flex items-center justify-center gap-2 max-w-xl mx-auto animate-pulse">
+            <Sparkles size={16} className="animate-spin text-indigo-500" />
+            <span className="font-bold">Gemini Cloud AI is evaluating your pronunciation & pitch...</span>
+          </div>
+        )}
+
         {/* Speech / Typing Recognition Result */}
         {result && (
           <div className="p-6 rounded-2xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200 dark:border-slate-700 text-left space-y-4 max-w-xl mx-auto animate-fade-in">
             <div className="flex items-center justify-between">
-              <span className="text-xs font-bold text-slate-400 uppercase">
-                {practiceMode === 'voice' ? 'Pronunciation Evaluation:' : 'Spelling Evaluation:'}
-              </span>
+              <div className="flex items-center gap-2">
+                <span className="text-xs font-bold text-slate-400 uppercase">
+                  {practiceMode === 'voice' ? 'Pronunciation Evaluation:' : 'Spelling Evaluation:'}
+                </span>
+                {result.isAiEvaluated && (
+                  <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-100 text-indigo-700 dark:bg-indigo-950 dark:text-indigo-300">
+                    <Sparkles size={10} className="text-indigo-500" /> Live Gemini AI
+                  </span>
+                )}
+              </div>
               <span
                 className={`px-3 py-1 rounded-full text-xs font-black uppercase ${
                   result.confidenceScore >= 80

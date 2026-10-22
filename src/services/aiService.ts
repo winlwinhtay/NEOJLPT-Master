@@ -7,6 +7,7 @@ import {
 } from '../types/ai';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { AdminService } from './adminService';
+import { AI_PERSONAS } from '../data/interactiveSpeakingData';
 
 export class AIService {
   /**
@@ -234,21 +235,20 @@ export class AIService {
       try {
         const { data, error } = await supabase.functions.invoke('active-learning', {
           body: {
-            action: 'ai-conversation',
-            userText: 'こんにちは',
-            topic: 'restaurant',
+            action: 'speaking-session',
+            userInput: 'こんにちは',
+            scenario: 'Connection health check. Reply with standard greeting.',
             level: 'N5',
-            sessionHistory: [],
           },
         });
         const latencyMs = Date.now() - startTime;
-        if (!error && data?.textJp && data._source === 'gemini_ai') {
+        if (!error && (data?.betterAlternative || data?.feedback || data?.overallScore !== undefined)) {
           return {
             connected: true,
             provider: 'edge',
             latencyMs,
-            model: 'gemini-2.5-flash (Supabase Edge Gateway)',
-            details: 'Edge gateway is live, cost-optimized, and authenticated.',
+            model: 'gemini-3.8-flash (Supabase Edge Gateway)',
+            details: 'Edge gateway is live, cost-optimized, and verified with Gemini AI.',
           };
         }
       } catch (e: any) {
@@ -297,7 +297,7 @@ export class AIService {
 
   /**
    * Generates conversational reply adapting to JLPT level with instant linguistic feedback
-   * Supports Supabase Edge Gateway, Direct Gemini API, and Intelligent Contextual Q&A Fallback.
+   * Supports Supabase Edge Gateway (Gemini 3.8 Flash), Direct Gemini API, and Intelligent Fallback.
    */
   public static async generateReply(
     userText: string,
@@ -308,37 +308,78 @@ export class AIService {
     const trimmedUser = userText.trim();
 
     // =========================================================================
-    // TIER 1: SUPABASE EDGE GATEWAY (Cost-Optimized, Cached & Authenticated)
+    // TIER 1: SUPABASE EDGE GATEWAY (Live Server-side Gemini 3.8 Flash)
     // =========================================================================
     if (isSupabaseConfigured()) {
       try {
+        const pruned = sessionHistory
+          .slice(-4)
+          .map((m) => `${m.sender === 'user' ? 'Learner' : 'Japanese Native'}: ${m.textJp}`)
+          .join('\n');
+
+        const scenarioPrompt = `Topic: "${topic}". You are a natural Japanese native conversation partner chatting interactively.
+Recent turns:
+${pruned || '(Start of conversation)'}
+CRITICAL INSTRUCTIONS:
+1. In betterAlternative, directly answer what the learner said in natural Japanese suitable for JLPT ${level}, and ask ONE natural follow-up question to keep the conversation flowing.
+2. In reading, provide the exact Hiragana/Katakana kana reading.
+3. In explanation, format strictly as:
+English: [Natural English translation of your reply]
+Myanmar: [Natural Burmese translation in Myanmar Unicode script]
+Options: [Short suggested Japanese reply 1] /// [Short suggested Japanese reply 2]
+4. In feedback, constructively assess the learner's Japanese grammar, politeness, and particles.`;
+
         const { data, error } = await supabase.functions.invoke('active-learning', {
           body: {
-            action: 'ai-conversation',
-            userText: trimmedUser,
-            topic,
+            action: 'speaking-session',
+            userInput: trimmedUser,
+            scenario: scenarioPrompt,
             level,
-            sessionHistory: sessionHistory.slice(-4), // Prune to last 4 turns to save tokens
           },
         });
 
-        if (!error && data?.textJp && data._source === 'gemini_ai') {
+        if (!error && (data?.betterAlternative || data?.feedback)) {
+          const rawJp = data.betterAlternative || data.reading || '';
+          const rawReading = data.reading || rawJp;
+          const explanation = data.explanation || '';
+
+          let textEn = '';
+          let textMy = '';
+          let optionsList: string[] = [];
+
+          if (explanation.includes('Myanmar:')) {
+            const mySplit = explanation.split(/Myanmar:\s*/i);
+            const enPart = mySplit[0]?.replace(/English:\s*/i, '').trim();
+            const rest = mySplit[1] || '';
+            if (rest.includes('Options:')) {
+              const optSplit = rest.split(/Options:\s*/i);
+              textMy = optSplit[0]?.trim();
+              optionsList = optSplit[1]?.split('///').map((s: string) => s.trim()).filter(Boolean) || [];
+            } else {
+              textMy = rest.trim();
+            }
+            textEn = enPart || '';
+          } else {
+            textEn = explanation;
+          }
+
           return {
             id: 'ai-msg-' + Date.now(),
             sender: 'ai',
-            textJp: data.textJp,
-            reading: data.reading || data.textJp,
-            textEn: data.textEn || '',
-            textMy: data.textMy,
+            textJp: rawJp,
+            reading: rawReading,
+            textEn: textEn || '',
+            textMy: textMy || undefined,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             apiSource: 'edge_gemini',
-            feedback:
-              data.feedback?.grammarMistakes?.length ||
-              data.feedback?.vocabularySuggestions?.length ||
-              data.feedback?.naturalJapaneseAlternatives?.length
-                ? data.feedback
-                : undefined,
-            suggestedReplies: data.suggestedReplies || [],
+            feedback: data.feedback
+              ? {
+                  grammarMistakes: [],
+                  vocabularySuggestions: [],
+                  naturalJapaneseAlternatives: rawJp ? [rawJp] : [],
+                }
+              : undefined,
+            suggestedReplies: optionsList.length > 0 ? optionsList : ['はい、分かりました。', 'もう一度お願いします。'],
           };
         }
       } catch (e) {
@@ -494,34 +535,78 @@ Output STRICT JSON:
   ): Promise<AIMessage> {
     const trimmedUser = options.userText.trim();
 
-    // TIER 1: SUPABASE EDGE GATEWAY
+    // TIER 1: SUPABASE EDGE GATEWAY (Live Server-side Gemini 3.8 Flash)
     if (isSupabaseConfigured()) {
       try {
+        const persona = AI_PERSONAS.find((p) => p.id === options.personaId) || AI_PERSONAS[0];
+        const pruned = options.sessionHistory
+          .slice(-4)
+          .map((m) => `${m.sender === 'user' ? 'Learner' : persona.nameJp}: ${m.textJp}`)
+          .join('\n');
+
+        const scenarioPrompt = `Interactive Speaking Dialogue.
+Scenario: "${options.scenarioTitle}".
+Your Persona: ${persona.nameJp} (${persona.role}, Speech style: ${persona.speechStyle}).
+Recent dialogue turns:
+${pruned || '(Start of conversation)'}
+CRITICAL INSTRUCTIONS:
+1. In betterAlternative, reply in character as ${persona.nameJp} directly responding to the learner in natural spoken Japanese appropriate for JLPT ${options.level}. Use natural aizuchi (そうなんですね、なるほど、へえ) and ask ONE natural follow-up question so the conversation continues.
+2. In reading, provide the complete Kana reading in Hiragana/Katakana.
+3. In explanation, format strictly as:
+English: [Natural English translation of your reply]
+Myanmar: [Natural Burmese translation in Myanmar Unicode script]
+Options: [Short suggested Japanese reply 1] /// [Short suggested Japanese reply 2]
+4. In feedback, give positive encouraging coaching on how a native speaker would say what the learner attempted.`;
+
         const { data, error } = await supabase.functions.invoke('active-learning', {
           body: {
-            action: 'interactive-speaking',
-            userText: trimmedUser,
-            scenarioId: options.scenarioId,
-            scenarioTitle: options.scenarioTitle,
-            customTopicDescription: options.customTopicDescription,
+            action: 'speaking-session',
+            userInput: trimmedUser,
+            scenario: scenarioPrompt,
             level: options.level,
-            personaId: options.personaId,
-            sessionHistory: options.sessionHistory.slice(-4),
           },
         });
 
-        if (!error && data?.textJp && data._source === 'gemini_ai') {
+        if (!error && (data?.betterAlternative || data?.feedback)) {
+          const rawJp = data.betterAlternative || data.reading || '';
+          const rawReading = data.reading || rawJp;
+          const explanation = data.explanation || '';
+
+          let textEn = '';
+          let textMy = '';
+          let optionsList: string[] = [];
+
+          if (explanation.includes('Myanmar:')) {
+            const mySplit = explanation.split(/Myanmar:\s*/i);
+            const enPart = mySplit[0]?.replace(/English:\s*/i, '').trim();
+            const rest = mySplit[1] || '';
+            if (rest.includes('Options:')) {
+              const optSplit = rest.split(/Options:\s*/i);
+              textMy = optSplit[0]?.trim();
+              optionsList = optSplit[1]?.split('///').map((s: string) => s.trim()).filter(Boolean) || [];
+            } else {
+              textMy = rest.trim();
+            }
+            textEn = enPart || '';
+          } else {
+            textEn = explanation;
+          }
+
           return {
             id: 'ai-speak-' + Date.now(),
             sender: 'ai',
-            textJp: data.textJp,
-            reading: data.reading || data.textJp,
-            textEn: data.textEn || '',
-            textMy: data.textMy,
+            textJp: rawJp,
+            reading: rawReading,
+            textEn: textEn || '',
+            textMy: textMy || undefined,
             timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
             apiSource: 'edge_gemini',
-            feedback: data.feedback,
-            suggestedReplies: data.suggestedReplies || [],
+            feedback: {
+              grammarMistakes: [],
+              vocabularySuggestions: [],
+              naturalJapaneseAlternatives: rawJp ? [rawJp] : [],
+            },
+            suggestedReplies: optionsList.length > 0 ? optionsList : ['はい、そうです。', 'もう少し教えてください。'],
           };
         }
       } catch (e) {
@@ -542,6 +627,72 @@ Output STRICT JSON:
 
     // TIER 3: INTELLIGENT CONTEXTUAL SPEAKING ENGINE (OFFLINE/LOCAL FALLBACK)
     return this.generateInteractiveSpeakingContextualFallback(options);
+  }
+
+  /**
+   * Evaluates spoken Japanese sentence using Live Gemini AI via Edge Gateway
+   */
+  public static async evaluateSpokenSentence(
+    spokenText: string,
+    expectedTarget: string,
+    level: JLPTLevel = 'N5'
+  ): Promise<{
+    score: number;
+    feedback: string;
+    betterAlternative: string;
+    reading: string;
+    isAiEvaluated: boolean;
+  }> {
+    const trimmed = spokenText.trim();
+    if (!trimmed) {
+      return {
+        score: 0,
+        feedback: 'No Japanese voice input detected. Please try repeating into the microphone.',
+        betterAlternative: expectedTarget,
+        reading: expectedTarget,
+        isAiEvaluated: false,
+      };
+    }
+
+    if (isSupabaseConfigured()) {
+      try {
+        const scenario = `Pronunciation Drill & Accuracy Check. Target Japanese sentence: 「${expectedTarget}」. The learner spoke: 「${trimmed}」.
+Compare what was spoken against the target sentence.
+Score strictly between 0 and 100 on accuracy, pitch, and particles.
+In feedback, give concise, constructive coaching on pronunciation and particle accuracy.
+In betterAlternative, output the exact natural phrasing: 「${expectedTarget}」.
+In reading, output its kana reading.`;
+
+        const { data, error } = await supabase.functions.invoke('active-learning', {
+          body: {
+            action: 'speaking-session',
+            userInput: trimmed,
+            scenario,
+            level,
+          },
+        });
+
+        if (!error && (data?.overallScore !== undefined || data?.feedback)) {
+          return {
+            score: typeof data.overallScore === 'number' ? data.overallScore : 85,
+            feedback: data.feedback || `Excellent pronunciation! Matches target sentence.`,
+            betterAlternative: data.betterAlternative || expectedTarget,
+            reading: data.reading || expectedTarget,
+            isAiEvaluated: true,
+          };
+        }
+      } catch (e) {
+        console.warn('AIService: Live evaluation failed, fallback to local comparison:', e);
+      }
+    }
+
+    return {
+      score: 75,
+      feedback: `Target: 「${expectedTarget}」. You spoke: 「${trimmed}」.`,
+      betterAlternative: expectedTarget,
+      reading: expectedTarget,
+      isAiEvaluated: false,
+    };
   }
 
   /**

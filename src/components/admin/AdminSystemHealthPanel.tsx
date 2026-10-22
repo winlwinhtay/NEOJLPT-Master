@@ -56,7 +56,7 @@ export const AdminSystemHealthPanel: React.FC = () => {
     },
     {
       id: 'serverless-api',
-      name: 'Vercel Serverless Edge API',
+      name: 'Supabase Database & Edge API',
       category: 'api',
       status: 'checking',
       latencyMs: 0,
@@ -179,7 +179,7 @@ export const AdminSystemHealthPanel: React.FC = () => {
       const latency = Date.now() - apiStart;
       updated[apiIndex] = {
         id: 'serverless-api',
-        name: 'Vercel Serverless Edge API',
+        name: 'Supabase Database & Edge API',
         category: 'api',
         status: authRes.authorized ? 'operational' : 'degraded',
         latencyMs: latency,
@@ -188,7 +188,7 @@ export const AdminSystemHealthPanel: React.FC = () => {
     } catch (e: any) {
       updated[apiIndex] = {
         id: 'serverless-api',
-        name: 'Vercel Serverless Edge API',
+        name: 'Supabase Database & Edge API',
         category: 'api',
         status: 'operational',
         latencyMs: 15,
@@ -316,7 +316,7 @@ export const AdminSystemHealthPanel: React.FC = () => {
           </div>
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
             <span className="text-[10px] uppercase font-bold text-slate-400">Deployment Target</span>
-            <div className="font-bold text-slate-900 dark:text-white">Vercel Serverless Edge</div>
+            <div className="font-bold text-slate-900 dark:text-white">Firebase Hosting (neojlptmaster)</div>
           </div>
           <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-100 dark:border-slate-800">
             <span className="text-[10px] uppercase font-bold text-slate-400">Frontend Stack</span>

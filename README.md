@@ -63,29 +63,21 @@ Zero external API dependencies. All UI navigation, grammar formulas, in-depth ex
 - **Bundler & Dev Server**: [Vite](https://vitejs.dev/)
 - **Styling**: [Tailwind CSS](https://tailwindcss.com/)
 - **Database & Auth**: [Supabase](https://supabase.com/) (PostgreSQL with Row Level Security)
-- **Hosting**: [Vercel](https://vercel.com/)
+- **Hosting**: [Firebase Hosting](https://firebase.google.com/) (Production: `https://neojlptmaster.web.app`)
 - **Icons**: [Lucide React](https://lucide.dev/)
 - **Audio & Animations**: Web Speech API, [Canvas Confetti](https://www.npmjs.com/package/canvas-confetti)
 - **Persistence**: Hybrid offline `localStorage` + real-time Supabase cloud synchronization
 
 ---
 
-## ⚡ Deployment to Vercel
+## ⚡ Deployment to Firebase Hosting
 
-[![Deploy with Vercel](https://vercel.com/button)](https://vercel.com/new/clone?repository-url=https%3A%2F%2Fgithub.com%2Fwinlwinhtay%2FNEOJLPT-Master&env=VITE_SUPABASE_URL,VITE_SUPABASE_ANON_KEY)
+Production live at: **[https://neojlptmaster.web.app](https://neojlptmaster.web.app)**
 
-### Option 1: Automatic via Vercel Dashboard (Recommended)
-1. Go to [vercel.com](https://vercel.com) and log in with your GitHub account.
-2. Click **"Add New Project"** and select repository **`winlwinhtay/NEOJLPT-Master`**.
-3. Under **Environment Variables**, add:
-   - `VITE_SUPABASE_URL`: `https://rhidvvfdbilagdgzzzzg.supabase.co`
-   - `VITE_SUPABASE_ANON_KEY`: `eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9...`
-4. Click **Deploy**. Vercel will build and deploy your app with instant global CDN coverage.
-
-### Option 2: Via Vercel CLI
+### Deploy via Firebase CLI
 ```bash
-npm install -g vercel
-vercel
+npm run build
+firebase deploy --only hosting
 ```
 
 ---
@@ -144,4 +136,5 @@ npm run preview
 
 ## 📄 License
 This project is open-source and available under the [MIT License](LICENSE).
+
 

@@ -192,7 +192,7 @@ export const LoginView: React.FC = () => {
       const { data, error: authErr } = await supabase.auth.signInWithOAuth({
         provider: 'google',
         options: {
-          redirectTo: window.location.origin,
+          redirectTo: AuthService.getAppOrigin(),
           skipBrowserRedirect: true,
         },
       });

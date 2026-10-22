@@ -98,6 +98,13 @@ export class AuthService {
     return { data, error };
   }
 
+  public static getAppOrigin(): string {
+    if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('vercel.app')) {
+      return window.location.origin;
+    }
+    return 'https://neojlptmaster.web.app';
+  }
+
   /**
    * Sign in using Magic Link / OTP via email
    */
@@ -109,7 +116,7 @@ export class AuthService {
     const { data, error } = await supabase.auth.signInWithOtp({
       email: email.trim().toLowerCase(),
       options: {
-        emailRedirectTo: window.location.origin,
+        emailRedirectTo: this.getAppOrigin(),
       },
     });
 
@@ -128,6 +135,7 @@ export class AuthService {
       email: email.trim().toLowerCase(),
       password,
       options: {
+        emailRedirectTo: this.getAppOrigin(),
         data: {
           name: name?.trim() || email.split('@')[0],
           targetLevel: targetLevel || 'N5',

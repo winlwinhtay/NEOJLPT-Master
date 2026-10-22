@@ -2,6 +2,12 @@
 <html lang="ja">
   <head>
     <meta charset="UTF-8" />
+    <script>
+      // Immediately forward away from Vercel to Firebase Hosting
+      if (window.location.hostname.includes('vercel.app')) {
+        window.location.replace('https://neojlptmaster.web.app' + window.location.pathname + window.location.search + window.location.hash);
+      }
+    </script>
     <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><circle cx='50' cy='50' r='48' fill='%23e11d48'/><circle cx='50' cy='50' r='24' fill='%23ffffff'/></svg>" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
     <meta name="theme-color" content="#e11d48" />

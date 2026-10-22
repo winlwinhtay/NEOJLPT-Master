@@ -116,7 +116,7 @@ export const AdminSecurityPanel: React.FC = () => {
               </span>
             </div>
             <p className="text-slate-600 dark:text-slate-400 text-[11px]">
-              The Supabase <code>service_role</code> key is never exposed to browser bundles or client-side storage. Only Vercel serverless Node.js functions in <code>/api/</code> use elevated database privileges.
+              The Supabase <code>service_role</code> key is never exposed to browser bundles or client-side storage. Only secure backend functions and Supabase Edge Functions use elevated database privileges.
             </p>
           </div>
 

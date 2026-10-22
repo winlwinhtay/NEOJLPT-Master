@@ -99,9 +99,6 @@ export class AuthService {
   }
 
   public static getAppOrigin(): string {
-    if (typeof window !== 'undefined' && window.location.origin && !window.location.origin.includes('vercel.app')) {
-      return window.location.origin;
-    }
     return 'https://neojlptmaster.web.app';
   }
 
@@ -146,6 +143,21 @@ export class AuthService {
     if (!error && data?.user?.id) {
       await GuestMigrationService.mergeGuestProgressIntoAccount(data.user.id);
     }
+
+    return { data, error };
+  }
+
+  /**
+   * Send Password Reset Email
+   */
+  public static async resetPasswordForEmail(email: string) {
+    if (!isSupabaseConfigured()) {
+      return { data: null, error: new Error('Supabase is not configured.') };
+    }
+
+    const { data, error } = await supabase.auth.resetPasswordForEmail(email.trim().toLowerCase(), {
+      redirectTo: this.getAppOrigin(),
+    });
 
     return { data, error };
   }

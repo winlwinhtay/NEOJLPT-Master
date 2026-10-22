@@ -547,7 +547,7 @@ export const AdminContentPanel: React.FC = () => {
       )}
 
       {/* Dataset Metric Summary Cards */}
-      <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-9 gap-3 sm:gap-4">
+      <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 xl:grid-cols-9 gap-2.5 sm:gap-3.5">
         <button
           onClick={() => handleTabChange('vocab')}
           className={`p-4 sm:p-5 text-left rounded-2xl border transition-all ${

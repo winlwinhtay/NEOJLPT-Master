@@ -63,9 +63,9 @@ export const Navbar: React.FC = () => {
 
   return (
     <header className="sticky top-0 z-30 w-full bg-white/95 dark:bg-slate-900/95 backdrop-blur border-b border-slate-200 dark:border-slate-800 transition-colors">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-4">
+      <div className="max-w-7xl mx-auto px-2.5 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-1.5 sm:gap-4">
         {/* Left: Mobile Menu Toggle & Brand & Level Switcher */}
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-2 sm:gap-3 shrink-0">
           <button
             type="button"
             onClick={() => setMobileMenuOpen(true)}
@@ -146,13 +146,13 @@ export const Navbar: React.FC = () => {
         </div>
 
         {/* Right: Stats, AI Tutor, Theme, Language & Profile */}
-        <div className="flex items-center gap-2 sm:gap-3">
+        <div className="flex items-center gap-1.5 sm:gap-3 shrink-0">
           {/* Daily Streak */}
           <div
             title="Daily Streak"
-            className="flex items-center gap-1 px-2.5 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-200 dark:border-orange-900/50"
+            className="flex items-center gap-1 px-2 sm:px-2.5 py-1.5 rounded-xl bg-orange-50 dark:bg-orange-950/30 text-orange-600 dark:text-orange-400 text-xs font-bold border border-orange-200 dark:border-orange-900/50"
           >
-            <Flame size={16} className="text-orange-500 animate-pulse" />
+            <Flame size={15} className="text-orange-500 animate-pulse" />
             <span>{profile.streakDays}</span>
           </div>
 
@@ -170,7 +170,7 @@ export const Navbar: React.FC = () => {
             type="button"
             onClick={() => setAiTutorOpen(true)}
             title="AI Japanese Tutor"
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-bold shadow-sm shadow-indigo-500/20 hover:from-indigo-600 hover:to-purple-700 transition-all"
+            className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-xs font-bold shadow-sm shadow-indigo-500/20 hover:from-indigo-600 hover:to-purple-700 transition-all cursor-pointer"
           >
             <Sparkles size={14} className="animate-spin-slow" />
             <span className="hidden sm:inline">AI Tutor</span>
@@ -181,11 +181,11 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => setLangMenuOpen(!langMenuOpen)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors flex items-center gap-1 cursor-pointer"
               title="Interface Language"
             >
-              <Globe size={18} />
-              <span className="text-xs uppercase font-bold">{language}</span>
+              <Globe size={17} />
+              <span className="text-xs uppercase font-bold hidden xs:inline">{language}</span>
             </button>
 
             {langMenuOpen && (
@@ -219,10 +219,10 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => setThemeMenuOpen(!themeMenuOpen)}
-              className="p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+              className="p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
               title="Theme Settings"
             >
-              {profile.theme === 'dark' ? <Moon size={18} /> : <Sun size={18} />}
+              {profile.theme === 'dark' ? <Moon size={17} /> : <Sun size={17} />}
             </button>
 
             {themeMenuOpen && (
@@ -241,7 +241,7 @@ export const Navbar: React.FC = () => {
                 </button>
                 <button
                   onClick={() => handleThemeChange('sakura')}
-                  className="w-full text-left px-3 py-1.5 text-xs text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2"
+                  className="w-full text-left px-3 py-1.5 text-rose-600 hover:bg-rose-50 dark:hover:bg-rose-950/30 flex items-center gap-2"
                 >
                   🌸 Sakura
                 </button>
@@ -259,7 +259,7 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={toggleKeyboard}
-            className={`hidden sm:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
+            className={`hidden md:flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
               isKeyboardOpen
                 ? 'bg-indigo-50 dark:bg-indigo-950/40 text-indigo-600 dark:text-indigo-400 border-indigo-200 dark:border-indigo-900/50 shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 border-transparent hover:text-slate-700 dark:hover:text-slate-300'
@@ -274,7 +274,7 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={() => updateProfile({ showFurigana: !profile.showFurigana })}
-            className={`hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border ${
+            className={`hidden sm:flex items-center gap-1 px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all border cursor-pointer ${
               profile.showFurigana
                 ? 'bg-rose-50 dark:bg-rose-950/40 text-rose-600 dark:text-rose-400 border-rose-200 dark:border-rose-900/50 shadow-xs'
                 : 'bg-slate-100 dark:bg-slate-800 text-slate-400 dark:text-slate-500 border-transparent hover:text-slate-600 dark:hover:text-slate-300'
@@ -292,10 +292,10 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={() => setNotificationDrawerOpen(true)}
-            className="relative p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="relative p-1.5 sm:p-2 rounded-xl text-slate-600 dark:text-slate-300 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors cursor-pointer"
             title="Study Reminders"
           >
-            <Bell size={18} />
+            <Bell size={17} />
             <span className="absolute top-1.5 right-1.5 w-2 h-2 bg-brand-500 rounded-full ring-2 ring-white dark:ring-slate-900" />
           </button>
 
@@ -304,11 +304,12 @@ export const Navbar: React.FC = () => {
             <button
               type="button"
               onClick={() => setActiveView('admin')}
-              className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 transition-all cursor-pointer ring-1 ring-purple-400/40"
+              className="flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs shadow-md shadow-purple-500/20 transition-all cursor-pointer ring-1 ring-purple-400/40"
               title="Admin Console (စီမံခန့်ခွဲသူ / 管理者コンソール)"
             >
-              <ShieldCheck size={15} className="text-amber-300" />
-              <span className="font-bold">Admin Console</span>
+              <ShieldCheck size={14} className="text-amber-300" />
+              <span className="hidden sm:inline font-bold">Admin Console</span>
+              <span className="sm:hidden font-bold">Admin</span>
               <span className="text-[9px] bg-white/20 px-1 py-0.2 rounded font-mono hidden md:inline">SUPER</span>
             </button>
           )}
@@ -317,11 +318,11 @@ export const Navbar: React.FC = () => {
           <button
             type="button"
             onClick={() => openLoginView('plans')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-indigo-500/10 hover:from-amber-500/20 hover:to-indigo-500/20 text-amber-700 dark:text-amber-300 border border-amber-300/40 dark:border-amber-600/40 font-bold text-xs shadow-2xs transition-all cursor-pointer"
+            className="flex items-center gap-1.5 px-2 sm:px-3 py-1.5 rounded-xl bg-gradient-to-r from-amber-500/10 via-rose-500/10 to-indigo-500/10 hover:from-amber-500/20 hover:to-indigo-500/20 text-amber-700 dark:text-amber-300 border border-amber-300/40 dark:border-amber-600/40 font-bold text-xs shadow-2xs transition-all cursor-pointer"
             title="View Subscription Plans & Pricing (料金プラン)"
           >
             <Crown size={14} className="text-amber-500" />
-            <span className="hidden sm:inline">Plans</span>
+            <span className="hidden xs:inline sm:inline">Plans</span>
             <span className="text-[10px] text-amber-600 dark:text-amber-400 font-japanese hidden md:inline">料金</span>
           </button>
 
@@ -331,12 +332,11 @@ export const Navbar: React.FC = () => {
               <button
                 type="button"
                 onClick={() => openLoginView('auth')}
-                className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm shadow-brand-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
+                className="px-2.5 sm:px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-indigo-600 hover:from-brand-700 hover:to-indigo-700 text-white font-bold text-xs shadow-sm shadow-brand-500/20 transition-all flex items-center gap-1.5 cursor-pointer"
                 title="Sign in with Supabase email for AI features and sync"
               >
                 <LogIn size={14} />
                 <span>Log In</span>
-                <span className="text-[10px] opacity-80 hidden sm:inline font-japanese">ログイン</span>
               </button>
             </div>
           ) : (

@@ -87,17 +87,23 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
-      {/* Top Fixed Header */}
-      <Navbar />
+      {/* Top Fixed Header (Hidden when in dedicated Admin Console) */}
+      {activeView !== 'admin' && <Navbar />}
 
       {/* Main Body with Sidebar and Active View */}
-      <div className="flex-1 flex max-w-7xl w-full mx-auto pb-16 lg:pb-0">
-        <Sidebar />
+      <div
+        className={`flex-1 flex w-full mx-auto ${
+          activeView === 'admin'
+            ? 'max-w-none p-0'
+            : 'max-w-7xl pb-[max(4.5rem,calc(4rem+env(safe-area-inset-bottom)))] lg:pb-0'
+        }`}
+      >
+        {activeView !== 'admin' && <Sidebar />}
         <main className="flex-1 min-w-0 overflow-x-hidden">{renderActiveView()}</main>
       </div>
 
-      {/* Mobile Bottom Navigation */}
-      <BottomNav />
+      {/* Mobile Bottom Navigation (Hidden when in dedicated Admin Console) */}
+      {activeView !== 'admin' && <BottomNav />}
 
       {/* Global Modals & Drawers */}
       <GlobalSearch />

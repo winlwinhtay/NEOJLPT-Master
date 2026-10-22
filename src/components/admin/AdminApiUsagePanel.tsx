@@ -130,7 +130,7 @@ export const AdminApiUsagePanel: React.FC = () => {
             <span>Usage Breakdown by Learning Feature</span>
           </h3>
           <div className="overflow-x-auto">
-            <table className="w-full text-left border-collapse text-xs">
+            <table className="w-full text-left border-collapse text-xs min-w-[600px]">
               <thead>
                 <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
                   <th className="py-2.5 px-3">Feature</th>
@@ -200,7 +200,7 @@ export const AdminApiUsagePanel: React.FC = () => {
         </div>
 
         <div className="overflow-x-auto">
-          <table className="w-full text-left border-collapse text-xs">
+          <table className="w-full text-left border-collapse text-xs min-w-[700px]">
             <thead>
               <tr className="bg-slate-50 dark:bg-slate-800/60 border-b border-slate-200 dark:border-slate-800 text-slate-400 font-bold uppercase text-[10px]">
                 <th className="py-3 px-4">Feature & Model</th>

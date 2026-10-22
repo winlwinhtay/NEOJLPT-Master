@@ -261,9 +261,9 @@ export const AdminView: React.FC = () => {
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 -m-4 sm:-m-6 lg:-m-8">
+    <div className="min-h-screen flex flex-col bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 w-full">
       {/* Top Admin Bar */}
-      <header className="sticky top-0 z-30 flex items-center justify-between px-4 sm:px-6 py-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-2xs">
+      <header className="sticky top-0 z-30 flex items-center justify-between px-3 sm:px-6 py-2.5 sm:py-3 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border-b border-slate-200 dark:border-slate-800 shadow-2xs">
         <div className="flex items-center gap-3">
           {/* Mobile Sidebar Toggle */}
           <button
@@ -392,8 +392,8 @@ export const AdminView: React.FC = () => {
         </aside>
 
         {/* Active Content Area */}
-        <main className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8">
-          <div className="max-w-7xl mx-auto">{renderActivePanel()}</div>
+        <main className="flex-1 overflow-y-auto p-3 sm:p-6 lg:p-8">
+          <div className="max-w-[1600px] w-full mx-auto">{renderActivePanel()}</div>
         </main>
       </div>
     </div>

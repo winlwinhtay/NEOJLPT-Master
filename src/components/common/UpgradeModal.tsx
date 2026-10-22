@@ -340,15 +340,17 @@ export const UpgradeModal: React.FC = () => {
               <div className="bg-slate-100 dark:bg-slate-800 p-3 font-bold text-slate-700 dark:text-slate-300">
                 Detailed Feature Matrix
               </div>
-              <div className="divide-y divide-slate-100 dark:divide-slate-800">
-                {comparisonRows.map((r, idx) => (
-                  <div key={idx} className="p-3 grid grid-cols-4 items-center">
-                    <span className="font-medium text-slate-900 dark:text-white">{r.feature}</span>
-                    <span className="text-slate-400">{r.free}</span>
-                    <span className="text-purple-600 dark:text-purple-400 font-bold">{r.pro}</span>
-                    <span className="text-brand-600 dark:text-brand-400 font-bold">{r.premium}</span>
-                  </div>
-                ))}
+              <div className="overflow-x-auto">
+                <div className="divide-y divide-slate-100 dark:divide-slate-800 min-w-[480px]">
+                  {comparisonRows.map((r, idx) => (
+                    <div key={idx} className="p-3 grid grid-cols-4 items-center">
+                      <span className="font-medium text-slate-900 dark:text-white">{r.feature}</span>
+                      <span className="text-slate-400">{r.free}</span>
+                      <span className="text-purple-600 dark:text-purple-400 font-bold">{r.pro}</span>
+                      <span className="text-brand-600 dark:text-brand-400 font-bold">{r.premium}</span>
+                    </div>
+                  ))}
+                </div>
               </div>
             </div>
           </div>

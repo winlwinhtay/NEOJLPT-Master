@@ -640,7 +640,7 @@ export const ActiveLearningSessionModal: React.FC = () => {
         </div>
 
         {/* Bottom Navigation Buttons */}
-        <div className="p-4 sm:p-6 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between">
+        <div className="p-3.5 sm:p-6 border-t border-slate-800 bg-slate-950/40 flex items-center justify-between shrink-0">
           <button
             onClick={closeSession}
             className="px-4 py-2 rounded-xl text-xs font-bold text-slate-400 hover:text-white transition-colors cursor-pointer"

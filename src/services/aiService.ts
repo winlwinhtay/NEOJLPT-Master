@@ -1,5 +1,10 @@
 import { JLPTLevel } from '../types';
-import { AIConversationTopic, AIMessage, ConversationSession } from '../types/ai';
+import {
+  AIConversationTopic,
+  AIMessage,
+  ConversationSession,
+  InteractiveSpeakingOptions,
+} from '../types/ai';
 import { supabase, isSupabaseConfigured } from './supabaseClient';
 import { AdminService } from './adminService';
 
@@ -477,6 +482,327 @@ Output STRICT JSON:
           ? parsed.feedback
           : undefined,
       suggestedReplies: parsed.suggestedReplies || [],
+    };
+  }
+
+  /**
+   * Customized Interactive Voice Speaking Engine
+   * Generates natural human-like spoken dialogue tailored to persona, custom topics, and JLPT level.
+   */
+  public static async generateInteractiveSpeakingReply(
+    options: InteractiveSpeakingOptions
+  ): Promise<AIMessage> {
+    const trimmedUser = options.userText.trim();
+
+    // TIER 1: SUPABASE EDGE GATEWAY
+    if (isSupabaseConfigured()) {
+      try {
+        const { data, error } = await supabase.functions.invoke('active-learning', {
+          body: {
+            action: 'interactive-speaking',
+            userText: trimmedUser,
+            scenarioId: options.scenarioId,
+            scenarioTitle: options.scenarioTitle,
+            customTopicDescription: options.customTopicDescription,
+            level: options.level,
+            personaId: options.personaId,
+            sessionHistory: options.sessionHistory.slice(-4),
+          },
+        });
+
+        if (!error && data?.textJp && data._source === 'gemini_ai') {
+          return {
+            id: 'ai-speak-' + Date.now(),
+            sender: 'ai',
+            textJp: data.textJp,
+            reading: data.reading || data.textJp,
+            textEn: data.textEn || '',
+            textMy: data.textMy,
+            timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+            apiSource: 'edge_gemini',
+            feedback: data.feedback,
+            suggestedReplies: data.suggestedReplies || [],
+          };
+        }
+      } catch (e) {
+        console.warn('AIService: Edge speaking failed, attempting direct Gemini:', e);
+      }
+    }
+
+    // TIER 2: DIRECT GEMINI FLASH API
+    const apiKey = this.getEffectiveApiKey();
+    if (apiKey) {
+      try {
+        const directReply = await this.callGeminiInteractiveSpeakingDirect(options, apiKey);
+        if (directReply) return directReply;
+      } catch (e) {
+        console.warn('AIService: Direct Gemini speaking error, using intelligent contextual engine:', e);
+      }
+    }
+
+    // TIER 3: INTELLIGENT CONTEXTUAL SPEAKING ENGINE (OFFLINE/LOCAL FALLBACK)
+    return this.generateInteractiveSpeakingContextualFallback(options);
+  }
+
+  /**
+   * Direct Gemini Flash Call for Interactive Speaking (Optimized for Spoken Dialogues)
+   */
+  private static async callGeminiInteractiveSpeakingDirect(
+    options: InteractiveSpeakingOptions,
+    apiKey: string
+  ): Promise<AIMessage | null> {
+    const personaMap = {
+      yuki: {
+        name: 'Yuki (ユキ)',
+        role: 'a warm, friendly Japanese peer (24 years old, Tokyo native)',
+        tone: 'Friendly and warm. Uses natural polite or gentle casual Japanese with enthusiastic aizuchi (そうなんですね！、なるほど！、いいね！). Conversational like talking on a phone call or in a coffee shop.',
+      },
+      kenji: {
+        name: 'Kenji-sensei (ケンジ先生)',
+        role: 'an experienced, encouraging native Japanese teacher',
+        tone: 'Speaks clear, standard Tokyo Japanese with desu/masu. Very patient, supportive, speaks at a measured conversational pace, gives reassuring feedback.',
+      },
+      tanaka: {
+        name: 'Tanaka Senpai (田中先輩)',
+        role: 'a professional senior colleague at a Japanese company',
+        tone: 'Polite workplace Japanese (丁寧語・敬語), realistic business etiquette, professional yet approachable.',
+      },
+      ren: {
+        name: 'Ren (レン)',
+        role: 'an energetic youth and pop-culture/anime fan in Tokyo',
+        tone: 'Lively, casual everyday Japanese (タメ口・親しみやすい口調), enthusiastic about modern culture, games, and life.',
+      },
+    };
+
+    const persona = personaMap[options.personaId] || personaMap.yuki;
+
+    const prunedHistory = options.sessionHistory.slice(-4).map((m) => ({
+      role: m.sender === 'user' ? 'Learner' : persona.name,
+      text: m.textJp,
+    }));
+
+    const historyStr = prunedHistory
+      .map((h) => `${h.role}: ${h.text}`)
+      .join('\n');
+
+    const prompt = `You are roleplaying as ${persona.name}, ${persona.role}.
+Character Voice & Tone: ${persona.tone}
+Scenario / Topic: "${options.scenarioTitle}"
+${options.customTopicDescription ? `Specific Scenario Setting from User: "${options.customTopicDescription}"` : ''}
+Learner JLPT Target Level: JLPT ${options.level}
+
+Recent conversation history:
+${historyStr || '(Beginning of dialogue)'}
+
+Learner just spoke to you:
+"${options.userText}"
+
+CRITICAL INSTRUCTIONS FOR A NATURAL, HUMAN-LIKE SPOKEN CONVERSATION:
+1. Respond DIRECTLY and authentically to what the learner said, staying in character as ${persona.name}.
+2. React like a real human in a real voice call — use natural Japanese aizuchi (相槌: そうなんだ、なるほど、へえ、確かに、いいね、すごい、あ、そうなんですか).
+3. Keep the conversation flowing smoothly: share a short personal reaction or thought, and ask ONE natural follow-up question so the learner can reply.
+4. Adapt Japanese vocabulary and grammar complexity to JLPT ${options.level}.
+5. Provide:
+   - "textJp": Your Japanese reply in natural Japanese script.
+   - "reading": Complete hiragana reading of your reply for learners.
+   - "textEn": Natural English translation.
+   - "textMy": Natural Burmese (Myanmar unicode script) translation.
+   - "feedback":
+     - "naturalJapaneseAlternatives": 1-2 ways native Japanese would say what the learner said more naturally.
+     - "grammarMistakes": Brief constructive tip if any particle or verb form was off.
+     - "pronunciationTips": 1 helpful tip on pitch, pause, or rhythm.
+   - "suggestedReplies": 2-3 short, natural Japanese responses the learner can say next to keep the dialogue going.
+
+Output STRICT JSON:
+{
+  "textJp": "Japanese reply",
+  "reading": "Kana reading",
+  "textEn": "English translation",
+  "textMy": "Burmese translation in Myanmar unicode",
+  "feedback": {
+    "naturalJapaneseAlternatives": ["Natural native alternative 1"],
+    "grammarMistakes": ["Brief grammar note"],
+    "pronunciationTips": ["Intonation tip"]
+  },
+  "suggestedReplies": ["short Japanese reply 1", "short Japanese reply 2"]
+}`;
+
+    const callStartTime = Date.now();
+    const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${apiKey}`;
+    const res = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        contents: [{ role: 'user', parts: [{ text: prompt }] }],
+        generationConfig: {
+          temperature: 0.75,
+          maxOutputTokens: 380,
+          responseMimeType: 'application/json',
+        },
+      }),
+    });
+
+    const durationMs = Date.now() - callStartTime;
+
+    if (!res.ok) {
+      AdminService.trackAiUsage({
+        feature: 'ai_conversation',
+        model: 'gemini-2.5-flash',
+        inputTokens: 0,
+        outputTokens: 0,
+        cacheHit: false,
+        status: 'error',
+        durationMs,
+      }).catch(() => {});
+      return null;
+    }
+
+    const json = await res.json();
+    const raw = json.candidates?.[0]?.content?.parts?.[0]?.text;
+    if (!raw) return null;
+
+    const inputTokens = json.usageMetadata?.promptTokenCount || 220;
+    const outputTokens = json.usageMetadata?.candidatesTokenCount || 100;
+
+    AdminService.trackAiUsage({
+      feature: 'ai_conversation',
+      model: 'gemini-2.5-flash',
+      inputTokens,
+      outputTokens,
+      cacheHit: false,
+      status: 'success',
+      durationMs,
+    }).catch(() => {});
+
+    try {
+      const parsed = JSON.parse(raw);
+      return {
+        id: 'ai-speak-' + Date.now(),
+        sender: 'ai',
+        textJp: parsed.textJp,
+        reading: parsed.reading || parsed.textJp,
+        textEn: parsed.textEn || '',
+        textMy: parsed.textMy,
+        timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+        apiSource: 'direct_gemini',
+        feedback:
+          parsed.feedback?.grammarMistakes?.length ||
+          parsed.feedback?.pronunciationTips?.length ||
+          parsed.feedback?.naturalJapaneseAlternatives?.length
+            ? parsed.feedback
+            : undefined,
+        suggestedReplies: parsed.suggestedReplies || [],
+      };
+    } catch {
+      return null;
+    }
+  }
+
+  /**
+   * Intelligent Contextual Speaking Engine Fallback (Offline-Ready & Dynamic Persona-Driven)
+   */
+  private static async generateInteractiveSpeakingContextualFallback(
+    options: InteractiveSpeakingOptions
+  ): Promise<AIMessage> {
+    await new Promise((r) => setTimeout(r, 600));
+
+    const clean = options.userText.toLowerCase().trim();
+    const isYuki = options.personaId === 'yuki';
+    const isKenji = options.personaId === 'kenji';
+    const isTanaka = options.personaId === 'tanaka';
+    const isRen = options.personaId === 'ren';
+
+    let textJp = '';
+    let reading = '';
+    let textEn = '';
+    let textMy = '';
+    let suggestedReplies: string[] = [];
+    const alternatives: string[] = [];
+    const grammarMistakes: string[] = [];
+
+    // Analyze learner input
+    if (clean.includes('食べるでした') || clean.includes('行くでした')) {
+      grammarMistakes.push('Past tense uses 〜ました / 〜た (e.g. 食べました), not dict form + でした.');
+    }
+    if (clean.includes('私は') && clean.split('私は').length > 2) {
+      grammarMistakes.push('In natural spoken Japanese, you can omit 「私は」 (watashi wa) once clear.');
+    }
+
+    if (/こんにちは|おはよう|こんばんは|初めまして|はじめまして|hello|hi/.test(clean)) {
+      if (isRen) {
+        textJp = 'おっ、こんにちは！調子はどう？今日も楽しく日本語で話そうぜ！';
+        reading = 'おっ、こんにちは！ちょうしは どう？きょうも たのしく にほんごで はなそうぜ！';
+        textEn = 'Yo, hello! How are things going? Let’s chat in Japanese today and have fun!';
+        textMy = 'ဟေး၊ မင်္ဂလာပါ! အခြေအနေ ဘယ်လိုရှိလဲ? ဒီနေ့လည်း ဂျပန်လို ပျော်ပျော်ပါးပါး စကားပြောကြမယ်ဟေ့!';
+      } else if (isTanaka) {
+        textJp = 'こんにちは、お疲れ様です。本日はどのような点について情報共有またはご相談でしょうか？';
+        reading = 'こんにちは、おつかれさまです。ほんじつは どのようなてんについて じょうほうきょうゆう または ごそうだんでしょうか？';
+        textEn = 'Hello, thank you for your work. What topic or matter would you like to discuss today?';
+        textMy = 'မင်္ဂလာပါ၊ ပင်ပန်းနေပါပြီ။ ဒီနေ့ ဘယ်အကြောင်းအရာနဲ့ ပတ်သက်ပြီး သတင်းဖလှယ် ဆွေးနွေးလိုပါသလဲခင်ဗျာ?';
+      } else if (isKenji) {
+        textJp = 'こんにちは！いつも熱心に学習されて素晴らしいですね。今日はどんなトピックについて練習しましょうか？';
+        reading = 'こんにちは！いつも ねっしんに がくしゅうされて すばらしいですね。きょうは どんな トピックについて れんしゅうしましょうか？';
+        textEn = 'Hello! It is wonderful to see your dedication to learning. What topic shall we practice today?';
+        textMy = 'မင်္ဂလာပါ! အမြဲတစေ ကြိုးစားလေ့လာနေတာ သိပ်ချီးကျူးဖို့ကောင်းပါတယ်။ ဒီနေ့ ဘာခေါင်းစဉ်လေး လေ့ကျင့်ကြမလဲ?';
+      } else {
+        textJp = 'こんにちは！話しかけてくれて嬉しいです。今日はどんなことについて話しましょうか？';
+        reading = 'こんにちは！はなしかけてくれて うれしいです。きょうは どんなことについて はなしましょうか？';
+        textEn = 'Hello! So happy you chatted with me. What shall we talk about today?';
+        textMy = 'မင်္ဂလာပါ! လှမ်းပြီး စကားပြောပေးလို့ ဝမ်းသာပါတယ်။ ဒီနေ့ ဘာအကြောင်း ပြောကြမလဲ?';
+      }
+      suggestedReplies = ['日本の文化について話したいです', '自己紹介をさせてください', '最近の出来事について話します'];
+      alternatives.push('こんにちは！よろしくお願いします！ (Very natural greeting)');
+    } else if (/好き|すき|趣味|しゅみ|面白い|おもしろい|like|favorite|hobby/.test(clean)) {
+      if (isRen) {
+        textJp = 'それ最高じゃん！俺もそういうのめっちゃ興味あるよ。もっと詳しく教えてよ！';
+        reading = 'それ さいこうじゃん！おれも そういうの めっちゃ きょうみ あるよ。もっと くわしく おしえてよ！';
+        textEn = 'That is awesome! I am super interested in that too. Tell me more details!';
+        textMy = 'ဒါ အမိုက်စားပဲကွ! ငါလည်း အဲဒီလိုမျိုး သိပ်စိတ်ဝင်စားတာ။ အသေးစိတ်လေး ထပ်ပြောပြပါဦး!';
+      } else {
+        textJp = 'そうなんですね！とても魅力的ですね。どうしてそれに興味を持たれたのですか？';
+        reading = 'そうなんですね！とても みりょくてき ですね。どうして それに きょうみを もたれたのですか？';
+        textEn = 'Is that so! That sounds fascinating. What got you interested in it?';
+        textMy = 'ဟုတ်လားခင်ဗျာ! သိပ်စိတ်ဝင်စားဖို့ ကောင်းတယ်နော်။ ဘာကြောင့် အဲဒါကို စိတ်ဝင်စားသွားခဲ့တာလဲ?';
+      }
+      suggestedReplies = ['昔から興味がありました', '友達に勧められたのがきっかけです', 'とても楽しいからです'];
+      alternatives.push('とても気に入っています (I really like it)');
+    } else {
+      // General natural interactive response
+      if (isRen) {
+        textJp = 'なるほどな！よく分かったよ。ちなみに、それについて君はどう思う？';
+        reading = 'なるほどな！よく わかったよ。ちなみに、それについて きみは どう おもう？';
+        textEn = 'I see! I get what you mean. By the way, what are your thoughts on that?';
+        textMy = 'သဘောပေါက်ပါပြီ! ရှင်းရှင်းလင်းလင်း နားလည်ပါတယ်။ ဒါနဲ့ မင်းကရော အဲဒါနဲ့ပတ်သက်ပြီး ဘယ်လိုထင်လဲ?';
+      } else if (isTanaka) {
+        textJp = '承知いたしました。貴重なご意見ありがとうございます。今後どのように進めるのが良いとお考えでしょうか？';
+        reading = 'しょうちいたしました。きちょうな ごいけん ありがとうございます。こんご どのように すすめるのが よいとおかんがえでしょうか？';
+        textEn = 'Understood. Thank you for your valuable input. How do you propose we move forward from here?';
+        textMy = 'သဘောပေါက် နားလည်ပါပြီ။ အဖိုးတန် အမြင်သဘောထားအတွက် ကျေးဇူးတင်ပါတယ်။ နောင် ဘယ်လို ရှေ့ဆက်ရင် ကောင်းမလဲလို့ ယူဆပါသလဲခင်ဗျာ?';
+      } else {
+        textJp = 'なるほど、そうなんですね！とても興味深いお話です。それに関して、もう少し詳しく聞かせてもらえますか？';
+        reading = 'なるほど、そうなんですね！とても きょうみぶかい おはなし です。それにかんして、もうすこし くわしく きかせてもらえますか？';
+        textEn = 'I see, that makes sense! That is very interesting. Could you tell me a little more about it?';
+        textMy = 'ဟုတ်ကဲ့၊ အဲဒီလိုလားခင်ဗျာ! သိပ်စိတ်ဝင်စားစရာ ကောင်းတဲ့ အကြောင်းအရာပဲနော်။ အဲဒါနဲ့ပတ်သက်ပြီး နည်းနည်းလောက် ထပ်ပြောပြပေးနိုင်မလား?';
+      }
+      suggestedReplies = ['例えば、〜ということです', '理由は、〜だからです', '具体的に説明します'];
+      alternatives.push('〜だと思います (I think that...)');
+    }
+
+    return {
+      id: 'ai-speak-' + Date.now(),
+      sender: 'ai',
+      textJp,
+      reading,
+      textEn,
+      textMy,
+      timestamp: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+      apiSource: 'smart_contextual',
+      feedback: {
+        naturalJapaneseAlternatives: alternatives,
+        grammarMistakes,
+        pronunciationTips: ['Keep pauses natural between topic (は) and predicate.'],
+      },
+      suggestedReplies,
     };
   }
 

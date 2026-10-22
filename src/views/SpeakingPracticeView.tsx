@@ -19,11 +19,13 @@ import { JapaneseInput } from '../components/keyboard/JapaneseInput';
 import { SpeakingAttemptResult } from '../types/ai';
 import { JLPTLevel } from '../types';
 import { SPEAKING_EXERCISES } from '../data/speakingData';
+import { InteractiveSpeakingStudio } from '../components/speaking/InteractiveSpeakingStudio';
 
 export const SpeakingPracticeView: React.FC = () => {
   const { activeLevel } = useApp();
   const { logActivity, addXP } = useUser();
 
+  const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>('interactive');
   const [selectedSpeakingLevel, setSelectedSpeakingLevel] = useState<JLPTLevel>(activeLevel || 'N5');
 
   const exercises = useMemo(() => {
@@ -138,55 +140,87 @@ export const SpeakingPracticeView: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
         <div>
-          <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider">
-            Oral Pronunciation & Fluency
+          <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+            <Mic size={14} /> AI Spoken Japanese & Oral Communication
           </span>
           <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            Japanese Speaking & Communication Practice
+            AI စကားပြောလေ့ကျင့်ခန်း (Speaking Practice)
           </h1>
           <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            Listen to native Japanese audio and repeat into the microphone to verify speech clarity and pitch.
+            {activeStudioTab === 'interactive'
+              ? 'AI ဂျပန်မိတ်ဆွေများနှင့် အပြန်အလှန် လူတစ်ယောက်လို လွတ်လပ်စွာ စကားပြောဆို လေ့ကျင့်နိုင်ပါသည်။'
+              : 'Listen to native Japanese audio and repeat into the microphone to verify speech clarity and pitch.'}
           </p>
         </div>
 
-        <span className="text-xs font-bold text-slate-400">
-          Drill {currentIndex + 1} of {exercises.length}
-        </span>
-      </div>
-
-      {/* Non-JLPT Disclaimer Banner */}
-      <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-3 shadow-sm">
-        <ShieldCheck size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
-        <div className="leading-relaxed">
-          <span className="font-extrabold">Curriculum Note: </span>
-          The official JLPT (Japanese-Language Proficiency Test) is a written and listening examination without an oral speaking section.
-          These drills are provided as communicative Japanese reinforcement to develop active recall, correct pitch accent, and workplace fluency.
+        {/* Studio View Switcher Tabs */}
+        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
+          <button
+            type="button"
+            onClick={() => setActiveStudioTab('interactive')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeStudioTab === 'interactive'
+                ? 'bg-gradient-to-r from-brand-600 to-rose-500 text-white shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Sparkles size={14} />
+            <span>Interactive AI Voice (အပြန်အလှန်ပြော)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveStudioTab('drills')}
+            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+              activeStudioTab === 'drills'
+                ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Mic size={14} />
+            <span>Pronunciation Drills (အသံထွက်)</span>
+          </button>
         </div>
       </div>
 
-      {/* Level Selection Chips */}
-      <div className="flex items-center gap-2 overflow-x-auto pb-1">
-        {(['N5', 'N4', 'N3', 'N2', 'N1'] as const).map((lvl) => (
-          <button
-            key={lvl}
-            onClick={() => {
-              setSelectedSpeakingLevel(lvl);
-              setCurrentIndex(0);
-              setResult(null);
-            }}
-            className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
-              selectedSpeakingLevel === lvl
-                ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/20'
-                : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50'
-            }`}
-          >
-            {lvl} Speaking Drills
-          </button>
-        ))}
-      </div>
+      {/* TAB 1: INTERACTIVE AI VOICE CONVERSATION */}
+      {activeStudioTab === 'interactive' && <InteractiveSpeakingStudio />}
 
-      {/* Main Speaking Studio Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-8">
+      {/* TAB 2: PRONUNCIATION & SHADOWING DRILLS */}
+      {activeStudioTab === 'drills' && (
+        <div className="space-y-6 animate-fade-in">
+          {/* Non-JLPT Disclaimer Banner */}
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/30 border border-amber-200 dark:border-amber-800 text-amber-900 dark:text-amber-200 text-xs flex items-start gap-3 shadow-sm">
+            <ShieldCheck size={16} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="leading-relaxed">
+              <span className="font-extrabold">Curriculum Note: </span>
+              The official JLPT is a written and listening examination without an oral speaking section.
+              These pronunciation and pitch drills develop active recall and speaking confidence.
+            </div>
+          </div>
+
+          {/* Level Selection Chips */}
+          <div className="flex items-center gap-2 overflow-x-auto pb-1">
+            {(['N5', 'N4', 'N3', 'N2', 'N1'] as const).map((lvl) => (
+              <button
+                key={lvl}
+                onClick={() => {
+                  setSelectedSpeakingLevel(lvl);
+                  setCurrentIndex(0);
+                  setResult(null);
+                }}
+                className={`px-4 py-2 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                  selectedSpeakingLevel === lvl
+                    ? 'bg-rose-500 text-white shadow-sm shadow-rose-500/20'
+                    : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300 hover:bg-slate-50'
+                }`}
+              >
+                {lvl} Speaking Drills
+              </button>
+            ))}
+          </div>
+
+          {/* Main Speaking Studio Card */}
+          <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-10 border border-slate-200 dark:border-slate-800 shadow-sm text-center space-y-8">
         <div className="space-y-3">
           <span className="px-3 py-1 rounded-full bg-rose-50 dark:bg-rose-950 text-rose-600 dark:text-rose-400 text-xs font-bold uppercase">
             Topic: {currentEx.topic}
@@ -338,5 +372,7 @@ export const SpeakingPracticeView: React.FC = () => {
         )}
       </div>
     </div>
+  )}
+</div>
   );
 };

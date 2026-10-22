@@ -356,6 +356,13 @@ class SpeechService {
     this.activeUtterances.clear();
   }
 
+  /**
+   * Alias for stop() to halt all speech audio
+   */
+  public stopAudio() {
+    this.stop();
+  }
+
   // =========================================================================
   // Speech Recognition (Speech-to-Text) - Backward-Compatible Helper
   // =========================================================================

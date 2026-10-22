@@ -14,6 +14,41 @@ export type AIConversationTopic =
   | 'daily_conversation'
   | 'business_conversation';
 
+export type AIPersonaId = 'yuki' | 'kenji' | 'tanaka' | 'ren';
+
+export interface AIPersona {
+  id: AIPersonaId;
+  name: string;
+  nameJp: string;
+  avatar: string;
+  role: string;
+  roleMy: string;
+  description: string;
+  speechStyle: string;
+}
+
+export interface InteractiveSpeakingScenario {
+  id: string;
+  icon: string;
+  title: string;
+  titleMy: string;
+  titleJp: string;
+  description: string;
+  descriptionMy: string;
+  starterMessages: Record<JLPTLevel, { jp: string; reading: string; en: string; my: string }>;
+  suggestedReplies: Record<JLPTLevel, string[]>;
+}
+
+export interface InteractiveSpeakingOptions {
+  userText: string;
+  scenarioId: string;
+  scenarioTitle: string;
+  customTopicDescription?: string;
+  level: JLPTLevel;
+  personaId: AIPersonaId;
+  sessionHistory: AIMessage[];
+}
+
 export interface AIMessage {
   id: string;
   sender: 'user' | 'ai' | 'system';

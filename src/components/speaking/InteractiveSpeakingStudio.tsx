@@ -277,234 +277,251 @@ export const InteractiveSpeakingStudio: React.FC = () => {
   };
 
   return (
-    <div className="space-y-6 animate-fade-in">
-      {/* 1. Interactive Studio Header & Persona Control Bar */}
-      <div className="p-4 sm:p-6 rounded-3xl bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 border border-slate-800 text-white shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-4">
-        <div className="space-y-1">
-          <div className="flex items-center gap-2 flex-wrap">
-            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse" />
-            <span className="text-[11px] font-black uppercase tracking-wider text-indigo-300">
-              Live Interactive AI Voice Partner (Gemini 3.8 Flash)
-            </span>
-            {isEligible ? (
-              <span className="px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-500/30 text-[10px] font-bold">
-                {profile.role === 'admin' || profile.account_type === 'ADMIN' ? '👑 Admin Live Access' : '⭐ PRO Live Access'}
+    <div className="space-y-3 sm:space-y-4 animate-fade-in">
+      {/* Studio Container with Integrated Sleek Control Bar & Chat Stream */}
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md overflow-hidden flex flex-col h-[calc(100dvh-170px)] sm:h-[650px] min-h-[480px]">
+        {/* 1. Sleek Studio Header (Compact on mobile, rich on desktop) */}
+        <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3 sm:p-4 border-b border-slate-800 shrink-0">
+          <div className="flex items-center justify-between gap-2">
+            {/* Persona Info */}
+            <div className="flex items-center gap-2.5 min-w-0">
+              <div className="relative shrink-0">
+                <div className="w-9 h-9 sm:w-11 sm:h-11 rounded-2xl bg-white/10 border border-white/20 flex items-center justify-center text-xl sm:text-2xl shadow-xs">
+                  {selectedPersona.avatar}
+                </div>
+                <span className="absolute -bottom-0.5 -right-0.5 w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-emerald-400 border-2 border-slate-900 animate-pulse" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-1.5 sm:gap-2">
+                  <span className="font-bold text-sm sm:text-base text-white truncate">
+                    {selectedPersona.name} ({selectedPersona.nameJp})
+                  </span>
+                  <span className="px-1.5 py-0.2 rounded-md text-[9px] sm:text-[10px] font-black bg-rose-500 text-white shrink-0">
+                    {speakingLevel}
+                  </span>
+                </div>
+                <p className="text-[10px] sm:text-xs text-indigo-200/90 truncate">
+                  {isCustomTopicActive && customTopicText.trim()
+                    ? `✍️ ${customTopicText.trim()}`
+                    : `${selectedScenario.titleMy} • ${selectedPersona.roleMy}`}
+                </p>
+              </div>
+            </div>
+
+            {/* Header Action Controls */}
+            <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              {/* Voice Rate / Speed */}
+              <button
+                type="button"
+                onClick={() => {
+                  const nextRate = speechRate === 0.8 ? 1.0 : speechRate === 1.0 ? 1.2 : 0.8;
+                  setSpeechRate(nextRate);
+                }}
+                className="px-2 sm:px-2.5 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-[11px] font-bold text-slate-200 transition-colors cursor-pointer"
+                title="Voice Speed (အသံ အမြန်နှုန်း)"
+              >
+                {speechRate}x
+              </button>
+
+              {/* Auto Voice Toggle */}
+              <button
+                type="button"
+                onClick={() => setAutoPlayVoice(!autoPlayVoice)}
+                className={`p-1.5 sm:px-2.5 sm:py-1 rounded-xl text-[11px] font-bold transition-colors cursor-pointer flex items-center gap-1 border ${
+                  autoPlayVoice
+                    ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
+                    : 'bg-white/10 text-slate-400 border-transparent hover:text-white'
+                }`}
+                title="Auto-Play Voice (အလိုအလျောက် အသံဖွင့်ပေးခြင်း)"
+              >
+                {autoPlayVoice ? <Volume2 size={14} /> : <VolumeX size={14} />}
+                <span className="hidden sm:inline">Voice</span>
+              </button>
+
+              {/* Change Persona / Scenario Drawer Toggle */}
+              <button
+                type="button"
+                onClick={() => setShowConfigDrawer(!showConfigDrawer)}
+                className={`px-2.5 py-1 rounded-xl text-[11px] font-bold flex items-center gap-1 transition-all cursor-pointer ${
+                  showConfigDrawer
+                    ? 'bg-rose-500 text-white shadow-xs'
+                    : 'bg-white/10 hover:bg-white/20 text-slate-200'
+                }`}
+                title="Change Persona or Scenario (စကားပြောဖော် သို့မဟုတ် အကြောင်းအရာ ပြောင်းရန်)"
+              >
+                <Sliders size={13} />
+                <span>Change</span>
+              </button>
+
+              {/* Reset Conversation */}
+              <button
+                type="button"
+                onClick={() => initScenario(selectedScenarioId, selectedPersonaId, speakingLevel, customTopicText)}
+                className="p-1.5 rounded-xl text-slate-400 hover:text-white bg-white/5 hover:bg-white/15 transition-colors cursor-pointer"
+                title="Reset conversation (အသစ်ပြန်စတင်ပါ)"
+              >
+                <RotateCcw size={14} />
+              </button>
+            </div>
+          </div>
+
+          {/* Level Switcher Strip + Live indicator */}
+          <div className="flex items-center justify-between text-[11px] pt-1.5 mt-1 border-t border-white/10">
+            <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
+              <span className="text-[10px] text-slate-400 uppercase font-bold shrink-0 mr-1">Level:</span>
+              {(['N5', 'N4', 'N3', 'N2', 'N1'] as const).map((lvl) => (
+                <button
+                  key={lvl}
+                  type="button"
+                  onClick={() => setSpeakingLevel(lvl)}
+                  className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer ${
+                    speakingLevel === lvl
+                      ? 'bg-rose-500 text-white shadow-xs'
+                      : 'bg-white/10 text-slate-300 hover:bg-white/20'
+                  }`}
+                >
+                  {lvl}
+                </button>
+              ))}
+            </div>
+
+            {isAiSpeaking ? (
+              <div className="flex items-center gap-1 text-[10px] text-emerald-300 font-bold animate-pulse shrink-0">
+                <Volume2 size={12} />
+                <span>AI Speaking...</span>
+              </div>
+            ) : isEligible ? (
+              <span className="text-[9px] font-bold text-amber-300/80 shrink-0">
+                {profile.role === 'admin' || profile.account_type === 'ADMIN' ? '👑 Admin' : '⭐ PRO'}
               </span>
             ) : (
               <button
                 type="button"
                 onClick={() => setAiGateModalOpen(true)}
-                className="px-2.5 py-0.5 rounded-full bg-purple-500/30 text-purple-200 border border-purple-500/40 text-[10px] font-bold hover:bg-purple-500/50 cursor-pointer"
+                className="text-[9px] font-bold text-purple-300 hover:text-purple-200 underline shrink-0 cursor-pointer"
               >
-                🔒 Upgrade to PRO
+                🔒 PRO Live
               </button>
             )}
           </div>
-          <h2 className="text-xl sm:text-2xl font-black flex items-center gap-2">
-            <span>{selectedPersona.avatar}</span>
-            <span>Talking with {selectedPersona.name}</span>
-          </h2>
-          <p className="text-xs text-slate-300">
-            {selectedPersona.roleMy} • {selectedPersona.speechStyle}
-          </p>
         </div>
 
-        {/* Action Controls */}
-        <div className="flex items-center gap-2 flex-wrap">
-          {/* Level Switcher */}
-          <div className="flex items-center gap-1 bg-white/10 rounded-xl p-1 text-xs">
-            {(['N5', 'N4', 'N3', 'N2', 'N1'] as const).map((lvl) => (
+        {/* 2. Persona & Scenario Customizer Drawer (Collapsible & Overlay-friendly) */}
+        {showConfigDrawer && (
+          <div className="p-3.5 sm:p-5 bg-slate-900 border-b border-slate-800 text-white space-y-4 animate-slide-down shrink-0 max-h-[360px] overflow-y-auto custom-scrollbar">
+            <div className="flex items-center justify-between">
+              <span className="text-xs font-bold uppercase tracking-wider text-slate-300">
+                Choose Partner & Topic (စကားပြောဖော် ရွေးချယ်ပါ)
+              </span>
               <button
-                key={lvl}
-                onClick={() => setSpeakingLevel(lvl)}
-                className={`px-2.5 py-1 rounded-lg font-bold transition-all cursor-pointer ${
-                  speakingLevel === lvl
-                    ? 'bg-rose-500 text-white shadow-xs'
-                    : 'text-slate-300 hover:text-white'
-                }`}
+                type="button"
+                onClick={() => setShowConfigDrawer(false)}
+                className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-xs font-bold text-slate-200 cursor-pointer"
               >
-                {lvl}
+                Close ✕
               </button>
-            ))}
-          </div>
+            </div>
 
-          {/* Speed Toggle */}
-          <button
-            onClick={() => {
-              const nextRate = speechRate === 0.8 ? 1.0 : speechRate === 1.0 ? 1.2 : 0.8;
-              setSpeechRate(nextRate);
-            }}
-            className="px-3 py-1.5 rounded-xl bg-white/10 hover:bg-white/20 text-xs font-bold transition-all cursor-pointer flex items-center gap-1"
-            title="Voice Speed (အသံ အမြန်နှုန်း)"
-          >
-            <span>{speechRate}x</span>
-            <span className="text-[10px] text-slate-300">Speed</span>
-          </button>
-
-          {/* Auto-Play Voice Toggle */}
-          <button
-            onClick={() => setAutoPlayVoice(!autoPlayVoice)}
-            className={`px-3 py-1.5 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 border ${
-              autoPlayVoice
-                ? 'bg-emerald-500/20 text-emerald-300 border-emerald-500/40'
-                : 'bg-white/10 text-slate-400 border-transparent hover:text-white'
-            }`}
-            title="Auto-Play Voice (အလိုအလျောက် အသံထွက်ပေးခြင်း)"
-          >
-            {autoPlayVoice ? <Volume2 size={14} /> : <VolumeX size={14} />}
-            <span>Auto-Voice: {autoPlayVoice ? 'ON' : 'OFF'}</span>
-          </button>
-
-          {/* Settings Drawer Toggle */}
-          <button
-            onClick={() => setShowConfigDrawer(!showConfigDrawer)}
-            className={`p-2 rounded-xl transition-all cursor-pointer ${
-              showConfigDrawer
-                ? 'bg-rose-500 text-white'
-                : 'bg-white/10 text-slate-300 hover:bg-white/20 hover:text-white'
-            }`}
-            title="Custom Persona & Topic Settings (စိတ်ကြိုက် ပြင်ဆင်ရန်)"
-          >
-            <Sliders size={16} />
-          </button>
-        </div>
-      </div>
-
-      {/* 2. Persona & Scenario Customizer Drawer */}
-      {showConfigDrawer && (
-        <div className="p-5 sm:p-6 rounded-3xl bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 shadow-md space-y-5 animate-slide-down">
-          <div>
-            <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400 mb-2.5">
-              1. Choose AI Persona & Conversation Tone (စကားပြောဖော် AI ရွေးချယ်ပါ)
-            </h3>
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3">
+            {/* Persona Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-4 gap-2">
               {AI_PERSONAS.map((p) => {
                 const isSelected = p.id === selectedPersonaId;
                 return (
                   <button
                     key={p.id}
-                    onClick={() => setSelectedPersonaId(p.id)}
-                    className={`p-3.5 rounded-2xl text-left border transition-all cursor-pointer ${
+                    type="button"
+                    onClick={() => {
+                      setSelectedPersonaId(p.id);
+                    }}
+                    className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                       isSelected
-                        ? 'border-brand-500 bg-brand-50/60 dark:bg-brand-950/40 ring-2 ring-brand-500/20 shadow-xs'
-                        : 'border-slate-200 dark:border-slate-800 hover:border-slate-300 dark:hover:border-slate-700 bg-slate-50/50 dark:bg-slate-850/50'
+                        ? 'border-brand-400 bg-brand-500/20 ring-1 ring-brand-400 shadow-xs'
+                        : 'border-slate-700 bg-slate-800/60 hover:bg-slate-800'
                     }`}
                   >
-                    <div className="flex items-center gap-2 mb-1">
-                      <span className="text-xl">{p.avatar}</span>
-                      <span className="font-bold text-xs text-slate-900 dark:text-white">{p.name}</span>
+                    <div className="flex items-center gap-1.5 mb-1">
+                      <span className="text-lg">{p.avatar}</span>
+                      <span className="font-bold text-xs text-white truncate">{p.name}</span>
                     </div>
-                    <p className="text-[11px] font-semibold text-brand-600 dark:text-brand-400">{p.roleMy}</p>
-                    <p className="text-[10px] text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
-                      {p.description}
-                    </p>
+                    <p className="text-[10px] font-medium text-slate-300 line-clamp-1">{p.roleMy}</p>
                   </button>
                 );
               })}
             </div>
-          </div>
 
-          <div>
-            <div className="flex items-center justify-between mb-2.5">
-              <h3 className="text-xs font-bold uppercase tracking-wider text-slate-400">
-                2. Select Situation or Custom Topic (အခြေအနေနှင့် စိတ်ကြိုက်အကြောင်းအရာ)
-              </h3>
-              <button
-                onClick={() => {
-                  setIsCustomTopicActive(!isCustomTopicActive);
-                  if (!isCustomTopicActive) setSelectedScenarioId('custom');
-                }}
-                className={`text-xs font-bold px-2.5 py-1 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
-                  isCustomTopicActive
-                    ? 'bg-purple-600 text-white'
-                    : 'bg-purple-50 dark:bg-purple-950/40 text-purple-600 dark:text-purple-400 border border-purple-200 dark:border-purple-800/60'
-                }`}
-              >
-                <span>✍️ Custom Free Topic (မိမိစိတ်ကြိုက်)</span>
-              </button>
-            </div>
+            {/* Scenario / Custom Topic Selector */}
+            <div className="space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-bold uppercase tracking-wider text-slate-400">
+                  Select Situation (အခြေအနေ)
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsCustomTopicActive(!isCustomTopicActive);
+                    if (!isCustomTopicActive) setSelectedScenarioId('custom');
+                  }}
+                  className={`text-[11px] font-bold px-2 py-0.5 rounded-lg transition-colors cursor-pointer flex items-center gap-1 ${
+                    isCustomTopicActive
+                      ? 'bg-purple-600 text-white'
+                      : 'bg-purple-950/40 text-purple-300 border border-purple-800/60'
+                  }`}
+                >
+                  <span>✍️ Custom Topic (မိမိစိတ်ကြိုက်)</span>
+                </button>
+              </div>
 
-            {/* Custom Topic Input Field */}
-            {isCustomTopicActive && (
-              <div className="p-3.5 rounded-2xl bg-purple-50/50 dark:bg-purple-950/20 border border-purple-200 dark:border-purple-800/50 mb-3 space-y-2">
-                <label className="text-xs font-bold text-purple-900 dark:text-purple-300 block">
-                  Describe what situation you want to practice with {selectedPersona.name}:
-                </label>
-                <div className="flex gap-2">
+              {/* Custom Topic Input */}
+              {isCustomTopicActive && (
+                <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-800/60 flex gap-2">
                   <input
                     type="text"
                     value={customTopicText}
                     onChange={(e) => setCustomTopicText(e.target.value)}
-                    placeholder="e.g. Chatting about my hometown in Myanmar, practicing hotel check-out, asking directions in Shibuya..."
-                    className="flex-1 px-3.5 py-2 rounded-xl bg-white dark:bg-slate-800 border border-purple-200 dark:border-purple-700 text-xs text-slate-900 dark:text-white outline-none focus:border-purple-500 font-medium"
+                    placeholder="e.g. Asking directions in Shinjuku, ordering ramen..."
+                    className="flex-1 px-3 py-1.5 rounded-lg bg-slate-900 border border-purple-700 text-xs text-white outline-none focus:border-purple-400"
                   />
                   <button
-                    onClick={() => initScenario('custom', selectedPersonaId, speakingLevel, customTopicText)}
-                    className="px-4 py-2 rounded-xl bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs shadow-xs transition-all cursor-pointer shrink-0"
+                    type="button"
+                    onClick={() => {
+                      initScenario('custom', selectedPersonaId, speakingLevel, customTopicText);
+                      setShowConfigDrawer(false);
+                    }}
+                    className="px-3 py-1.5 rounded-lg bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs cursor-pointer shrink-0"
                   >
-                    Start Roleplay
+                    Apply
                   </button>
                 </div>
-              </div>
-            )}
+              )}
 
-            {/* Scenario Pills */}
-            <div className="flex items-center gap-2 overflow-x-auto pb-1 custom-scrollbar">
-              {INTERACTIVE_SCENARIOS.map((scen) => {
-                const isSelected = selectedScenarioId === scen.id && !isCustomTopicActive;
-                return (
-                  <button
-                    key={scen.id}
-                    onClick={() => {
-                      setIsCustomTopicActive(false);
-                      setSelectedScenarioId(scen.id);
-                    }}
-                    className={`px-3.5 py-2 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shrink-0 border ${
-                      isSelected
-                        ? 'bg-slate-900 dark:bg-white text-white dark:text-slate-900 border-slate-900 dark:border-white shadow-xs'
-                        : 'bg-white dark:bg-slate-800 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-700 hover:border-slate-300'
-                    }`}
-                  >
-                    <span>{scen.icon}</span>
-                    <span>{scen.title}</span>
-                  </button>
-                );
-              })}
+              {/* Scenario Pills */}
+              <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+                {INTERACTIVE_SCENARIOS.map((scen) => {
+                  const isSelected = selectedScenarioId === scen.id && !isCustomTopicActive;
+                  return (
+                    <button
+                      key={scen.id}
+                      type="button"
+                      onClick={() => {
+                        setIsCustomTopicActive(false);
+                        setSelectedScenarioId(scen.id);
+                        setShowConfigDrawer(false);
+                      }}
+                      className={`px-2.5 py-1 rounded-xl text-xs font-bold flex items-center gap-1 transition-all cursor-pointer shrink-0 border ${
+                        isSelected
+                          ? 'bg-white text-slate-900 border-white shadow-xs'
+                          : 'bg-slate-800 text-slate-300 border-slate-700 hover:border-slate-500'
+                      }`}
+                    >
+                      <span>{scen.icon}</span>
+                      <span>{scen.title}</span>
+                    </button>
+                  );
+                })}
+              </div>
             </div>
           </div>
-        </div>
-      )}
-
-      {/* 3. Live Conversational Thread Container */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm overflow-hidden flex flex-col h-[520px]">
-        {/* Scenario Header Bar */}
-        <div className="p-3.5 sm:p-4 border-b border-slate-100 dark:border-slate-800 bg-slate-50/70 dark:bg-slate-850/70 flex items-center justify-between text-xs">
-          <div className="flex items-center gap-2 truncate">
-            <span className="text-base">{selectedScenario.icon}</span>
-            <span className="font-bold text-slate-900 dark:text-white truncate">
-              {isCustomTopicActive && customTopicText.trim() ? customTopicText.trim() : selectedScenario.titleMy}
-            </span>
-            <span className="text-[10px] px-2 py-0.5 rounded-full bg-brand-50 dark:bg-brand-950/60 text-brand-600 dark:text-brand-300 font-bold shrink-0">
-              {speakingLevel}
-            </span>
-          </div>
-
-          <div className="flex items-center gap-2 shrink-0">
-            {isAiSpeaking && (
-              <div className="flex items-center gap-1 px-2.5 py-1 rounded-full bg-emerald-50 dark:bg-emerald-950/40 text-emerald-600 dark:text-emerald-400 font-bold text-[11px] animate-pulse">
-                <Volume2 size={13} />
-                <span>AI Speaking... (ပြောနေပါသည်)</span>
-              </div>
-            )}
-            <button
-              onClick={() => initScenario(selectedScenarioId, selectedPersonaId, speakingLevel, customTopicText)}
-              className="p-1.5 rounded-lg text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors cursor-pointer"
-              title="Reset conversation (အသစ်ပြန်စတင်ပါ)"
-            >
-              <RotateCcw size={15} />
-            </button>
-          </div>
-        </div>
+        )}
 
         {/* Messages Feed */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">

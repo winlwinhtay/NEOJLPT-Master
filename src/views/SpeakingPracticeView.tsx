@@ -28,7 +28,20 @@ export const SpeakingPracticeView: React.FC = () => {
   const { profile, entitlements, logActivity, addXP } = useUser();
   const isEligible = isUserEligibleForLiveAI(profile, entitlements);
 
-  const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>('interactive');
+  const [activeStudioTab, setActiveStudioTab] = useState<'interactive' | 'drills'>(() => {
+    try {
+      const saved = localStorage.getItem('jlpt_speaking_active_tab');
+      if (saved === 'interactive' || saved === 'drills') return saved;
+    } catch {}
+    return 'interactive';
+  });
+
+  const handleTabChange = (tab: 'interactive' | 'drills') => {
+    setActiveStudioTab(tab);
+    try {
+      localStorage.setItem('jlpt_speaking_active_tab', tab);
+    } catch {}
+  };
   const [selectedSpeakingLevel, setSelectedSpeakingLevel] = useState<JLPTLevel>(activeLevel || 'N5');
 
   const exercises = useMemo(() => {
@@ -168,28 +181,28 @@ export const SpeakingPracticeView: React.FC = () => {
   };
 
   return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-6 animate-fade-in">
+    <div className="p-3 sm:p-6 lg:p-8 max-w-4xl mx-auto space-y-3 sm:space-y-6 pb-24 lg:pb-8 animate-fade-in">
       {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 sm:gap-4">
         <div>
-          <span className="text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
-            <Mic size={14} /> AI Spoken Japanese & Oral Communication
-          </span>
-          <div className="flex items-center gap-3">
-            <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-              AI စကားပြောလေ့ကျင့်ခန်း (Speaking Practice)
-            </h1>
+          <div className="flex items-center justify-between sm:justify-start gap-2">
+            <span className="text-[11px] sm:text-xs font-bold text-rose-600 dark:text-rose-400 uppercase tracking-wider flex items-center gap-1.5">
+              <Mic size={13} /> AI Spoken Japanese & Oral Communication
+            </span>
             {isEligible ? (
-              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-amber-50 dark:bg-amber-950/40 text-amber-700 dark:text-amber-300 border border-amber-200 dark:border-amber-800">
                 {profile.role === 'admin' || profile.account_type === 'ADMIN' ? '👑 Admin Live Access' : '⭐ PRO Live Access'}
               </span>
             ) : (
-              <span className="hidden sm:inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
+              <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] sm:text-[10px] font-bold bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800">
                 🔒 PRO Live Speaking
               </span>
             )}
           </div>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+          <h1 className="text-xl sm:text-3xl font-black text-slate-900 dark:text-white mt-0.5">
+            AI စကားပြောလေ့ကျင့်ခန်း
+          </h1>
+          <p className="hidden sm:block text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
             {activeStudioTab === 'interactive'
               ? 'AI ဂျပန်မိတ်ဆွေများနှင့် အပြန်အလှန် လူတစ်ယောက်လို လွတ်လပ်စွာ စကားပြောဆို လေ့ကျင့်နိုင်ပါသည်။'
               : 'Listen to native Japanese audio and repeat into the microphone to verify speech clarity and pitch.'}
@@ -197,30 +210,30 @@ export const SpeakingPracticeView: React.FC = () => {
         </div>
 
         {/* Studio View Switcher Tabs */}
-        <div className="flex items-center gap-1.5 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0">
+        <div className="grid grid-cols-2 sm:flex sm:items-center gap-1 p-1 bg-slate-100 dark:bg-slate-800 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0 shadow-xs">
           <button
             type="button"
-            onClick={() => setActiveStudioTab('interactive')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            onClick={() => handleTabChange('interactive')}
+            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeStudioTab === 'interactive'
                 ? 'bg-gradient-to-r from-brand-600 to-rose-500 text-white shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Sparkles size={14} />
-            <span>Interactive AI Voice (အပြန်အလှန်ပြော)</span>
+            <Sparkles size={14} className="shrink-0" />
+            <span className="truncate">AI အပြန်အလှန်ပြော</span>
           </button>
           <button
             type="button"
-            onClick={() => setActiveStudioTab('drills')}
-            className={`flex items-center gap-1.5 px-3.5 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            onClick={() => handleTabChange('drills')}
+            className={`flex items-center justify-center gap-1.5 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer ${
               activeStudioTab === 'drills'
                 ? 'bg-white dark:bg-slate-900 text-rose-600 dark:text-rose-400 shadow-sm'
                 : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
             }`}
           >
-            <Mic size={14} />
-            <span>Pronunciation Drills (အသံထွက်)</span>
+            <Mic size={14} className="shrink-0" />
+            <span className="truncate">အသံထွက် Drills</span>
           </button>
         </div>
       </div>

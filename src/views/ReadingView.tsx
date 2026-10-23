@@ -39,6 +39,10 @@ import {
 import { ReadingService } from '../services/content/readingService';
 import { ReadingProgressModal } from '../components/reading/ReadingProgressModal';
 import { ReadingLibraryI18n } from '../data/translations/readingLibraryI18n';
+import { ProAIReadingGeneratorModal } from '../components/reading/ProAIReadingGeneratorModal';
+import { AIAccessGateModal } from '../components/auth/AIAccessGateModal';
+import { isUserEligibleForLiveAI } from '../services/entitlementService';
+import { ReadingAiGeneratorService } from '../services/content/readingAiGeneratorService';
 
 export const ReadingView: React.FC = () => {
   const { activeLevel, setActiveLevel } = useApp();
@@ -46,19 +50,29 @@ export const ReadingView: React.FC = () => {
   const { t, language } = useI18n();
   const activeLang = (profile.translationLanguage || language || 'en') as SupportedLanguage;
 
+  const isProOrAdmin = isUserEligibleForLiveAI(profile, entitlements);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
+  const [isGeneratorModalOpen, setIsGeneratorModalOpen] = useState(false);
+  const [isAiGateOpen, setIsAiGateOpen] = useState(false);
 
   // Filter States
   const [selectedTopic, setSelectedTopic] = useState<string>('all');
   const [searchQuery, setSearchQuery] = useState('');
+  const [sourceFilter, setSourceFilter] = useState<'all' | 'core' | 'ai_generated'>('all');
 
-  // Get readings for current active level and topic
+  // Get readings for current active level and topic (combining 50 core + user's saved AI readings)
   const allLevelReadings = useMemo(() => {
-    return ReadingService.getReadingsByLevel(activeLevel);
-  }, [activeLevel]);
+    const core = ReadingService.getReadingsByLevel(activeLevel);
+    const myAi = ReadingAiGeneratorService.getMyGeneratedExercises().filter(
+      (e) => e.level === activeLevel
+    );
+    return [...core, ...myAi];
+  }, [activeLevel, isGeneratorModalOpen]);
 
   const filteredReadings = useMemo(() => {
     return allLevelReadings.filter((r) => {
+      if (sourceFilter === 'core' && r.sourceType === 'ai_generated') return false;
+      if (sourceFilter === 'ai_generated' && r.sourceType !== 'ai_generated') return false;
       if (selectedTopic !== 'all' && r.topic !== selectedTopic) return false;
       if (searchQuery.trim()) {
         const q = searchQuery.toLowerCase();
@@ -71,7 +85,7 @@ export const ReadingView: React.FC = () => {
       }
       return true;
     });
-  }, [allLevelReadings, selectedTopic, searchQuery]);
+  }, [allLevelReadings, selectedTopic, searchQuery, sourceFilter]);
 
   const [selectedReading, setSelectedReading] = useState<UniversityReadingExercise>(() => {
     return (
@@ -230,7 +244,62 @@ export const ReadingView: React.FC = () => {
             <Award size={14} className="text-amber-500" />
             <span className="hidden sm:inline">Progress</span>
           </button>
+
+          {/* Pro AI Generator Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (isProOrAdmin) {
+                setIsGeneratorModalOpen(true);
+              } else {
+                setIsAiGateOpen(true);
+              }
+            }}
+            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-brand-600 hover:opacity-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+            title="Generate personalized JLPT reading practice with AI"
+          >
+            <Sparkles size={14} />
+            <span>Pro AI Generator</span>
+          </button>
         </div>
+      </div>
+
+      {/* Source Filter Switcher (Core vs AI Generated) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+        <button
+          type="button"
+          onClick={() => setSourceFilter('all')}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            sourceFilter === 'all'
+              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          All Lessons ({allLevelReadings.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setSourceFilter('core')}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            sourceFilter === 'core'
+              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          Core 50 Curriculum
+        </button>
+        <button
+          type="button"
+          onClick={() => setSourceFilter('ai_generated')}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+            sourceFilter === 'ai_generated'
+              ? 'bg-gradient-to-r from-amber-500 to-brand-600 text-white shadow-2xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          <Sparkles size={12} className="text-amber-500" />
+          <span>My AI Generated</span>
+        </button>
       </div>
 
       {/* 2. Topic Filter Strip */}
@@ -746,6 +815,27 @@ export const ReadingView: React.FC = () => {
         isOpen={isProgressModalOpen}
         onClose={() => setIsProgressModalOpen(false)}
         activeLevel={activeLevel}
+      />
+
+      {/* Pro AI Reading Generator Modal */}
+      <ProAIReadingGeneratorModal
+        isOpen={isGeneratorModalOpen}
+        onClose={() => setIsGeneratorModalOpen(false)}
+        defaultLevel={activeLevel}
+        onStartPractice={(exercise) => {
+          setSelectedReading(exercise);
+          setUserAnswers({});
+          setIsSubmitted(false);
+          setShowTranslation(false);
+        }}
+      />
+
+      {/* Pro AI Gate Modal for Free Users */}
+      <AIAccessGateModal
+        isOpen={isAiGateOpen}
+        onClose={() => setIsAiGateOpen(false)}
+        featureTitle="Pro AI Reading Generator"
+        featureDescription="Generate unlimited, personalized Japanese reading passages matching your JLPT target level, personal interests, and grammar focus."
       />
     </div>
   );

@@ -12,6 +12,7 @@ import { ReadingValidator } from './readingValidator';
 
 const STORAGE_READING_PROGRESS_KEY = 'jlpt_reading_user_progress_records';
 const STORAGE_CUSTOM_READINGS_KEY = 'jlpt_custom_reading_exercises';
+const inMemoryProgress: ReadingProgressRecord[] = [];
 
 export class ReadingService {
   private static cache = new Map<string, UniversityReadingExercise>();
@@ -116,7 +117,12 @@ export class ReadingService {
     }
 
     try {
-      localStorage.setItem(STORAGE_READING_PROGRESS_KEY, JSON.stringify(list));
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem(STORAGE_READING_PROGRESS_KEY, JSON.stringify(list));
+      } else {
+        inMemoryProgress.length = 0;
+        inMemoryProgress.push(...list);
+      }
     } catch (e) {
       console.warn('Error saving local reading progress:', e);
     }
@@ -145,8 +151,12 @@ export class ReadingService {
    */
   public static getReadingProgressList(): ReadingProgressRecord[] {
     try {
-      const stored = localStorage.getItem(STORAGE_READING_PROGRESS_KEY);
-      if (stored) return JSON.parse(stored);
+      if (typeof localStorage !== 'undefined') {
+        const stored = localStorage.getItem(STORAGE_READING_PROGRESS_KEY);
+        if (stored) return JSON.parse(stored);
+      } else {
+        return [...inMemoryProgress];
+      }
     } catch (e) {
       console.warn('Error reading stored progress:', e);
     }

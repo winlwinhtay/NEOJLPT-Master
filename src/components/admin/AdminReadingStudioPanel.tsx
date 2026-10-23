@@ -21,10 +21,13 @@ import {
   ExternalLink,
   MessageSquare,
   HelpCircle,
+  Database,
+  UploadCloud,
 } from 'lucide-react';
 import { READING_DATA } from '../../data/readingData';
 import { READING_TOPIC_REGISTRY, ReadingTopicId, UniversityReadingExercise } from '../../types/readingCurriculum';
 import { ReadingValidator } from '../../services/content/readingValidator';
+import { ReadingSupabaseSyncService, SyncProgressReport } from '../../services/content/readingSupabaseSync';
 import { JLPTLevel, ReadingLesson } from '../../types';
 
 export const AdminReadingStudioPanel: React.FC = () => {
@@ -36,6 +39,30 @@ export const AdminReadingStudioPanel: React.FC = () => {
   const [inspectedExercise, setInspectedExercise] = useState<ReadingLesson | null>(null);
   const [activeSubTab, setActiveSubTab] = useState<'exercises' | 'matrix' | 'validation'>('exercises');
   const [validationRunCount, setValidationRunCount] = useState(0);
+  const [syncing, setSyncing] = useState(false);
+  const [syncReport, setSyncReport] = useState<SyncProgressReport | null>(() => {
+    try {
+      return ReadingSupabaseSyncService.getProgressReport();
+    } catch {
+      return null;
+    }
+  });
+
+  const handleSyncSupabase = async () => {
+    setSyncing(true);
+    try {
+      const rep = await ReadingSupabaseSyncService.runBatchSync({
+        batchSize: 5,
+        forceRetryFailed: true,
+        onProgress: (r) => setSyncReport(r),
+      });
+      setSyncReport(rep);
+    } catch (e) {
+      console.error('Batch sync error:', e);
+    } finally {
+      setSyncing(false);
+    }
+  };
 
   // Compute validation on all exercises
   const validationMap = useMemo(() => {
@@ -156,7 +183,21 @@ export const AdminReadingStudioPanel: React.FC = () => {
           </p>
         </div>
 
-        <div className="flex items-center gap-2">
+        <div className="flex flex-wrap items-center gap-2">
+          <button
+            type="button"
+            disabled={syncing}
+            onClick={handleSyncSupabase}
+            className={`px-3.5 py-2 rounded-xl text-xs font-bold shadow-xs border flex items-center gap-1.5 transition-all cursor-pointer ${
+              syncing
+                ? 'bg-slate-100 dark:bg-slate-800 text-slate-400 border-slate-200 dark:border-slate-700'
+                : 'bg-indigo-600 hover:bg-indigo-700 text-white border-transparent'
+            }`}
+          >
+            <Database size={14} className={syncing ? 'animate-spin' : ''} />
+            <span>{syncing ? 'Syncing to Supabase...' : 'Sync Library to Supabase'}</span>
+          </button>
+
           <button
             type="button"
             onClick={() => setValidationRunCount((c) => c + 1)}

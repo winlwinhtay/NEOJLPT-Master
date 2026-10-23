@@ -37,10 +37,8 @@ import {
   READING_TOPIC_REGISTRY,
 } from '../types/readingCurriculum';
 import { ReadingService } from '../services/content/readingService';
-import { AIReadingGeneratorModal } from '../components/reading/AIReadingGeneratorModal';
 import { ReadingProgressModal } from '../components/reading/ReadingProgressModal';
-import { AIAccessGateModal } from '../components/auth/AIAccessGateModal';
-import { isUserEligibleForLiveAI } from '../services/entitlementService';
+import { ReadingLibraryI18n } from '../data/translations/readingLibraryI18n';
 
 export const ReadingView: React.FC = () => {
   const { activeLevel, setActiveLevel } = useApp();
@@ -48,9 +46,6 @@ export const ReadingView: React.FC = () => {
   const { t, language } = useI18n();
   const activeLang = (profile.translationLanguage || language || 'en') as SupportedLanguage;
 
-  const isProOrAdmin = isUserEligibleForLiveAI(profile, entitlements);
-  const [isAiGateOpen, setIsAiGateOpen] = useState(false);
-  const [isGeneratorOpen, setIsGeneratorOpen] = useState(false);
   const [isProgressModalOpen, setIsProgressModalOpen] = useState(false);
 
   // Filter States
@@ -235,23 +230,6 @@ export const ReadingView: React.FC = () => {
             <Award size={14} className="text-amber-500" />
             <span className="hidden sm:inline">Progress</span>
           </button>
-
-          {/* AI Generator Button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (isProOrAdmin) {
-                setIsGeneratorOpen(true);
-              } else {
-                setIsAiGateOpen(true);
-              }
-            }}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-brand-600 to-rose-500 hover:opacity-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
-            title="Generate custom reading exercises with AI"
-          >
-            <Sparkles size={14} />
-            <span>AI Generate</span>
-          </button>
         </div>
       </div>
 
@@ -410,6 +388,29 @@ export const ReadingView: React.FC = () => {
             )}
           </div>
         </div>
+
+        {/* Expert Faculty Review In-Progress Notice for N2 & N1 */}
+        {selectedReading.reviewStatus === 'review_required' && (
+          <div className="p-4 rounded-2xl bg-amber-50 dark:bg-amber-950/40 border border-amber-200 dark:border-amber-800 flex items-start gap-3 text-xs animate-fade-in">
+            <AlertCircle size={18} className="text-amber-600 dark:text-amber-400 shrink-0 mt-0.5" />
+            <div className="space-y-1">
+              <div className="font-bold text-amber-900 dark:text-amber-200 flex items-center gap-2">
+                <span>Expert Faculty Review in Progress (N2–N1 Academic Curriculum)</span>
+                <span className="px-2 py-0.5 rounded-full bg-amber-200 dark:bg-amber-900 text-amber-800 dark:text-amber-200 text-[10px] font-black uppercase">
+                  Pending Verification
+                </span>
+              </div>
+              <p className="text-amber-700 dark:text-amber-300 leading-relaxed">
+                This academic passage and comprehension keys are currently undergoing human pedagogical verification by JLPT language instructors before official publication.
+              </p>
+              {selectedReading.reviewerNotes && (
+                <div className="pt-1 text-[11px] text-amber-800 dark:text-amber-200 italic font-sans border-t border-amber-200/60 dark:border-amber-900/40 mt-1">
+                  <strong>Reviewer Audit Notes:</strong> {selectedReading.reviewerNotes}
+                </div>
+              )}
+            </div>
+          </div>
+        )}
 
         {/* Tab switch for Passage / Vocabulary / Grammar */}
         <div className="flex items-center gap-2 border-b border-slate-100 dark:border-slate-800 pb-2">
@@ -740,27 +741,12 @@ export const ReadingView: React.FC = () => {
         </div>
       </div>
 
-      {/* AI Reading Generator Modal */}
-      <AIReadingGeneratorModal
-        isOpen={isGeneratorOpen}
-        onClose={() => setIsGeneratorOpen(false)}
-        defaultLevel={activeLevel}
-        onGenerated={(newExercise) => {
-          setSelectedReading(newExercise);
-          setUserAnswers({});
-          setIsSubmitted(false);
-        }}
-      />
-
       {/* Reading Progress Modal */}
       <ReadingProgressModal
         isOpen={isProgressModalOpen}
         onClose={() => setIsProgressModalOpen(false)}
         activeLevel={activeLevel}
       />
-
-      {/* PRO Access Gate Modal */}
-      <AIAccessGateModal isOpen={isAiGateOpen} onClose={() => setIsAiGateOpen(false)} />
     </div>
   );
 };

@@ -1,4 +1,5 @@
 import { JLPTLevel } from './index';
+import { SpeakingFeedback } from './speakingCoach';
 
 export type AIConversationTopic =
   | 'self_introduction'
@@ -66,6 +67,7 @@ export interface AIMessage {
     pronunciationTips?: string[];
   };
   suggestedReplies?: string[];
+  speakingCoachFeedback?: SpeakingFeedback;
 }
 
 export interface ConversationSession {

@@ -7,20 +7,20 @@ import {
   Sparkles,
   Send,
   RotateCcw,
-  Languages,
+  Sliders,
+  Keyboard,
+  Lightbulb,
+  ArrowRight,
+  GraduationCap,
+  Briefcase,
+  MessageCircle,
+  Bookmark,
+  Check,
+  Edit3,
+  X,
+  HelpCircle,
   Eye,
   EyeOff,
-  CheckCircle2,
-  AlertCircle,
-  MessageSquare,
-  Sliders,
-  Settings,
-  Keyboard,
-  Check,
-  Lightbulb,
-  Radio,
-  Flame,
-  ArrowRight,
 } from 'lucide-react';
 import { useApp } from '../../context/AppContext';
 import { useUser } from '../../context/UserContext';
@@ -33,8 +33,11 @@ import { AIAccessGateModal } from '../auth/AIAccessGateModal';
 import { AI_PERSONAS, INTERACTIVE_SCENARIOS } from '../../data/interactiveSpeakingData';
 import { AIMessage, AIPersonaId } from '../../types/ai';
 import { JLPTLevel } from '../../types';
+import { SpeakingMode, SpeakingFeedback } from '../../types/speakingCoach';
+import { SpeakingCoachService } from '../../services/speakingCoachService';
+import { SpeakingFeedbackPanel } from './SpeakingFeedbackPanel';
+import { SpeakingLearningHistoryModal } from './SpeakingLearningHistoryModal';
 import { JapaneseInput } from '../keyboard/JapaneseInput';
-import { TranslationToggleButton } from '../common/TranslationToggleButton';
 
 interface InteractiveSpeakingStudioProps {
   onSwitchToDrills?: () => void;
@@ -57,12 +60,19 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
   const [autoPlayVoice, setAutoPlayVoice] = useState<boolean>(true);
   const [showConfigDrawer, setShowConfigDrawer] = useState<boolean>(false);
 
+  // Intelligent Coaching States
+  const [speakingMode, setSpeakingMode] = useState<SpeakingMode>('learning_mode');
+  const [explanationLang, setExplanationLang] = useState<'en' | 'my' | 'ja'>('my');
+  const [isLearningHistoryOpen, setIsLearningHistoryOpen] = useState<boolean>(false);
+
   // Chat & Conversation States
   const [messages, setMessages] = useState<AIMessage[]>([]);
   const [inputMode, setInputMode] = useState<'voice' | 'typing'>('voice');
   const [textInput, setTextInput] = useState('');
   const [isRecording, setIsRecording] = useState(false);
   const [liveTranscript, setLiveTranscript] = useState('');
+  const [pendingSpokenTranscript, setPendingSpokenTranscript] = useState('');
+  const [isReviewingSpeech, setIsReviewingSpeech] = useState(false);
   const [isAiProcessing, setIsAiProcessing] = useState(false);
   const [isAiSpeaking, setIsAiSpeaking] = useState(false);
   const [revealedTranslations, setRevealedTranslations] = useState<Record<string, boolean>>({});
@@ -93,6 +103,10 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
   const initScenario = (scenarioId: string, personaId: AIPersonaId, lvl: JLPTLevel, customDesc?: string) => {
     speechService.stopAudio();
     setIsAiSpeaking(false);
+    setIsReviewingSpeech(false);
+    setPendingSpokenTranscript('');
+    setLiveTranscript('');
+
     const scen = INTERACTIVE_SCENARIOS.find((s) => s.id === scenarioId) || INTERACTIVE_SCENARIOS[0];
     const starter = scen.starterMessages[lvl] || scen.starterMessages['N5'];
     const replies = scen.suggestedReplies[lvl] || scen.suggestedReplies['N5'];
@@ -131,7 +145,7 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
   // Auto-scroll to bottom of conversation
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
-  }, [messages, isAiProcessing, isAiSpeaking]);
+  }, [messages, isAiProcessing, isAiSpeaking, isReviewingSpeech]);
 
   const toggleTranslation = (msgId: string) => {
     setRevealedTranslations((prev) => ({ ...prev, [msgId]: !prev[msgId] }));
@@ -173,6 +187,8 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
     speechService.stopAudio();
     setIsAiSpeaking(false);
     setLiveTranscript('');
+    setPendingSpokenTranscript('');
+    setIsReviewingSpeech(false);
     setIsRecording(true);
 
     const session = speechService.createContinuousRecognitionSession({
@@ -188,7 +204,8 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
         const trimmed = finalText.trim();
         if (trimmed) {
           setLiveTranscript(trimmed);
-          handleSendMessage(trimmed);
+          setPendingSpokenTranscript(trimmed);
+          setIsReviewingSpeech(true);
         }
       },
       onError: (err: any) => {
@@ -209,13 +226,14 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
       setTimeout(() => {
         const simulated = 'こんにちは！楽しく日本語を話しましょう。';
         setLiveTranscript(simulated);
+        setPendingSpokenTranscript(simulated);
         setIsRecording(false);
-        handleSendMessage(simulated);
+        setIsReviewingSpeech(true);
       }, 2500);
     }
   };
 
-  // Send User Message & Trigger Persona-Driven AI Voice Response
+  // Send User Message & Trigger Intelligent Coaching Analysis + AI Voice Response
   const handleSendMessage = async (textToSend: string) => {
     const trimmed = textToSend.trim();
     if (!trimmed || isAiProcessing) return;
@@ -239,6 +257,8 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
     setMessages(nextHistory);
     setTextInput('');
     setLiveTranscript('');
+    setPendingSpokenTranscript('');
+    setIsReviewingSpeech(false);
     setIsAiProcessing(true);
 
     // Track user speaking progress
@@ -246,23 +266,48 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
     logActivity('practice', 1);
 
     try {
-      // 2. Request AI Persona Response
-      const reply = await AIService.generateInteractiveSpeakingReply({
+      const currentTopic =
+        isCustomTopicActive && customTopicText.trim()
+          ? customTopicText.trim()
+          : selectedScenario.title;
+
+      // 2. Run Conversation Generation & Intelligent Coaching Analysis in Parallel
+      const conversationPromise = AIService.generateInteractiveSpeakingReply({
         userText: trimmed,
         scenarioId: selectedScenarioId,
-        scenarioTitle: isCustomTopicActive && customTopicText.trim() ? customTopicText.trim() : selectedScenario.title,
+        scenarioTitle: currentTopic,
         customTopicDescription: isCustomTopicActive ? customTopicText.trim() : undefined,
         level: speakingLevel,
         personaId: selectedPersonaId,
         sessionHistory: nextHistory,
       });
 
-      setMessages((prev) => [...prev, reply]);
+      const coachingPromise = SpeakingCoachService.analyzeSpokenSpeech({
+        userText: trimmed,
+        conversationHistory: nextHistory.map((m) => ({ sender: m.sender, text: m.textJp })),
+        topic: currentTopic,
+        mode: speakingMode,
+        level: speakingLevel,
+        explanationLang,
+      });
+
+      const [reply, feedback] = await Promise.all([conversationPromise, coachingPromise]);
+
+      // Record speaking session & feedback persistence
+      SpeakingCoachService.recordSpeakingSession(currentTopic, speakingMode, speakingLevel, feedback);
+
+      // Attach feedback to reply message
+      const enrichedReply: AIMessage = {
+        ...reply,
+        speakingCoachFeedback: feedback,
+      };
+
+      setMessages((prev) => [...prev, enrichedReply]);
 
       // 3. Auto-play AI native voice response
       if (autoPlayVoice) {
         setIsAiSpeaking(true);
-        speechService.speakJapanese(reply.textJp, {
+        speechService.speakJapanese(enrichedReply.textJp, {
           rate: speechRate,
           onEnd: () => setIsAiSpeaking(false),
           onError: () => setIsAiSpeaking(false),
@@ -276,14 +321,13 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
   };
 
   const handleSelectSuggestedReply = (replyText: string) => {
-    // Fill text input and send, or speak aloud
     handleSendMessage(replyText);
   };
 
   return (
     <div className="space-y-3 sm:space-y-4 animate-fade-in">
       {/* Studio Container with Integrated Sleek Control Bar & Chat Stream */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md overflow-hidden flex flex-col h-[calc(100dvh-170px)] sm:h-[650px] min-h-[480px]">
+      <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-md overflow-hidden flex flex-col h-[calc(100dvh-170px)] sm:h-[680px] min-h-[500px]">
         {/* 1. Sleek Studio Header (Compact on mobile, rich on desktop) */}
         <div className="bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3 sm:p-4 border-b border-slate-800 shrink-0">
           <div className="flex items-center justify-between gap-2">
@@ -314,6 +358,27 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
 
             {/* Header Action Controls */}
             <div className="flex items-center gap-1 sm:gap-2 shrink-0">
+              {/* My Learning Notes & History Button */}
+              <button
+                type="button"
+                onClick={() => setIsLearningHistoryOpen(true)}
+                className="px-2.5 py-1 rounded-xl bg-indigo-600/60 hover:bg-indigo-600 border border-indigo-400/40 text-[11px] font-bold text-white transition-colors cursor-pointer flex items-center gap-1 shadow-xs"
+                title="View Saved Vocabulary, Grammar & Past Sessions (လေ့လာထားသော မှတ်စုများ)"
+              >
+                <Bookmark size={13} />
+                <span className="hidden sm:inline">Notebook</span>
+              </button>
+
+              {/* Explanation Language Toggle (EN / MY) */}
+              <button
+                type="button"
+                onClick={() => setExplanationLang(explanationLang === 'my' ? 'en' : 'my')}
+                className="px-2 py-1 rounded-xl bg-white/10 hover:bg-white/20 text-[11px] font-bold text-slate-200 transition-colors cursor-pointer flex items-center gap-1 border border-white/10"
+                title="Coaching Explanation Language (ရှင်းလင်းချက် ဘာသာစကား)"
+              >
+                <span>{explanationLang === 'my' ? '🇲🇲 MM' : '🇬🇧 EN'}</span>
+              </button>
+
               {/* Voice Rate / Speed */}
               <button
                 type="button"
@@ -382,9 +447,55 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
             </div>
           </div>
 
-          {/* Level Switcher Strip + Live indicator */}
-          <div className="flex items-center justify-between text-[11px] pt-1.5 mt-1 border-t border-white/10">
-            <div className="flex items-center gap-1 overflow-x-auto custom-scrollbar">
+          {/* Level Switcher Strip + Mode Selector Bar */}
+          <div className="flex flex-wrap items-center justify-between text-[11px] pt-2 mt-1.5 border-t border-white/10 gap-2">
+            {/* 3 Coaching Modes */}
+            <div className="flex items-center gap-1 bg-white/10 p-0.5 rounded-xl">
+              <button
+                type="button"
+                onClick={() => setSpeakingMode('natural_conversation')}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  speakingMode === 'natural_conversation'
+                    ? 'bg-brand-500 text-white shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Natural Conversation: Light, spontaneous conversational flow"
+              >
+                <MessageCircle size={11} />
+                <span>Natural Flow</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSpeakingMode('learning_mode')}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  speakingMode === 'learning_mode'
+                    ? 'bg-rose-500 text-white shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Learning Mode: Detailed grammar, particle breakdown, and exercises"
+              >
+                <GraduationCap size={11} />
+                <span>Learning Mode</span>
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setSpeakingMode('professional_speaking')}
+                className={`px-2 py-0.5 rounded-lg text-[10px] font-bold transition-all cursor-pointer flex items-center gap-1 ${
+                  speakingMode === 'professional_speaking'
+                    ? 'bg-purple-600 text-white shadow-xs'
+                    : 'text-slate-300 hover:text-white'
+                }`}
+                title="Professional Speaking: Business Japanese & Keigo (丁寧語・尊敬語・謙譲語)"
+              >
+                <Briefcase size={11} />
+                <span>Business Keigo</span>
+              </button>
+            </div>
+
+            {/* JLPT Level Selector */}
+            <div className="flex items-center gap-1">
               <span className="text-[10px] text-slate-400 uppercase font-bold shrink-0 mr-1">Level:</span>
               {(['N5', 'N4', 'N3', 'N2', 'N1'] as const).map((lvl) => (
                 <button
@@ -402,6 +513,7 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
               ))}
             </div>
 
+            {/* AI speaking indicator */}
             {isAiSpeaking ? (
               <div className="flex items-center gap-1 text-[10px] text-emerald-300 font-bold animate-pulse shrink-0">
                 <Volume2 size={12} />
@@ -423,7 +535,7 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
           </div>
         </div>
 
-        {/* 2. Persona & Scenario Customizer Drawer (Collapsible & Overlay-friendly) */}
+        {/* 2. Persona & Scenario Customizer Drawer (Collapsible) */}
         {showConfigDrawer && (
           <div className="p-3.5 sm:p-5 bg-slate-900 border-b border-slate-800 text-white space-y-4 animate-slide-down shrink-0 max-h-[360px] overflow-y-auto custom-scrollbar">
             <div className="flex items-center justify-between">
@@ -447,9 +559,7 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
                   <button
                     key={p.id}
                     type="button"
-                    onClick={() => {
-                      setSelectedPersonaId(p.id);
-                    }}
+                    onClick={() => setSelectedPersonaId(p.id)}
                     className={`p-2.5 rounded-2xl text-left border transition-all cursor-pointer ${
                       isSelected
                         ? 'border-brand-400 bg-brand-500/20 ring-1 ring-brand-400 shadow-xs'
@@ -540,7 +650,7 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
           </div>
         )}
 
-        {/* Messages Feed */}
+        {/* 3. Messages Feed */}
         <div className="flex-1 overflow-y-auto p-4 sm:p-6 space-y-5">
           {messages.map((m) => {
             const isUser = m.sender === 'user';
@@ -556,8 +666,8 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
                   {isUser ? profile.avatar || '👤' : selectedPersona.avatar}
                 </div>
 
-                {/* Message Bubble */}
-                <div className="space-y-1.5 max-w-[85%] sm:max-w-xl">
+                {/* Message Bubble & Feedback Container */}
+                <div className="space-y-1.5 max-w-[90%] sm:max-w-xl">
                   {/* Sender Name & Timestamp */}
                   <div
                     className={`flex items-center gap-2 text-[10px] text-slate-400 ${
@@ -632,30 +742,21 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
                     </div>
                   </div>
 
-                  {/* Coaching Card under AI message (Native Alternatives & Grammar Tips) */}
-                  {!isUser && m.feedback && (
-                    <div className="p-3 rounded-2xl bg-amber-50/70 dark:bg-amber-950/25 border border-amber-200/60 dark:border-amber-900/40 text-xs space-y-1.5 animate-fade-in">
-                      {m.feedback.naturalJapaneseAlternatives && m.feedback.naturalJapaneseAlternatives.length > 0 && (
-                        <div className="text-amber-900 dark:text-amber-300">
-                          <span className="font-bold flex items-center gap-1">
-                            <Lightbulb size={12} className="text-amber-500" />
-                            <span>How a Native Would Say It (သဘာဝကျကျ ပြောဆိုနည်း):</span>
-                          </span>
-                          <ul className="list-disc list-inside mt-0.5 space-y-0.5 font-japanese text-[11px]">
-                            {m.feedback.naturalJapaneseAlternatives.map((alt, i) => (
-                              <li key={i}>{alt}</li>
-                            ))}
-                          </ul>
-                        </div>
-                      )}
-
-                      {m.feedback.grammarMistakes && m.feedback.grammarMistakes.length > 0 && (
-                        <div className="text-rose-700 dark:text-rose-400 text-[11px]">
-                          <span className="font-bold">💡 Grammar Note: </span>
-                          <span>{m.feedback.grammarMistakes.join('; ')}</span>
-                        </div>
-                      )}
-                    </div>
+                  {/* Yuki's Intelligent Speaking Coach Feedback Card */}
+                  {!isUser && m.speakingCoachFeedback && (
+                    <SpeakingFeedbackPanel
+                      feedback={m.speakingCoachFeedback}
+                      mode={speakingMode}
+                      explanationLang={explanationLang}
+                      onRetryAttempt={(textToPractice) => {
+                        setTextInput(textToPractice);
+                        setInputMode('typing');
+                      }}
+                      onPracticeGrammar={(point) => {
+                        setTextInput(point);
+                        setInputMode('typing');
+                      }}
+                    />
                   )}
                 </div>
               </div>
@@ -670,7 +771,9 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
               </div>
               <div className="p-4 rounded-3xl bg-slate-100 dark:bg-slate-800 text-slate-500 text-xs flex items-center gap-2">
                 <Sparkles size={16} className="text-brand-500 animate-spin-slow" />
-                <span>{selectedPersona.name} is thinking and formulating spoken Japanese...</span>
+                <span>
+                  {selectedPersona.name} is evaluating your speech, grammar, and formulating natural Japanese...
+                </span>
               </div>
             </div>
           )}
@@ -700,13 +803,13 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
           )}
 
         {/* 4. Live Recording & Interactive Input Deck */}
-        <div className="p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2">
-          {/* Live Transcript / Hearing preview */}
+        <div className="p-3.5 sm:p-4 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 space-y-2.5">
+          {/* A. Live Speech Hearing indicator */}
           {isRecording && (
             <div className="p-3 rounded-2xl bg-rose-50 dark:bg-rose-950/30 border border-rose-200 dark:border-rose-900/50 flex items-center justify-between gap-3 text-xs text-rose-700 dark:text-rose-300 animate-pulse">
               <div className="flex items-center gap-2 truncate">
                 <span className="w-2.5 h-2.5 rounded-full bg-rose-500 inline-block animate-ping" />
-                <span className="font-bold shrink-0">Hearing you in Japanese:</span>
+                <span className="font-bold shrink-0">Hearing Japanese:</span>
                 <span className="font-japanese font-bold text-slate-900 dark:text-white truncate">
                   "{liveTranscript || 'Listening... speak clearly into microphone'}"
                 </span>
@@ -716,12 +819,55 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
                 onClick={handleToggleRecording}
                 className="px-3 py-1 rounded-xl bg-rose-600 text-white font-bold text-xs hover:bg-rose-700 shrink-0 cursor-pointer"
               >
-                Send Speech
+                Finish Speaking
               </button>
             </div>
           )}
 
-          {/* Mode Switcher & Input Controls */}
+          {/* B. Editable Spoken Review Bar (Allows user to inspect and edit transcript before Yuki evaluates) */}
+          {isReviewingSpeech && pendingSpokenTranscript && !isRecording && (
+            <div className="p-3 rounded-2xl bg-indigo-50 dark:bg-indigo-950/30 border border-indigo-200 dark:border-indigo-900/50 space-y-2 animate-slide-down">
+              <div className="flex items-center justify-between text-xs">
+                <span className="font-bold text-indigo-950 dark:text-indigo-300 flex items-center gap-1.5">
+                  <Edit3 size={13} className="text-indigo-600" />
+                  <span>Review Spoken Transcript (အသံဖမ်းယူရရှိသော စာသားကို စစ်ဆေး/ပြင်ဆင်ပါ)</span>
+                </span>
+                <button
+                  type="button"
+                  onClick={() => {
+                    setIsReviewingSpeech(false);
+                    setPendingSpokenTranscript('');
+                  }}
+                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200 p-0.5"
+                >
+                  <X size={14} />
+                </button>
+              </div>
+
+              <div className="flex gap-2">
+                <input
+                  type="text"
+                  value={pendingSpokenTranscript}
+                  onChange={(e) => setPendingSpokenTranscript(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') handleSendMessage(pendingSpokenTranscript);
+                  }}
+                  placeholder="You can edit the Japanese text here before sending..."
+                  className="flex-1 px-3 py-2 rounded-xl bg-white dark:bg-slate-900 border border-indigo-300 dark:border-indigo-800 font-japanese font-bold text-sm text-slate-900 dark:text-white outline-none focus:border-indigo-500 shadow-2xs"
+                />
+                <button
+                  type="button"
+                  onClick={() => handleSendMessage(pendingSpokenTranscript)}
+                  className="px-4 py-2 rounded-xl bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs flex items-center gap-1.5 shadow-xs transition-colors cursor-pointer shrink-0"
+                >
+                  <Send size={13} />
+                  <span>Send & Analyze</span>
+                </button>
+              </div>
+            </div>
+          )}
+
+          {/* C. Mode Switcher & Input Controls */}
           <div className="flex items-center gap-2">
             <button
               type="button"
@@ -780,6 +926,13 @@ export const InteractiveSpeakingStudio: React.FC<InteractiveSpeakingStudioProps>
           </div>
         </div>
       </div>
+
+      {/* Speaking Learning Notes & Progress Modal */}
+      <SpeakingLearningHistoryModal
+        isOpen={isLearningHistoryOpen}
+        onClose={() => setIsLearningHistoryOpen(false)}
+        explanationLang={explanationLang}
+      />
 
       {/* PRO Plan Upgrade Gate Modal */}
       <AIAccessGateModal isOpen={aiGateModalOpen} onClose={() => setAiGateModalOpen(false)} />

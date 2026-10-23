@@ -23,6 +23,7 @@ import {
   CheckCircle2,
   AlertTriangle,
   Layers,
+  BookMarked,
 } from 'lucide-react';
 import { useUser } from '../context/UserContext';
 import { useApp } from '../context/AppContext';
@@ -40,6 +41,7 @@ import { AdminRevenuePanel } from '../components/admin/AdminRevenuePanel';
 import { AdminSettingsPanel } from '../components/admin/AdminSettingsPanel';
 import { AdminLearningAnalyticsPanel } from '../components/admin/AdminLearningAnalyticsPanel';
 import { AdminContentPanel } from '../components/admin/AdminContentPanel';
+import { AdminReadingStudioPanel } from '../components/admin/AdminReadingStudioPanel';
 import { AdminSystemHealthPanel } from '../components/admin/AdminSystemHealthPanel';
 import { AdminAuditLogsPanel } from '../components/admin/AdminAuditLogsPanel';
 import { AdminSecurityPanel } from '../components/admin/AdminSecurityPanel';
@@ -56,6 +58,7 @@ export type AdminConsoleTab =
   | 'settings'
   | 'analytics'
   | 'content'
+  | 'reading-studio'
   | 'exam-blueprints'
   | 'system-health'
   | 'audit-logs'
@@ -139,6 +142,7 @@ export const AdminView: React.FC = () => {
       title: 'Curriculum & Config',
       items: [
         { id: 'content', label: 'Content Management', icon: <BookOpen size={18} /> },
+        { id: 'reading-studio', label: 'Reading Content Studio', icon: <BookMarked size={18} />, badge: '50 Ex' },
         { id: 'exam-blueprints', label: 'JLPT Exam Blueprints', icon: <Layers size={18} />, badge: 'Official' },
         { id: 'settings', label: 'Plan & Feature Settings', icon: <Sliders size={18} /> },
       ],
@@ -253,6 +257,8 @@ export const AdminView: React.FC = () => {
         return <AdminLearningAnalyticsPanel />;
       case 'content':
         return <AdminContentPanel />;
+      case 'reading-studio':
+        return <AdminReadingStudioPanel />;
       case 'exam-blueprints':
         return <AdminExamBlueprintPanel />;
       case 'system-health':

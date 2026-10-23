@@ -202,22 +202,38 @@ export interface ReadingLesson {
   id: string;
   title: string;
   titleEn: string;
+  titleMy?: string;
   level: JLPTLevel;
-  topic: 'daily_life' | 'school' | 'work' | 'travel' | 'culture' | 'society' | 'technology' | 'environment' | 'news' | 'business' | 'academic';
+  topic: 'daily_life' | 'school' | 'work' | 'travel' | 'culture' | 'society' | 'technology' | 'environment' | 'news' | 'business' | 'academic' | 'food' | 'community' | string;
+  subtopic?: string;
+  learningObjectives?: string[];
+  learningObjectivesMy?: string[];
+  difficultyRating?: number;
+  estimatedReadingTimeMinutes?: number;
   length: 'short' | 'medium' | 'long';
   passage: string; // May contain furigana notation e.g. [漢字]{かんじ}
   passagePlain: string;
   translationEn: string;
-  vocabularyList: { word: string; reading: string; meaning: string }[];
+  translationMy?: string;
+  vocabularyList: { word: string; reading: string; meaning: string; meaningMy?: string; example?: string }[];
+  grammarPoints?: { grammar: string; meaning: string; meaningMy?: string; explanation: string; explanationMy?: string; exampleJp?: string }[];
   audioScript?: string;
   questions: {
     id: string;
     questionJp: string;
     questionEn?: string;
+    questionMy?: string;
     options: string[];
+    optionsMy?: string[];
     correctIndex: number;
     explanation: string;
+    explanationMy?: string;
+    optionExplanations?: string[];
   }[];
+  reviewStatus?: 'published' | 'approved' | 'review_required' | 'draft';
+  contentVersion?: string;
+  sourceType?: 'curated_university' | 'ai_generated' | 'official_sample';
+  reviewerNotes?: string;
 }
 
 export interface ListeningLesson {

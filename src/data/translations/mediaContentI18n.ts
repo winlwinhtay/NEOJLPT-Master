@@ -5,6 +5,7 @@
 // ============================================================================
 
 import { SupportedLanguage } from '../../types/i18n';
+import { READING_DATA } from '../readingData';
 
 // ----------------------------------------------------------------------------
 // 1. Reading Passages Translations (8 Canonical JLPT Passages N5 -> N1)
@@ -586,6 +587,12 @@ export function getLocalizedReadingPassage(
   const match = READING_PASSAGES_I18N[passageId];
   if (match && match[lang]) {
     return match[lang]!;
+  }
+  if (lang === 'my') {
+    const readingItem = READING_DATA.find((r) => r.id === passageId);
+    if (readingItem && readingItem.translationMy) {
+      return readingItem.translationMy;
+    }
   }
   return defaultEn;
 }

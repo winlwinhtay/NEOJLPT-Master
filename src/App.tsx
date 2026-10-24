@@ -23,7 +23,6 @@ import { PracticeView } from './views/PracticeView';
 import { MockTestView } from './views/MockTestView';
 import { BusinessJapaneseView } from './views/BusinessJapaneseView';
 import { ActiveLearningView } from './views/ActiveLearningView';
-import { AIConversationView } from './views/AIConversationView';
 import { SpeakingPracticeView } from './views/SpeakingPracticeView';
 import { ProgressAnalyticsView } from './views/ProgressAnalyticsView';
 import { DictionaryView } from './views/DictionaryView';
@@ -63,7 +62,6 @@ export const App: React.FC = () => {
       case 'active-learning':
         return <ActiveLearningView />;
       case 'ai-conversation':
-        return <AIConversationView />;
       case 'speaking':
         return <SpeakingPracticeView />;
       case 'progress':

@@ -66,7 +66,7 @@ export class AuthService {
         allowed: false,
         reason: 'login_required',
         message:
-          'Please sign in to your account. Live interactive AI conversation is powered by Gemini and available for Administrator and PRO / PREMIUM members.',
+          'Please sign in to your account. Live interactive AI speaking practice is powered by Gemini and available for Administrator and PRO / PREMIUM members.',
       };
     }
 
@@ -74,7 +74,7 @@ export class AuthService {
       allowed: false,
       reason: 'unsupported',
       message:
-        'Live interactive Gemini AI is exclusively available for Admin and PRO / PREMIUM members. Please upgrade your plan or redeem a gift code to unlock unlimited AI conversation.',
+        'Live interactive Gemini AI is exclusively available for Admin and PRO / PREMIUM members. Please upgrade your plan or redeem a gift code to unlock unlimited AI speaking practice.',
     };
   }
 

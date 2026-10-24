@@ -87,7 +87,7 @@ export const AIAccessGateModal: React.FC<AIAccessGateModalProps> = ({
                 <span>メール登録で解放 (Supabase)</span>
               </span>
               <ul className="space-y-1.5 text-slate-700 dark:text-slate-300 text-[11px]">
-                <li>★ Live AI Conversation Tutor</li>
+                <li>★ Live AI Speaking Coach (🌸 Yuki)</li>
                 <li>★ AI Personal Grammar Explainer</li>
                 <li>★ AI Business Email Proofreader</li>
                 <li>★ Cloud Multi-Device Sync</li>

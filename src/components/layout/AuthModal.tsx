@@ -303,7 +303,7 @@ export const AuthModal: React.FC = () => {
               <span>Normal users: No login required to study JLPT!</span>
             </div>
             <p className="text-[11px] text-slate-600 dark:text-slate-300 leading-relaxed">
-              All curriculum, vocabulary, kanji, listening, mock tests, and virtual keyboard typing are completely free. Sign in with your email in our Supabase database to unlock full AI API features (AI Conversation, AI Tutor Explainer & Email Proofreading).
+              All curriculum, vocabulary, kanji, listening, mock tests, and virtual keyboard typing are completely free. Sign in with your email in our Supabase database to unlock full AI API features (Speaking Practice - Yuki, AI Tutor Explainer & Email Proofreading).
             </p>
           </div>
 

@@ -905,7 +905,7 @@ export const LoginView: React.FC = () => {
                   </li>
                   <li className="flex items-center gap-2">
                     <Check size={14} className="text-purple-600 shrink-0" />
-                    <span>Live Voice AI Conversation</span>
+                    <span>Live Voice AI Speaking Practice (🌸 Yuki)</span>
                   </li>
                   <li className="flex items-center gap-2">
                     <Check size={14} className="text-purple-600 shrink-0" />

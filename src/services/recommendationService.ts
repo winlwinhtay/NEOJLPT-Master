@@ -75,13 +75,13 @@ export class RecommendationService {
       });
     }
 
-    // 4. Conversation practice suggestion
+    // 4. Speaking practice suggestion
     recommendations.push({
       id: 'rec-ai-chat',
       type: 'conversation',
-      title: `AI Japanese Conversation: Restaurant / Daily Life`,
+      title: `AI Japanese Speaking & Conversation (🌸 Yuki)`,
       subtitle: 'Practice outputting sentences with AI instant grammar feedback.',
-      actionView: 'ai-conversation',
+      actionView: 'speaking',
       priority: 'medium',
       estimatedMinutes: 8,
       reason: 'Active sentence production solidifies grammar comprehension.',

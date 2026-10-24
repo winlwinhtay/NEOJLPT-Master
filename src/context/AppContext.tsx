@@ -28,6 +28,14 @@ interface AppContextType {
   setSelectedKanjiId: (id: string | null) => void;
   selectedVocabId: string | null;
   setSelectedVocabId: (id: string | null) => void;
+  selectedReadingId: string | null;
+  setSelectedReadingId: (id: string | null) => void;
+  selectedListeningId: string | null;
+  setSelectedListeningId: (id: string | null) => void;
+  isExamSimulating: boolean;
+  setIsExamSimulating: (simulating: boolean) => void;
+  isDistractionFree: boolean;
+  exitLessonMode: () => void;
   navigateToLesson: (lessonId: string) => void;
   loginInitialTab: 'auth' | 'plans';
   setLoginInitialTab: (tab: 'auth' | 'plans') => void;
@@ -42,6 +50,28 @@ const VALID_VIEWS: ViewType[] = [
   'speaking', 'progress', 'dictionary', 'profile', 'settings', 'admin', 'typing-practice', 'login'
 ];
 
+const parseHashState = () => {
+  if (typeof window === 'undefined') {
+    return {
+      view: 'dashboard' as ViewType,
+      id: null as string | null,
+      session: null as string | null,
+    };
+  }
+  const raw = window.location.hash.replace(/^#\/?/, '');
+  const [viewPart, queryPart] = raw.split('?');
+  const lowerView = viewPart.toLowerCase();
+  const searchParams = new URLSearchParams(queryPart || '');
+  const id = searchParams.get('id') || searchParams.get('lesson') || null;
+  const session = searchParams.get('session') || null;
+
+  return {
+    view: VALID_VIEWS.includes(lowerView as ViewType) ? (lowerView as ViewType) : ('dashboard' as ViewType),
+    id,
+    session,
+  };
+};
+
 const getInitialView = (): ViewType => {
   if (typeof window !== 'undefined') {
     const hash = window.location.hash.toLowerCase().replace(/^#\/?/, '');
@@ -52,8 +82,9 @@ const getInitialView = (): ViewType => {
     if (hash === 'login' || hash === 'plans' || path === '/login' || path === '/plans' || viewParam === 'login' || viewParam === 'plans') {
       return 'login';
     }
-    if (VALID_VIEWS.includes(hash as ViewType)) {
-      return hash as ViewType;
+    const parsed = parseHashState();
+    if (VALID_VIEWS.includes(parsed.view)) {
+      return parsed.view;
     }
   }
   return 'dashboard';
@@ -87,24 +118,74 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
   const [notificationDrawerOpen, setNotificationDrawerOpen] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
 
-  const [selectedLessonId, setSelectedLessonId] = useState<string | null>(null);
-  const [selectedGrammarId, setSelectedGrammarId] = useState<string | null>(null);
-  const [selectedKanjiId, setSelectedKanjiId] = useState<string | null>(null);
-  const [selectedVocabId, setSelectedVocabId] = useState<string | null>(null);
+  // Lesson Identification States
+  const [selectedLessonId, setSelectedLessonIdState] = useState<string | null>(() => {
+    const p = parseHashState();
+    return p.view === 'learn' ? p.id : null;
+  });
+  const [selectedGrammarId, setSelectedGrammarIdState] = useState<string | null>(() => {
+    const p = parseHashState();
+    return p.view === 'grammar' ? p.id : null;
+  });
+  const [selectedKanjiId, setSelectedKanjiIdState] = useState<string | null>(() => {
+    const p = parseHashState();
+    return p.view === 'kanji' ? p.id : null;
+  });
+  const [selectedVocabId, setSelectedVocabIdState] = useState<string | null>(() => {
+    const p = parseHashState();
+    return p.view === 'vocabulary' ? p.id : null;
+  });
+  const [selectedReadingId, setSelectedReadingIdState] = useState<string | null>(() => {
+    const p = parseHashState();
+    return p.view === 'reading' ? p.id : null;
+  });
+  const [selectedListeningId, setSelectedListeningIdState] = useState<string | null>(() => {
+    const p = parseHashState();
+    return p.view === 'listening' ? p.id : null;
+  });
+  const [isExamSimulating, setIsExamSimulatingState] = useState<boolean>(() => {
+    const p = parseHashState();
+    return p.view === 'mock-test' && p.session === 'active';
+  });
 
-  // Sync hash changes (back/forward or external links)
+  // Calculate whether Distraction-Free Lesson Mode is active
+  const isDistractionFree = Boolean(
+    (activeView === 'learn' && selectedLessonId) ||
+    (activeView === 'kanji' && selectedKanjiId) ||
+    (activeView === 'grammar' && selectedGrammarId) ||
+    (activeView === 'vocabulary' && selectedVocabId) ||
+    (activeView === 'reading' && selectedReadingId) ||
+    (activeView === 'listening' && selectedListeningId) ||
+    (activeView === 'mock-test' && isExamSimulating)
+  );
+
+  // Sync hash changes (Browser Back / Forward / Bookmarks)
   React.useEffect(() => {
     const onHashChange = () => {
-      const hash = window.location.hash.toLowerCase().replace(/^#\/?/, '');
-      if (hash === 'plans') {
+      const raw = window.location.hash.replace(/^#\/?/, '');
+      const [viewPart, queryPart] = raw.split('?');
+      const lowerView = viewPart.toLowerCase();
+      const searchParams = new URLSearchParams(queryPart || '');
+      const id = searchParams.get('id') || searchParams.get('lesson') || null;
+
+      if (lowerView === 'plans') {
         setLoginInitialTab('plans');
         setActiveViewState('login');
-      } else if (hash === 'login') {
+      } else if (lowerView === 'login') {
         setLoginInitialTab('auth');
         setActiveViewState('login');
-      } else if (VALID_VIEWS.includes(hash as ViewType)) {
-        setActiveViewState(hash as ViewType);
+      } else if (VALID_VIEWS.includes(lowerView as ViewType)) {
+        setActiveViewState(lowerView as ViewType);
       }
+
+      // Synchronize individual lesson states with URL hash parameters
+      if (lowerView === 'kanji') setSelectedKanjiIdState(id);
+      if (lowerView === 'grammar') setSelectedGrammarIdState(id);
+      if (lowerView === 'vocabulary') setSelectedVocabIdState(id);
+      if (lowerView === 'reading') setSelectedReadingIdState(id);
+      if (lowerView === 'listening') setSelectedListeningIdState(id);
+      if (lowerView === 'learn') setSelectedLessonIdState(id);
+      if (lowerView === 'mock-test') setIsExamSimulatingState(searchParams.get('session') === 'active');
     };
     window.addEventListener('hashchange', onHashChange);
     return () => window.removeEventListener('hashchange', onHashChange);
@@ -115,6 +196,112 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
     if (typeof window !== 'undefined') {
       try {
         window.location.hash = `#${view}`;
+      } catch (_) {}
+    }
+  };
+
+  const setSelectedLessonId = (id: string | null) => {
+    setSelectedLessonIdState(id);
+    if (typeof window !== 'undefined') {
+      try {
+        if (id) {
+          window.location.hash = `#learn?lesson=${encodeURIComponent(id)}`;
+        } else if (window.location.hash.startsWith('#learn')) {
+          window.location.hash = '#learn';
+        }
+      } catch (_) {}
+    }
+  };
+
+  const setSelectedGrammarId = (id: string | null) => {
+    setSelectedGrammarIdState(id);
+    if (typeof window !== 'undefined') {
+      try {
+        if (id) {
+          window.location.hash = `#grammar?id=${encodeURIComponent(id)}`;
+        } else if (window.location.hash.startsWith('#grammar')) {
+          window.location.hash = '#grammar';
+        }
+      } catch (_) {}
+    }
+  };
+
+  const setSelectedKanjiId = (id: string | null) => {
+    setSelectedKanjiIdState(id);
+    if (typeof window !== 'undefined') {
+      try {
+        if (id) {
+          window.location.hash = `#kanji?id=${encodeURIComponent(id)}`;
+        } else if (window.location.hash.startsWith('#kanji')) {
+          window.location.hash = '#kanji';
+        }
+      } catch (_) {}
+    }
+  };
+
+  const setSelectedVocabId = (id: string | null) => {
+    setSelectedVocabIdState(id);
+    if (typeof window !== 'undefined') {
+      try {
+        if (id) {
+          window.location.hash = `#vocabulary?id=${encodeURIComponent(id)}`;
+        } else if (window.location.hash.startsWith('#vocabulary')) {
+          window.location.hash = '#vocabulary';
+        }
+      } catch (_) {}
+    }
+  };
+
+  const setSelectedReadingId = (id: string | null) => {
+    setSelectedReadingIdState(id);
+    if (typeof window !== 'undefined') {
+      try {
+        if (id) {
+          window.location.hash = `#reading?id=${encodeURIComponent(id)}`;
+        } else if (window.location.hash.startsWith('#reading')) {
+          window.location.hash = '#reading';
+        }
+      } catch (_) {}
+    }
+  };
+
+  const setSelectedListeningId = (id: string | null) => {
+    setSelectedListeningIdState(id);
+    if (typeof window !== 'undefined') {
+      try {
+        if (id) {
+          window.location.hash = `#listening?id=${encodeURIComponent(id)}`;
+        } else if (window.location.hash.startsWith('#listening')) {
+          window.location.hash = '#listening';
+        }
+      } catch (_) {}
+    }
+  };
+
+  const setIsExamSimulating = (simulating: boolean) => {
+    setIsExamSimulatingState(simulating);
+    if (typeof window !== 'undefined') {
+      try {
+        if (simulating) {
+          window.location.hash = '#mock-test?session=active';
+        } else if (window.location.hash.startsWith('#mock-test')) {
+          window.location.hash = '#mock-test';
+        }
+      } catch (_) {}
+    }
+  };
+
+  const exitLessonMode = () => {
+    setSelectedLessonIdState(null);
+    setSelectedGrammarIdState(null);
+    setSelectedKanjiIdState(null);
+    setSelectedVocabIdState(null);
+    setSelectedReadingIdState(null);
+    setSelectedListeningIdState(null);
+    setIsExamSimulatingState(false);
+    if (typeof window !== 'undefined') {
+      try {
+        window.location.hash = `#${activeView}`;
       } catch (_) {}
     }
   };
@@ -168,6 +355,14 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({ children 
         setSelectedKanjiId,
         selectedVocabId,
         setSelectedVocabId,
+        selectedReadingId,
+        setSelectedReadingId,
+        selectedListeningId,
+        setSelectedListeningId,
+        isExamSimulating,
+        setIsExamSimulating,
+        isDistractionFree,
+        exitLessonMode,
         navigateToLesson,
         loginInitialTab,
         setLoginInitialTab,

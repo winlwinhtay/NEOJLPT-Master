@@ -45,6 +45,7 @@ import { DailyStudySessionModal } from '../components/planner/DailyStudySessionM
 import { UpgradePrompt } from '../components/common/UpgradePrompt';
 import { AdBanner } from '../components/common/AdBanner';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
+import { LessonLayout } from '../components/layout/LessonLayout';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 import { adaptPracticeQuestion } from '../session/adapters/practiceAdapter';
 import { translateExampleSentence, GRAMMAR_MULTILINGUAL_MAP } from '../data/translations/multilingualEngine';
@@ -157,30 +158,56 @@ export const LearnRoadmapView: React.FC = () => {
       setQuizSubmitted(false);
     };
 
-    return (
-      <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6 animate-fade-in">
-        {/* Top Back Navigation & Title */}
-        <div className="flex items-center justify-between">
-          <button
-            onClick={() => {
-              setSelectedLessonId(null);
-              setQuizSubmitted(false);
-              setQuizAnswers({});
-            }}
-            className="flex items-center gap-2 text-xs font-bold text-slate-500 hover:text-slate-900 dark:hover:text-white transition-colors cursor-pointer"
-          >
-            <ArrowLeft size={16} /> Back to Study Plan
-          </button>
+    const units = LESSON_ROADMAP[activeLevel] || [];
+    const allLessons = units.flatMap((u) => u.lessons);
+    const currentIndex = allLessons.findIndex((l) => l.id === currentLesson.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex >= 0 && currentIndex < allLessons.length - 1;
 
+    const handlePrev = () => {
+      if (hasPrev) {
+        setSelectedLessonId(allLessons[currentIndex - 1].id);
+        setQuizSubmitted(false);
+        setQuizAnswers({});
+      }
+    };
+
+    const handleNext = () => {
+      if (hasNext) {
+        setSelectedLessonId(allLessons[currentIndex + 1].id);
+        setQuizSubmitted(false);
+        setQuizAnswers({});
+      }
+    };
+
+    return (
+      <LessonLayout
+        moduleTitle="Study Plan"
+        lessonTitle={currentLesson.title}
+        levelBadge={activeLevel}
+        onBack={() => {
+          setSelectedLessonId(null);
+          setQuizSubmitted(false);
+          setQuizAnswers({});
+        }}
+        onPrev={handlePrev}
+        onNext={handleNext}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        progressPercent={Math.round(((currentIndex + 1) / (allLessons.length || 1)) * 100)}
+        maxWidthClass="max-w-4xl"
+        rightActions={
           <div className="flex items-center gap-2">
             <TranslationToggleButton size="sm" />
             {isCompleted && (
-              <span className="px-3 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1.5 border border-emerald-300 dark:border-emerald-800">
-                <CheckCircle2 size={14} /> Lesson Completed (+{currentLesson.xpReward} XP)
+              <span className="px-2.5 py-1 rounded-full bg-emerald-100 dark:bg-emerald-950/60 text-emerald-700 dark:text-emerald-300 text-xs font-bold flex items-center gap-1 border border-emerald-300 dark:border-emerald-800">
+                <CheckCircle2 size={12} /> Completed
               </span>
             )}
           </div>
-        </div>
+        }
+      >
+        <div className="space-y-6">
 
         {/* Lesson Header Card */}
         <div className="bg-white dark:bg-slate-900 p-6 sm:p-8 rounded-3xl border border-slate-200 dark:border-slate-800 shadow-sm space-y-3">
@@ -476,7 +503,8 @@ export const LearnRoadmapView: React.FC = () => {
             )}
           </div>
         )}
-      </div>
+        </div>
+      </LessonLayout>
     );
   }
 

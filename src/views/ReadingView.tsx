@@ -27,6 +27,7 @@ import { ContentService } from '../services/content';
 import { RubyText } from '../components/common/RubyText';
 import { AudioButton } from '../components/common/AudioButton';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
+import { LessonLayout } from '../components/layout/LessonLayout';
 import { JLPTLevel, ReadingLesson } from '../types';
 import { SupportedLanguage } from '../types/i18n';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
@@ -45,7 +46,7 @@ import { isUserEligibleForLiveAI } from '../services/entitlementService';
 import { ReadingAiGeneratorService } from '../services/content/readingAiGeneratorService';
 
 export const ReadingView: React.FC = () => {
-  const { activeLevel, setActiveLevel } = useApp();
+  const { activeLevel, setActiveLevel, selectedReadingId, setSelectedReadingId } = useApp();
   const { profile, entitlements, logActivity, addXP } = useUser();
   const { t, language } = useI18n();
   const activeLang = (profile.translationLanguage || language || 'en') as SupportedLanguage;
@@ -94,6 +95,18 @@ export const ReadingView: React.FC = () => {
       (ReadingService.getReadingsByLevel('N5')[0] as unknown as UniversityReadingExercise)
     );
   });
+
+  // Synchronize selectedReading when selectedReadingId changes
+  useEffect(() => {
+    if (selectedReadingId) {
+      const match = allLevelReadings.find((r) => r.id === selectedReadingId);
+      if (match) {
+        setSelectedReading(match);
+        setUserAnswers({});
+        setIsSubmitted(false);
+      }
+    }
+  }, [selectedReadingId, allLevelReadings]);
 
   // Whenever level changes, reset to the first available exercise
   useEffect(() => {
@@ -192,191 +205,8 @@ export const ReadingView: React.FC = () => {
 
   const currentTopicMeta = READING_TOPIC_REGISTRY.find((t) => t.id === selectedReading.topic);
 
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5 sm:space-y-6 animate-fade-in text-xs sm:text-sm">
-      {/* 1. Header with Controls & Level Selector */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
-              <BookOpen size={13} />
-              <span>University Reading Library (読解ライブラリ)</span>
-            </span>
-            <span className="px-2 py-0.2 rounded-md text-[10px] font-black bg-amber-500 text-white">
-              50 Core Exercises
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
-            {activeLevel} {t('reading.title')}
-          </h1>
-          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-            Intensive & extensive reading curriculum inspired by Japanese university language programs
-          </p>
-        </div>
-
-        {/* Level Switcher Strip & Action Buttons */}
-        <div className="flex flex-wrap items-center gap-2">
-          {/* Level Selector */}
-          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
-            {(['N5', 'N4', 'N3', 'N2', 'N1'] as JLPTLevel[]).map((lvl) => (
-              <button
-                key={lvl}
-                type="button"
-                onClick={() => setActiveLevel(lvl)}
-                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
-                  activeLevel === lvl
-                    ? 'bg-amber-500 text-white shadow-xs'
-                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
-                }`}
-              >
-                {lvl}
-              </button>
-            ))}
-          </div>
-
-          {/* Progress Modal Button */}
-          <button
-            type="button"
-            onClick={() => setIsProgressModalOpen(true)}
-            className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs hover:border-amber-500 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
-            title="View completed exercises and performance"
-          >
-            <Award size={14} className="text-amber-500" />
-            <span className="hidden sm:inline">Progress</span>
-          </button>
-
-          {/* Pro AI Generator Button */}
-          <button
-            type="button"
-            onClick={() => {
-              if (isProOrAdmin) {
-                setIsGeneratorModalOpen(true);
-              } else {
-                setIsAiGateOpen(true);
-              }
-            }}
-            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-brand-600 hover:opacity-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
-            title="Generate personalized JLPT reading practice with AI"
-          >
-            <Sparkles size={14} />
-            <span>Pro AI Generator</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Source Filter Switcher (Core vs AI Generated) */}
-      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-        <button
-          type="button"
-          onClick={() => setSourceFilter('all')}
-          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            sourceFilter === 'all'
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
-          }`}
-        >
-          All Lessons ({allLevelReadings.length})
-        </button>
-        <button
-          type="button"
-          onClick={() => setSourceFilter('core')}
-          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
-            sourceFilter === 'core'
-              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
-          }`}
-        >
-          Core 50 Curriculum
-        </button>
-        <button
-          type="button"
-          onClick={() => setSourceFilter('ai_generated')}
-          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
-            sourceFilter === 'ai_generated'
-              ? 'bg-gradient-to-r from-amber-500 to-brand-600 text-white shadow-2xs'
-              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
-          }`}
-        >
-          <Sparkles size={12} className="text-amber-500" />
-          <span>My AI Generated</span>
-        </button>
-      </div>
-
-      {/* 2. Topic Filter Strip */}
-      <div className="space-y-2">
-        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
-          <button
-            type="button"
-            onClick={() => setSelectedTopic('all')}
-            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border ${
-              selectedTopic === 'all'
-                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs'
-                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-            }`}
-          >
-            All Topics ({allLevelReadings.length})
-          </button>
-
-          {READING_TOPIC_REGISTRY.map((tMeta) => {
-            const countInLevel = allLevelReadings.filter((r) => r.topic === tMeta.id).length;
-            const isSelected = selectedTopic === tMeta.id;
-
-            return (
-              <button
-                key={tMeta.id}
-                type="button"
-                onClick={() => setSelectedTopic(tMeta.id)}
-                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border ${
-                  isSelected
-                    ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
-                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
-                }`}
-              >
-                <span>{tMeta.icon}</span>
-                <span>{tMeta.labelEn}</span>
-                {countInLevel > 0 && <span className="opacity-70 text-[10px]">({countInLevel})</span>}
-              </button>
-            );
-          })}
-        </div>
-
-        {/* Passage Selection Carousel / List */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
-          {filteredReadings.map((r, idx) => {
-            const isCompleted = completedExerciseIds.has(r.id);
-            const isSelected = selectedReading.id === r.id;
-
-            return (
-              <button
-                key={r.id}
-                onClick={() => handleSelectPassage(r)}
-                className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 border cursor-pointer ${
-                  isSelected
-                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm scale-[1.01]'
-                    : isCompleted
-                    ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800 text-slate-800 dark:text-slate-200'
-                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
-                }`}
-              >
-                {isCompleted && (
-                  <span
-                    className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
-                      isSelected ? 'bg-white text-amber-600' : 'bg-emerald-500 text-white'
-                    }`}
-                  >
-                    <Check size={10} strokeWidth={3} />
-                  </span>
-                )}
-                <span className="font-japanese truncate max-w-[140px] sm:max-w-[180px]">
-                  {r.title}
-                </span>
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* 3. Main Reading Card & Workspace */}
+  const renderReadingWorkspace = () => {
+    return (
       <div className="bg-white dark:bg-slate-900 rounded-3xl p-5 sm:p-7 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
         {/* Toolbar & Meta */}
         <div className="flex flex-wrap items-center justify-between gap-3 pb-4 border-b border-slate-100 dark:border-slate-800">
@@ -809,7 +639,324 @@ export const ReadingView: React.FC = () => {
           )}
         </div>
       </div>
+    );
+  };
 
+
+  // DISTRACTION-FREE INDIVIDUAL READING LESSON MODE
+  if (selectedReadingId && selectedReading) {
+    const currentIndex = filteredReadings.findIndex((r) => r.id === selectedReading.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex >= 0 && currentIndex < filteredReadings.length - 1;
+
+    const handlePrevPassage = () => {
+      if (hasPrev) {
+        const prev = filteredReadings[currentIndex - 1];
+        handleSelectPassage(prev);
+        setSelectedReadingId(prev.id);
+      }
+    };
+
+    const handleNextPassage = () => {
+      if (hasNext) {
+        const next = filteredReadings[currentIndex + 1];
+        handleSelectPassage(next);
+        setSelectedReadingId(next.id);
+      }
+    };
+
+    return (
+      <LessonLayout
+        moduleTitle="Reading Library"
+        lessonTitle={`【${selectedReading.level}】 ${selectedReading.title}`}
+        levelBadge={selectedReading.level}
+        onBack={() => setSelectedReadingId(null)}
+        onPrev={handlePrevPassage}
+        onNext={handleNextPassage}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        progressPercent={Math.round(((currentIndex + 1) / (filteredReadings.length || 1)) * 100)}
+        maxWidthClass="max-w-4xl"
+        rightActions={
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton
+              size="sm"
+              showTranslation={showTranslation}
+              onToggle={(enabled) => setShowTranslation(enabled)}
+            />
+            <AudioButton text={selectedReading.passagePlain} size="sm" />
+          </div>
+        }
+      >
+        {renderReadingWorkspace()}
+
+        {/* Reading Progress Modal */}
+        <ReadingProgressModal
+          isOpen={isProgressModalOpen}
+          onClose={() => setIsProgressModalOpen(false)}
+          activeLevel={activeLevel}
+        />
+
+        {/* Pro AI Reading Generator Modal */}
+        <ProAIReadingGeneratorModal
+          isOpen={isGeneratorModalOpen}
+          onClose={() => setIsGeneratorModalOpen(false)}
+          defaultLevel={activeLevel}
+          onStartPractice={(exercise) => {
+            setSelectedReading(exercise);
+            setSelectedReadingId(exercise.id);
+            setUserAnswers({});
+            setIsSubmitted(false);
+            setShowTranslation(false);
+          }}
+        />
+
+        {/* Pro AI Gate Modal for Free Users */}
+        <AIAccessGateModal
+          isOpen={isAiGateOpen}
+          onClose={() => setIsAiGateOpen(false)}
+          featureTitle="Pro AI Reading Generator"
+          featureDescription="Generate unlimited, personalized Japanese reading passages matching your JLPT target level, personal interests, and grammar focus."
+        />
+      </LessonLayout>
+    );
+  }
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-5 sm:space-y-6 animate-fade-in text-xs sm:text-sm">
+      {/* 1. Header with Controls & Level Selector */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-4 pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="text-xs font-bold text-amber-600 dark:text-amber-400 uppercase tracking-wider flex items-center gap-1">
+              <BookOpen size={13} />
+              <span>University Reading Library (読解ライブラリ)</span>
+            </span>
+            <span className="px-2 py-0.2 rounded-md text-[10px] font-black bg-amber-500 text-white">
+              50 Core Exercises
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-1">
+            {activeLevel} {t('reading.title')}
+          </h1>
+          <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
+            Intensive & extensive reading curriculum inspired by Japanese university language programs
+          </p>
+        </div>
+
+        {/* Level Switcher Strip & Action Buttons */}
+        <div className="flex flex-wrap items-center gap-2">
+          {/* Level Selector */}
+          <div className="flex items-center gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-2xl">
+            {(['N5', 'N4', 'N3', 'N2', 'N1'] as JLPTLevel[]).map((lvl) => (
+              <button
+                key={lvl}
+                type="button"
+                onClick={() => setActiveLevel(lvl)}
+                className={`px-3 py-1.5 rounded-xl font-bold text-xs transition-all cursor-pointer ${
+                  activeLevel === lvl
+                    ? 'bg-amber-500 text-white shadow-xs'
+                    : 'text-slate-600 dark:text-slate-400 hover:text-slate-900'
+                }`}
+              >
+                {lvl}
+              </button>
+            ))}
+          </div>
+
+          {/* Progress Modal Button */}
+          <button
+            type="button"
+            onClick={() => setIsProgressModalOpen(true)}
+            className="px-3 py-1.5 rounded-xl bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-700 dark:text-slate-200 font-bold text-xs hover:border-amber-500 transition-colors cursor-pointer flex items-center gap-1.5 shadow-2xs"
+            title="View completed exercises and performance"
+          >
+            <Award size={14} className="text-amber-500" />
+            <span className="hidden sm:inline">Progress</span>
+          </button>
+
+          {/* Pro AI Generator Button */}
+          <button
+            type="button"
+            onClick={() => {
+              if (isProOrAdmin) {
+                setIsGeneratorModalOpen(true);
+              } else {
+                setIsAiGateOpen(true);
+              }
+            }}
+            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-amber-500 to-brand-600 hover:opacity-95 text-white font-bold text-xs shadow-xs transition-all cursor-pointer flex items-center gap-1.5"
+            title="Generate personalized JLPT reading practice with AI"
+          >
+            <Sparkles size={14} />
+            <span>Pro AI Generator</span>
+          </button>
+        </div>
+      </div>
+
+      {/* Source Filter Switcher (Core vs AI Generated) */}
+      <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+        <button
+          type="button"
+          onClick={() => setSourceFilter('all')}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            sourceFilter === 'all'
+              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          All Lessons ({allLevelReadings.length})
+        </button>
+        <button
+          type="button"
+          onClick={() => setSourceFilter('core')}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer ${
+            sourceFilter === 'core'
+              ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 shadow-2xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          Core 50 Curriculum
+        </button>
+        <button
+          type="button"
+          onClick={() => setSourceFilter('ai_generated')}
+          className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer flex items-center gap-1 ${
+            sourceFilter === 'ai_generated'
+              ? 'bg-gradient-to-r from-amber-500 to-brand-600 text-white shadow-2xs'
+              : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:text-slate-900'
+          }`}
+        >
+          <Sparkles size={12} className="text-amber-500" />
+          <span>My AI Generated</span>
+        </button>
+      </div>
+
+      {/* 2. Topic Filter Strip */}
+      <div className="space-y-2">
+        <div className="flex items-center gap-1.5 overflow-x-auto pb-1 custom-scrollbar">
+          <button
+            type="button"
+            onClick={() => setSelectedTopic('all')}
+            className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 border ${
+              selectedTopic === 'all'
+                ? 'bg-slate-900 text-white dark:bg-white dark:text-slate-900 border-transparent shadow-xs'
+                : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+            }`}
+          >
+            All Topics ({allLevelReadings.length})
+          </button>
+
+          {READING_TOPIC_REGISTRY.map((tMeta) => {
+            const countInLevel = allLevelReadings.filter((r) => r.topic === tMeta.id).length;
+            const isSelected = selectedTopic === tMeta.id;
+
+            return (
+              <button
+                key={tMeta.id}
+                type="button"
+                onClick={() => setSelectedTopic(tMeta.id)}
+                className={`px-3 py-1 rounded-xl text-xs font-bold transition-all cursor-pointer shrink-0 flex items-center gap-1.5 border ${
+                  isSelected
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-xs'
+                    : 'bg-white dark:bg-slate-800 text-slate-600 dark:text-slate-400 border-slate-200 dark:border-slate-700 hover:border-slate-400'
+                }`}
+              >
+                <span>{tMeta.icon}</span>
+                <span>{tMeta.labelEn}</span>
+                {countInLevel > 0 && <span className="opacity-70 text-[10px]">({countInLevel})</span>}
+              </button>
+            );
+          })}
+        </div>
+
+        {/* Passage Selection Carousel / List */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-2 custom-scrollbar">
+          {filteredReadings.map((r, idx) => {
+            const isCompleted = completedExerciseIds.has(r.id);
+            const isSelected = selectedReading.id === r.id;
+
+            return (
+              <button
+                key={r.id}
+                onClick={() => handleSelectPassage(r)}
+                className={`px-3.5 py-2 rounded-2xl text-xs font-bold transition-all shrink-0 flex items-center gap-2 border cursor-pointer ${
+                  isSelected
+                    ? 'bg-amber-500 text-white border-amber-500 shadow-sm scale-[1.01]'
+                    : isCompleted
+                    ? 'bg-emerald-50/70 dark:bg-emerald-950/20 border-emerald-300 dark:border-emerald-800 text-slate-800 dark:text-slate-200'
+                    : 'bg-white dark:bg-slate-900 border-slate-200 dark:border-slate-800 text-slate-700 dark:text-slate-300 hover:border-slate-400'
+                }`}
+              >
+                {isCompleted && (
+                  <span
+                    className={`w-4 h-4 rounded-full flex items-center justify-center text-[10px] ${
+                      isSelected ? 'bg-white text-amber-600' : 'bg-emerald-500 text-white'
+                    }`}
+                  >
+                    <Check size={10} strokeWidth={3} />
+                  </span>
+                )}
+                <span className="font-japanese truncate max-w-[140px] sm:max-w-[180px]">
+                  {r.title}
+                </span>
+              </button>
+            );
+          })}
+        </div>
+      </div>
+
+      {/* Full-width Grid of Reading Exercises */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+        {filteredReadings.map((r) => {
+          const isCompleted = completedExerciseIds.has(r.id);
+          const topicMeta = READING_TOPIC_REGISTRY.find((t) => t.id === r.topic);
+
+          return (
+            <div
+              key={r.id}
+              onClick={() => {
+                handleSelectPassage(r);
+                setSelectedReadingId(r.id);
+              }}
+              className="group bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 hover:border-amber-500 dark:hover:border-amber-400 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between hover:-translate-y-0.5"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="px-2 py-0.5 rounded-lg bg-amber-50 dark:bg-amber-950/60 text-amber-700 dark:text-amber-300 text-[11px] font-bold flex items-center gap-1">
+                    <span>{topicMeta?.icon}</span>
+                    <span>{topicMeta?.labelEn || r.topic}</span>
+                  </span>
+
+                  {isCompleted && (
+                    <span className="px-2 py-0.5 rounded-md bg-emerald-100 dark:bg-emerald-950/80 text-emerald-700 dark:text-emerald-300 text-[10px] font-bold flex items-center gap-1">
+                      <Check size={11} /> Completed
+                    </span>
+                  )}
+                </div>
+
+                <h3 className="text-lg font-bold font-japanese text-slate-900 dark:text-white group-hover:text-amber-600 dark:group-hover:text-amber-400 transition-colors line-clamp-2">
+                  {r.title}
+                </h3>
+
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                  {activeLang === 'my' && r.titleMy ? r.titleMy : r.titleEn}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-4 flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono text-[11px]">
+                  {r.length} • ~{r.estimatedReadingTimeMinutes || 4}m
+                </span>
+                <div className="flex items-center gap-1 text-amber-600 dark:text-amber-400 font-bold group-hover:translate-x-0.5 transition-transform">
+                  <span>Read Passage</span>
+                  <ChevronRight size={14} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
+      </div>
       {/* Reading Progress Modal */}
       <ReadingProgressModal
         isOpen={isProgressModalOpen}

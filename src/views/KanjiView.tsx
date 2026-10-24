@@ -39,6 +39,7 @@ import { KanjiVocabularyNetwork } from '../components/kanji/KanjiVocabularyNetwo
 import { AudioButton } from '../components/common/AudioButton';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
 import { ReportIssueModal } from '../components/common/ReportIssueModal';
+import { LessonLayout } from '../components/layout/LessonLayout';
 import { generate5ExampleSentences } from '../data/generators/kanjiGenerator';
 import { getKanjiStrokeData } from '../data/kanjiStrokeData';
 import { getKanjiEducationalDetail } from '../data/kanjiEducationalData';
@@ -260,139 +261,10 @@ export const KanjiView: React.FC = () => {
     { id: 'independent', labelEn: 'Independent', labelJp: '独（独立・単体）' },
   ];
 
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
-      {/* Header & Sub-category Tab Bar */}
-      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-slate-200 dark:border-slate-800">
-        <div>
-          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
-            {t('kanji.badge')}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3 mt-1">
-            <span>
-              {activeTab === 'kanji'
-                ? `${activeLevel} ${t('kanji.title')}`
-                : activeTab === 'radicals'
-                ? t('kanji.tabRadicals', 'Radicals Studio (部首)')
-                : activeTab === 'confusion'
-                ? '似ている漢字・混同対策スタジオ (Confusion Studio)'
-                : '5層語彙ネットワーク (Vocab Connection Network)'}
-            </span>
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {activeTab === 'kanji'
-              ? t('kanji.subtitle')
-              : activeTab === 'radicals'
-              ? 'Master the building blocks of Japanese characters: Important 69 core radicals and all 240 comprehensive radicals.'
-              : activeTab === 'confusion'
-              ? 'Side-by-side visual discrimination, radical role analysis, and contextual sentence quizzes for easily confused Kanji.'
-              : 'Explore how Kanji compounds connect into vocabulary, grammar patterns, living sentences, and reading comprehension.'}
-          </p>
-        </div>
-
-        {/* Subcategory Tab Switcher */}
-        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0 self-start md:self-auto overflow-x-auto scrollbar-none">
-          <button
-            type="button"
-            onClick={() => setActiveTab('kanji')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-              activeTab === 'kanji'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <PenTool size={16} />
-            <span>{t('kanji.tabKanji', 'Kanji Studio')}</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('radicals')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-              activeTab === 'radicals'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Sparkles size={16} />
-            <span>{t('kanji.tabRadicals', 'Radicals (部首)')}</span>
-            <span className="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold">
-              240
-            </span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('confusion')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-              activeTab === 'confusion'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <GitCompare size={16} />
-            <span>似ている漢字 (Confusion Studio)</span>
-          </button>
-          <button
-            type="button"
-            onClick={() => setActiveTab('network')}
-            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
-              activeTab === 'network'
-                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
-                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
-            }`}
-          >
-            <Network size={16} />
-            <span>語彙ネットワーク (Vocab Network)</span>
-          </button>
-        </div>
-      </div>
-
-      {/* ========================================================================= */}
-      {/* TAB 1: KANJI STUDY (Drawing canvas, readings, compounds & 5 sample sentences) */}
-      {/* ========================================================================= */}
-      {activeTab === 'kanji' && (
-        <div className="space-y-8 animate-fade-in">
-          {/* Top Search Bar & Active Filters */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
-              <div className="relative w-full sm:w-80">
-                <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
-                <input
-                  type="text"
-                  value={searchQuery}
-                  onChange={(e) => setSearchQuery(e.target.value)}
-                  placeholder={t('kanji.searchPlaceholder')}
-                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 shadow-sm"
-                />
-              </div>
-
-              {selectedRadicalFilter && (
-                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold">
-                  <span>Radical: 「{selectedRadicalFilter}」</span>
-                  <button
-                    onClick={() => setSelectedRadicalFilter(null)}
-                    className="hover:text-rose-500 p-0.5 rounded transition-colors"
-                  >
-                    <X size={14} />
-                  </button>
-                </div>
-              )}
-            </div>
-
-            {selectedStrokeFilter && (
-              <button
-                onClick={() => setSelectedStrokeFilter(null)}
-                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
-              >
-                Clear stroke filter ({selectedStrokeFilter})
-              </button>
-            )}
-          </div>
-
-          {/* Main Studio Grid: Left Detail & Writing Canvas, Right Kanji Browser */}
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-            {/* Left: Active Kanji Detail, Canvas & 5 Sample Sentences (7 cols) */}
-            {activeKanji && (
-              <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+  const renderActiveKanjiDetail = () => {
+    if (!activeKanji) return null;
+    return (
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
                 {/* Header / Big Character */}
                 <div className="flex flex-col sm:flex-row items-center sm:items-start justify-between gap-6 pb-6 border-b border-slate-100 dark:border-slate-800">
                   <div className="flex items-center gap-6">
@@ -882,81 +754,304 @@ export const KanjiView: React.FC = () => {
                     </div>
                   )}
                 </div>
-              </div>
-            )}
+      </div>
+    );
+  };
 
-            {/* Right: Kanji Grid Selector (5 cols) */}
-            <div className="lg:col-span-5 space-y-4">
-              <div className="flex items-center justify-between">
-                <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-                  {activeLevel} {t('kanji.index')} ({levelKanjiList.length})
-                </h3>
-                {selectedStrokeFilter && (
+  // DISTRACTION-FREE INDIVIDUAL KANJI LESSON MODE
+  if (selectedKanjiId && activeKanji) {
+    const currentIndex = levelKanjiList.findIndex((k) => k.id === activeKanji.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex >= 0 && currentIndex < levelKanjiList.length - 1;
+
+    const handlePrevKanji = () => {
+      if (hasPrev) {
+        const prev = levelKanjiList[currentIndex - 1];
+        setActiveKanji(prev);
+        setSelectedKanjiId(prev.id);
+      }
+    };
+
+    const handleNextKanji = () => {
+      if (hasNext) {
+        const next = levelKanjiList[currentIndex + 1];
+        setActiveKanji(next);
+        setSelectedKanjiId(next.id);
+      }
+    };
+
+    return (
+      <LessonLayout
+        moduleTitle="Kanji Catalog"
+        lessonTitle={`【${activeKanji.kanji}】 ${activeKanji.meaningsByLang?.[activeLang] || activeKanji.meaning}`}
+        levelBadge={activeKanji.level}
+        onBack={() => setSelectedKanjiId(null)}
+        onPrev={handlePrevKanji}
+        onNext={handleNextKanji}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        progressPercent={Math.round(((currentIndex + 1) / (levelKanjiList.length || 1)) * 100)}
+        maxWidthClass="max-w-5xl"
+        rightActions={
+          <div className="flex items-center gap-1.5">
+            <TranslationToggleButton size="sm" />
+            <button
+              type="button"
+              onClick={() => setPrinciplesModalOpen(true)}
+              className="flex items-center gap-1.5 px-2.5 py-1.5 rounded-xl border border-indigo-200 dark:border-indigo-800 bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 text-xs font-bold transition-colors cursor-pointer"
+              title="Learn 6 Japanese School Stroke Rules"
+            >
+              <GraduationCap size={14} />
+              <span className="hidden md:inline">6 Writing Rules</span>
+            </button>
+            <AudioButton text={activeKanji.kanji} size="sm" />
+          </div>
+        }
+      >
+        {renderActiveKanjiDetail()}
+
+        {/* Global School Principles Modal */}
+        <KanjiSchoolPrinciplesModal
+          isOpen={principlesModalOpen}
+          onClose={() => setPrinciplesModalOpen(false)}
+        />
+
+        {/* Report Issue Modal */}
+        {reportingKanji && (
+          <ReportIssueModal
+            isOpen={Boolean(reportingKanji)}
+            onClose={() => setReportingKanji(null)}
+            contentId={reportingKanji.id}
+            module="kanji"
+            level={reportingKanji.level}
+            currentText={`Kanji: ${reportingKanji.kanji} - Meaning: ${reportingKanji.meaning} - Onyomi: ${reportingKanji.onyomi.join(', ')}`}
+          />
+        )}
+      </LessonLayout>
+    );
+  }
+return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+      {/* Header & Sub-category Tab Bar */}
+      <div className="flex flex-col md:flex-row md:items-center justify-between gap-6 pb-2 border-b border-slate-200 dark:border-slate-800">
+        <div>
+          <span className="text-xs font-bold text-indigo-600 dark:text-indigo-400 uppercase tracking-wider">
+            {t('kanji.badge')}
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white flex items-center gap-3 mt-1">
+            <span>
+              {activeTab === 'kanji'
+                ? `${activeLevel} ${t('kanji.title')}`
+                : activeTab === 'radicals'
+                ? t('kanji.tabRadicals', 'Radicals Studio (部首)')
+                : activeTab === 'confusion'
+                ? '似ている漢字・混同対策スタジオ (Confusion Studio)'
+                : '5層語彙ネットワーク (Vocab Connection Network)'}
+            </span>
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {activeTab === 'kanji'
+              ? t('kanji.subtitle')
+              : activeTab === 'radicals'
+              ? 'Master the building blocks of Japanese characters: Important 69 core radicals and all 240 comprehensive radicals.'
+              : activeTab === 'confusion'
+              ? 'Side-by-side visual discrimination, radical role analysis, and contextual sentence quizzes for easily confused Kanji.'
+              : 'Explore how Kanji compounds connect into vocabulary, grammar patterns, living sentences, and reading comprehension.'}
+          </p>
+        </div>
+
+        {/* Subcategory Tab Switcher */}
+        <div className="flex items-center gap-1.5 p-1.5 bg-slate-100 dark:bg-slate-800/80 rounded-2xl border border-slate-200 dark:border-slate-700 shrink-0 self-start md:self-auto overflow-x-auto scrollbar-none">
+          <button
+            type="button"
+            onClick={() => setActiveTab('kanji')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === 'kanji'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <PenTool size={16} />
+            <span>{t('kanji.tabKanji', 'Kanji Studio')}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('radicals')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === 'radicals'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Sparkles size={16} />
+            <span>{t('kanji.tabRadicals', 'Radicals (部首)')}</span>
+            <span className="px-2 py-0.5 rounded-full bg-indigo-100 dark:bg-indigo-950 text-indigo-600 dark:text-indigo-400 text-[10px] font-mono font-bold">
+              240
+            </span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('confusion')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === 'confusion'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <GitCompare size={16} />
+            <span>似ている漢字 (Confusion Studio)</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('network')}
+            className={`flex items-center gap-2 px-4 py-2 rounded-xl text-xs sm:text-sm font-bold transition-all whitespace-nowrap ${
+              activeTab === 'network'
+                ? 'bg-white dark:bg-slate-900 text-indigo-600 dark:text-indigo-400 shadow-sm'
+                : 'text-slate-600 dark:text-slate-400 hover:text-slate-900 dark:hover:text-white'
+            }`}
+          >
+            <Network size={16} />
+            <span>語彙ネットワーク (Vocab Network)</span>
+          </button>
+        </div>
+      </div>
+
+      {/* ========================================================================= */}
+      {/* TAB 1: KANJI STUDY (Drawing canvas, readings, compounds & 5 sample sentences) */}
+      {/* ========================================================================= */}
+      {activeTab === 'kanji' && (
+        <div className="space-y-8 animate-fade-in">
+          {/* Top Search Bar & Active Filters */}
+          <div className="flex flex-wrap items-center justify-between gap-4">
+            <div className="flex flex-wrap items-center gap-3 w-full sm:w-auto">
+              <div className="relative w-full sm:w-80">
+                <Search size={16} className="absolute left-3 top-2.5 text-slate-400" />
+                <input
+                  type="text"
+                  value={searchQuery}
+                  onChange={(e) => setSearchQuery(e.target.value)}
+                  placeholder={t('kanji.searchPlaceholder')}
+                  className="w-full pl-9 pr-3 py-2 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-xl text-xs text-slate-900 dark:text-white outline-none focus:border-indigo-500 shadow-sm"
+                />
+              </div>
+
+              {selectedRadicalFilter && (
+                <div className="inline-flex items-center gap-2 px-3 py-1.5 rounded-xl bg-indigo-50 dark:bg-indigo-950 text-indigo-700 dark:text-indigo-300 border border-indigo-200 dark:border-indigo-800 text-xs font-bold">
+                  <span>Radical: 「{selectedRadicalFilter}」</span>
                   <button
-                    onClick={() => setSelectedStrokeFilter(null)}
-                    className="text-xs text-indigo-500 hover:underline"
+                    onClick={() => setSelectedRadicalFilter(null)}
+                    className="hover:text-rose-500 p-0.5 rounded transition-colors"
                   >
-                    {t('common.filter')}
+                    <X size={14} />
                   </button>
-                )}
-              </div>
-
-              <div className="grid grid-cols-3 sm:grid-cols-4 lg:grid-cols-3 gap-3 max-h-[650px] overflow-y-auto pr-1">
-                {paginatedKanjiList.map((k) => {
-                  const isSelected = activeKanji?.id === k.id;
-                  return (
-                    <div
-                      key={k.id}
-                      onClick={() => setActiveKanji(k)}
-                      className={`p-4 rounded-2xl border-2 transition-all cursor-pointer text-center space-y-1 group ${
-                        isSelected
-                          ? 'border-indigo-500 bg-indigo-50/50 dark:bg-indigo-950/40 shadow-md'
-                          : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-indigo-300'
-                      }`}
-                    >
-                      <div className="text-3xl font-kanji font-black text-slate-900 dark:text-white group-hover:scale-110 transition-transform">
-                        {k.kanji}
-                      </div>
-                      {isTransOn && (
-                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate">
-                          {k.meaningsByLang?.[activeLang] || k.meaning}
-                        </div>
-                      )}
-                      <div className="text-[10px] text-slate-400">
-                        {k.strokeCount} {t('kanji.strokes')}
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-
-              {/* Kanji Pagination Toolbar */}
-              {totalKanjiPages > 1 && (
-                <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-                  <span className="text-xs text-slate-500">
-                    Page {kanjiPage} of {totalKanjiPages}
-                  </span>
-                  <div className="flex items-center gap-1.5">
-                    <button
-                      type="button"
-                      disabled={kanjiPage <= 1}
-                      onClick={() => setKanjiPage((p) => Math.max(1, p - 1))}
-                      className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold disabled:opacity-40"
-                    >
-                      Prev
-                    </button>
-                    <button
-                      type="button"
-                      disabled={kanjiPage >= totalKanjiPages}
-                      onClick={() => setKanjiPage((p) => Math.min(totalKanjiPages, p + 1))}
-                      className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold disabled:opacity-40"
-                    >
-                      Next
-                    </button>
-                  </div>
                 </div>
               )}
             </div>
+
+            {selectedStrokeFilter && (
+              <button
+                onClick={() => setSelectedStrokeFilter(null)}
+                className="text-xs text-indigo-600 dark:text-indigo-400 hover:underline font-semibold"
+              >
+                Clear stroke filter ({selectedStrokeFilter})
+              </button>
+            )}
+          </div>
+
+          {/* Kanji Catalog Grid (Catalog Landing View) */}
+          <div className="space-y-6">
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+              <div className="flex items-center gap-3">
+                <span className="px-3 py-1 rounded-xl bg-indigo-50 dark:bg-indigo-950/60 text-indigo-700 dark:text-indigo-300 font-bold text-xs">
+                  {activeLevel} Kanji
+                </span>
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Showing {levelKanjiList.length} character{levelKanjiList.length === 1 ? '' : 's'}
+                </span>
+              </div>
+              <p className="text-xs text-slate-400 italic">
+                Click any character card to open focused lesson mode
+              </p>
+            </div>
+
+            {/* Full-width Grid of Kanji Cards */}
+            <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-6 gap-4">
+              {paginatedKanjiList.map((k) => {
+                const srs = getItemProgress(k.id);
+                return (
+                  <div
+                    key={k.id}
+                    onClick={() => {
+                      setActiveKanji(k);
+                      setSelectedKanjiId(k.id);
+                    }}
+                    className="group bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-200 dark:border-slate-800 hover:border-indigo-400 dark:hover:border-indigo-500 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between text-center relative hover:-translate-y-0.5"
+                  >
+                    <div className="absolute top-2.5 right-2.5">
+                      <span className="text-[10px] font-mono px-1.5 py-0.5 rounded-md bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400">
+                        {k.strokeCount}画
+                      </span>
+                    </div>
+
+                    <div className="pt-2 pb-1">
+                      <div className="text-4xl font-kanji font-black text-slate-900 dark:text-white group-hover:text-indigo-600 dark:group-hover:text-indigo-400 group-hover:scale-105 transition-all">
+                        {k.kanji}
+                      </div>
+                      {isTransOn && (
+                        <div className="text-xs font-bold text-slate-700 dark:text-slate-300 truncate mt-2">
+                          {k.meaningsByLang?.[activeLang] || k.meaning}
+                        </div>
+                      )}
+                      <div className="text-[11px] text-slate-400 truncate mt-0.5">
+                        {k.onyomi?.[0] || k.kunyomi?.[0] || '—'}
+                      </div>
+                    </div>
+
+                    <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-2 flex items-center justify-between">
+                      <span className="text-[10px] font-semibold text-slate-400">
+                        {srs?.level ? `Stage ${srs.level}` : 'New'}
+                      </span>
+                      <span className="text-[11px] font-bold text-indigo-600 dark:text-indigo-400 group-hover:underline">
+                        Study →
+                      </span>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Pagination */}
+            {totalKanjiPages > 1 && (
+              <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+                <span className="text-xs text-slate-500 dark:text-slate-400">
+                  Page {kanjiPage} of {totalKanjiPages} ({levelKanjiList.length} total)
+                </span>
+                <div className="flex items-center gap-2">
+                  <button
+                    type="button"
+                    disabled={kanjiPage <= 1}
+                    onClick={() => {
+                      setKanjiPage((p) => Math.max(1, p - 1));
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    Previous
+                  </button>
+                  <button
+                    type="button"
+                    disabled={kanjiPage >= totalKanjiPages}
+                    onClick={() => {
+                      setKanjiPage((p) => Math.min(totalKanjiPages, p + 1));
+                      window.scrollTo({ top: 0, behavior: 'smooth' });
+                    }}
+                    className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+                  >
+                    Next
+                  </button>
+                </div>
+              </div>
+            )}
           </div>
         </div>
       )}

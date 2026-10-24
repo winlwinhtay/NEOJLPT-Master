@@ -17,6 +17,7 @@ import { useI18n } from '../i18n/I18nContext';
 import { ContentService } from '../services/content';
 import { AudioButton } from '../components/common/AudioButton';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
+import { LessonLayout } from '../components/layout/LessonLayout';
 import { GrammarItem } from '../types';
 import { SupportedLanguage } from '../types/i18n';
 import { translateExampleSentence } from '../data/translations/multilingualEngine';
@@ -52,6 +53,14 @@ export const GrammarView: React.FC = () => {
     return GRAMMAR_DATA.find((g) => g.level === activeLevel) || GRAMMAR_DATA[0];
   });
 
+  // Synchronize activeGrammar when selectedGrammarId changes
+  React.useEffect(() => {
+    if (selectedGrammarId) {
+      const match = GRAMMAR_DATA.find((g) => g.id === selectedGrammarId);
+      if (match) setActiveGrammar(match);
+    }
+  }, [selectedGrammarId, GRAMMAR_DATA]);
+
   const levelGrammarList = useMemo(() => {
     return GRAMMAR_DATA.filter((g) => {
       if (g.level !== activeLevel) return false;
@@ -75,135 +84,11 @@ export const GrammarView: React.FC = () => {
     return levelGrammarList.slice(start, start + GRAMMAR_PAGE_SIZE);
   }, [levelGrammarList, grammarPage, GRAMMAR_PAGE_SIZE]);
 
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <div className="flex items-center gap-2">
-            <span className="px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 text-xs font-bold tracking-wide uppercase">
-              {t('grammar.badge')}
-            </span>
-            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold">
-              {activeLevel}
-            </span>
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
-            {t('grammar.title')}
-          </h1>
-          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
-            {t('grammar.subtitle')}
-          </p>
-        </div>
+    const renderActiveGrammarDetail = () => {
+    if (!activeGrammar) return null;
+    return (
+      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
 
-        {/* Controls */}
-        <div className="flex items-center gap-3">
-          <TranslationToggleButton size="sm" />
-          <button
-            onClick={() => setComparisonMode(!comparisonMode)}
-            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border shadow-sm cursor-pointer ${
-              comparisonMode
-                ? 'bg-brand-500 text-white border-brand-600 shadow-brand-500/20'
-                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
-            }`}
-          >
-            <Scale size={16} />
-            <span>{t('grammar.compareMode')}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* Search & Filter Bar */}
-      <div className="relative">
-        <Search
-          size={18}
-          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-        />
-        <input
-          type="text"
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          placeholder={`${t('common.search')} (${activeLevel} grammar rules, e.g. 〜てはいけない, わけだ, permission)...`}
-          className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-sm"
-        />
-      </div>
-
-      {/* Comparison Drawer (if open) */}
-      {comparisonMode && (
-        <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-50/50 via-purple-50/30 to-pink-50/40 dark:from-indigo-950/20 dark:via-purple-950/10 dark:to-pink-950/20 border border-indigo-100 dark:border-indigo-900/40 space-y-6">
-          <div className="flex items-center gap-3">
-            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
-              <Scale size={20} />
-            </div>
-            <div>
-              <h3 className="font-black text-slate-900 dark:text-white text-base">
-                {t('grammar.comparePatterns')} (Obligation vs Permission)
-              </h3>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                {t('grammar.subtitle')}
-              </p>
-            </div>
-          </div>
-
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            {/* Left Pair */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-rose-200 dark:border-rose-900/60 space-y-3 shadow-sm">
-              <span className="px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-bold">
-                Pattern A (Obligation / Must)
-              </span>
-              <h4 className="text-xl font-black font-japanese text-slate-900 dark:text-white">
-                〜なければならない
-              </h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
-                Meaning: Must do / Have to do (No other choice)
-              </p>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-japanese">
-                明日、早く起きなければなりません。
-                {isTransOn ? (
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
-                    {translateExampleSentence('明日、早く起きなければなりません。', 'I must wake up early tomorrow.', activeLang)}
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-slate-400 italic block mt-0.5">
-                    Translation hidden (Trans OFF)
-                  </span>
-                )}
-              </div>
-            </div>
-
-            {/* Right Pair */}
-            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-emerald-200 dark:border-emerald-900/60 space-y-3 shadow-sm">
-              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
-                Pattern B (Permission / Optional)
-              </span>
-              <h4 className="text-xl font-black font-japanese text-slate-900 dark:text-white">
-                〜なくてもいい
-              </h4>
-              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
-                Meaning: Do not have to do (Optional)
-              </p>
-              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-japanese">
-                明日は来なくてもいいです。
-                {isTransOn ? (
-                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
-                    {translateExampleSentence('明日は来なくてもいいです。', 'You do not have to come tomorrow.', activeLang)}
-                  </span>
-                ) : (
-                  <span className="text-[10px] text-slate-400 italic block mt-0.5">
-                    Translation hidden (Trans OFF)
-                  </span>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Main Studio Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-12 gap-8">
-        {/* Left: Active Grammar Detail (7 cols) */}
-        {activeGrammar && (
-          <div className="lg:col-span-7 bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
             {/* Header */}
             <div className="flex items-start justify-between gap-4 pb-6 border-b border-slate-100 dark:border-slate-800">
               <div>
@@ -334,71 +219,287 @@ export const GrammarView: React.FC = () => {
                 </ul>
               </div>
             )}
+      </div>
+    );
+  };
+
+  // DISTRACTION-FREE INDIVIDUAL GRAMMAR LESSON MODE
+  if (selectedGrammarId && activeGrammar) {
+    const currentIndex = levelGrammarList.findIndex((g) => g.id === activeGrammar.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex >= 0 && currentIndex < levelGrammarList.length - 1;
+
+    const handlePrevGrammar = () => {
+      if (hasPrev) {
+        const prev = levelGrammarList[currentIndex - 1];
+        setActiveGrammar(prev);
+        setSelectedGrammarId(prev.id);
+      }
+    };
+
+    const handleNextGrammar = () => {
+      if (hasNext) {
+        const next = levelGrammarList[currentIndex + 1];
+        setActiveGrammar(next);
+        setSelectedGrammarId(next.id);
+      }
+    };
+
+    return (
+      <LessonLayout
+        moduleTitle="Grammar Rules"
+        lessonTitle={`【${activeGrammar.pattern}】 ${activeGrammar.meaningsByLang?.[activeLang] || activeGrammar.meaning}`}
+        levelBadge={activeGrammar.level}
+        onBack={() => setSelectedGrammarId(null)}
+        onPrev={handlePrevGrammar}
+        onNext={handleNextGrammar}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        progressPercent={Math.round(((currentIndex + 1) / (levelGrammarList.length || 1)) * 100)}
+        maxWidthClass="max-w-4xl"
+        rightActions={
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+            <AudioButton text={activeGrammar.pattern} size="sm" />
           </div>
-        )}
+        }
+      >
+        {renderActiveGrammarDetail()}
+      </LessonLayout>
+    );
+  }
+return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-7xl mx-auto space-y-8 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <div className="flex items-center gap-2">
+            <span className="px-3 py-1 rounded-full bg-brand-100 dark:bg-brand-950 text-brand-700 dark:text-brand-300 text-xs font-bold tracking-wide uppercase">
+              {t('grammar.badge')}
+            </span>
+            <span className="px-2.5 py-0.5 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 text-xs font-bold">
+              {activeLevel}
+            </span>
+          </div>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white mt-2">
+            {t('grammar.title')}
+          </h1>
+          <p className="text-sm text-slate-500 dark:text-slate-400 mt-1 max-w-2xl">
+            {t('grammar.subtitle')}
+          </p>
+        </div>
 
-        {/* Right: Grammar Pattern List (5 cols) */}
-        <div className="lg:col-span-5 space-y-3">
-          <h3 className="text-sm font-bold text-slate-900 dark:text-white uppercase tracking-wider">
-            {activeLevel} {t('grammar.index')} ({levelGrammarList.length})
-          </h3>
+        {/* Controls */}
+        <div className="flex items-center gap-3">
+          <TranslationToggleButton size="sm" />
+          <button
+            onClick={() => setComparisonMode(!comparisonMode)}
+            className={`flex items-center gap-2 px-4 py-2.5 rounded-2xl text-xs font-bold transition-all border shadow-sm cursor-pointer ${
+              comparisonMode
+                ? 'bg-brand-500 text-white border-brand-600 shadow-brand-500/20'
+                : 'bg-white dark:bg-slate-900 text-slate-700 dark:text-slate-300 border-slate-200 dark:border-slate-800 hover:border-slate-300'
+            }`}
+          >
+            <Scale size={16} />
+            <span>{t('grammar.compareMode')}</span>
+          </button>
+        </div>
+      </div>
 
-          <div className="space-y-2 max-h-[650px] overflow-y-auto pr-1">
-            {paginatedGrammarList.map((g) => {
-              const isSelected = activeGrammar?.id === g.id;
-              return (
-                <div
-                  key={g.id}
-                  onClick={() => setActiveGrammar(g)}
-                  className={`p-4 rounded-2xl border-2 transition-all cursor-pointer flex items-center justify-between gap-3 ${
-                    isSelected
-                      ? 'border-brand-500 bg-brand-50/40 dark:bg-brand-950/30 shadow-md'
-                      : 'border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 hover:border-slate-300'
-                  }`}
-                >
-                  <div>
-                    <span className="text-base font-bold font-japanese text-slate-900 dark:text-white">
-                      {g.pattern}
-                    </span>
-                    {isTransOn && (
-                      <p className="text-xs text-slate-500 dark:text-slate-400 mt-0.5">
-                        {g.meaningsByLang?.[activeLang] || g.meaning}
-                      </p>
-                    )}
-                  </div>
-                  <ChevronRight size={18} className="text-slate-400 shrink-0" />
-                </div>
-              );
-            })}
+      {/* Search & Filter Bar */}
+      <div className="relative">
+        <Search
+          size={18}
+          className="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
+        />
+        <input
+          type="text"
+          value={searchQuery}
+          onChange={(e) => setSearchQuery(e.target.value)}
+          placeholder={`${t('common.search')} (${activeLevel} grammar rules, e.g. 〜てはいけない, わけだ, permission)...`}
+          className="w-full pl-11 pr-4 py-3 bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-900 dark:text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-brand-500/20 focus:border-brand-500 transition-all shadow-sm"
+        />
+      </div>
+
+      {/* Comparison Drawer (if open) */}
+      {comparisonMode && (
+        <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-50/50 via-purple-50/30 to-pink-50/40 dark:from-indigo-950/20 dark:via-purple-950/10 dark:to-pink-950/20 border border-indigo-100 dark:border-indigo-900/40 space-y-6">
+          <div className="flex items-center gap-3">
+            <div className="w-9 h-9 rounded-xl bg-indigo-500/10 dark:bg-indigo-500/20 flex items-center justify-center text-indigo-600 dark:text-indigo-400">
+              <Scale size={20} />
+            </div>
+            <div>
+              <h3 className="font-black text-slate-900 dark:text-white text-base">
+                {t('grammar.comparePatterns')} (Obligation vs Permission)
+              </h3>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                {t('grammar.subtitle')}
+              </p>
+            </div>
           </div>
 
-          {/* Grammar Pagination Toolbar */}
-          {totalGrammarPages > 1 && (
-            <div className="p-3 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
-              <span className="text-xs text-slate-500">
-                Page {grammarPage} of {totalGrammarPages}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Left Pair */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-rose-200 dark:border-rose-900/60 space-y-3 shadow-sm">
+              <span className="px-2.5 py-0.5 rounded-full bg-rose-100 dark:bg-rose-950 text-rose-700 dark:text-rose-300 text-xs font-bold">
+                Pattern A (Obligation / Must)
               </span>
-              <div className="flex items-center gap-1.5">
-                <button
-                  type="button"
-                  disabled={grammarPage <= 1}
-                  onClick={() => setGrammarPage((p) => Math.max(1, p - 1))}
-                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold disabled:opacity-40"
-                >
-                  Prev
-                </button>
-                <button
-                  type="button"
-                  disabled={grammarPage >= totalGrammarPages}
-                  onClick={() => setGrammarPage((p) => Math.min(totalGrammarPages, p + 1))}
-                  className="px-2.5 py-1 rounded-lg border border-slate-200 dark:border-slate-700 text-xs font-semibold disabled:opacity-40"
-                >
-                  Next
-                </button>
+              <h4 className="text-xl font-black font-japanese text-slate-900 dark:text-white">
+                〜なければならない
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
+                Meaning: Must do / Have to do (No other choice)
+              </p>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-japanese">
+                明日、早く起きなければなりません。
+                {isTransOn ? (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
+                    {translateExampleSentence('明日、早く起きなければなりません。', 'I must wake up early tomorrow.', activeLang)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 italic block mt-0.5">
+                    Translation hidden (Trans OFF)
+                  </span>
+                )}
               </div>
             </div>
-          )}
+
+            {/* Right Pair */}
+            <div className="bg-white dark:bg-slate-900 p-6 rounded-2xl border-2 border-emerald-200 dark:border-emerald-900/60 space-y-3 shadow-sm">
+              <span className="px-2.5 py-0.5 rounded-full bg-emerald-100 dark:bg-emerald-950 text-emerald-700 dark:text-emerald-300 text-xs font-bold">
+                Pattern B (Permission / Optional)
+              </span>
+              <h4 className="text-xl font-black font-japanese text-slate-900 dark:text-white">
+                〜なくてもいい
+              </h4>
+              <p className="text-xs text-slate-600 dark:text-slate-300 font-semibold">
+                Meaning: Do not have to do (Optional)
+              </p>
+              <div className="p-3 rounded-xl bg-slate-50 dark:bg-slate-800 text-xs font-japanese">
+                明日は来なくてもいいです。
+                {isTransOn ? (
+                  <span className="text-[11px] text-slate-500 dark:text-slate-400 block font-sans mt-0.5 font-medium">
+                    {translateExampleSentence('明日は来なくてもいいです。', 'You do not have to come tomorrow.', activeLang)}
+                  </span>
+                ) : (
+                  <span className="text-[10px] text-slate-400 italic block mt-0.5">
+                    Translation hidden (Trans OFF)
+                  </span>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
+      )}
+
+      {/* Grammar Rules Catalog Grid (Catalog Landing View) */}
+      <div className="space-y-6">
+        <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-200 dark:border-slate-800 shadow-2xs">
+          <div className="flex items-center gap-3">
+            <span className="px-3 py-1 rounded-xl bg-brand-50 dark:bg-brand-950/60 text-brand-700 dark:text-brand-300 font-bold text-xs">
+              {activeLevel} Grammar
+            </span>
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Showing {levelGrammarList.length} rule{levelGrammarList.length === 1 ? '' : 's'}
+            </span>
+          </div>
+          <p className="text-xs text-slate-400 italic">
+            Click any grammar pattern to enter focused lesson mode
+          </p>
+        </div>
+
+        {/* Full-width Grid of Grammar Cards */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          {paginatedGrammarList.map((g) => {
+            return (
+              <div
+                key={g.id}
+                onClick={() => {
+                  setActiveGrammar(g);
+                  setSelectedGrammarId(g.id);
+                }}
+                className="group bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 hover:border-brand-500 dark:hover:border-brand-400 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between hover:-translate-y-0.5"
+              >
+                <div>
+                  <div className="flex items-center justify-between gap-2 mb-2">
+                    <span className="px-2 py-0.5 rounded-lg bg-slate-100 dark:bg-slate-800 text-[11px] font-mono font-bold text-slate-600 dark:text-slate-300">
+                      {g.formalLevel || 'Standard'}
+                    </span>
+                    <span className="text-xs font-bold text-brand-600 dark:text-brand-400 opacity-0 group-hover:opacity-100 transition-opacity">
+                      Study Lesson →
+                    </span>
+                  </div>
+
+                  <h3 className="text-xl font-bold font-japanese text-slate-900 dark:text-white group-hover:text-brand-600 dark:group-hover:text-brand-400 transition-colors">
+                    {g.pattern}
+                  </h3>
+
+                  {isTransOn ? (
+                    <p className="text-xs font-semibold text-slate-600 dark:text-slate-300 mt-1.5 line-clamp-2">
+                      {g.meaningsByLang?.[activeLang] || g.meaning}
+                    </p>
+                  ) : (
+                    <p className="text-xs text-slate-400 italic mt-1.5">
+                      Translation hidden
+                    </p>
+                  )}
+
+                  <div className="mt-3 p-2.5 rounded-xl bg-slate-50 dark:bg-slate-800/60 border border-slate-200/60 dark:border-slate-700/60">
+                    <span className="text-[10px] font-bold text-slate-400 uppercase tracking-wider block mb-0.5">
+                      Structure
+                    </span>
+                    <p className="font-mono text-xs text-indigo-900 dark:text-indigo-200 truncate">
+                      {g.structure}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-4 flex items-center justify-between text-xs">
+                  <span className="text-slate-400">
+                    {g.examples?.length || 0} examples
+                  </span>
+                  <div className="flex items-center gap-1 text-brand-600 dark:text-brand-400 font-bold group-hover:translate-x-0.5 transition-transform">
+                    <span>Open Lesson</span>
+                    <ChevronRight size={14} />
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+
+        {/* Pagination Toolbar */}
+        {totalGrammarPages > 1 && (
+          <div className="p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-200 dark:border-slate-800 flex items-center justify-between">
+            <span className="text-xs text-slate-500 dark:text-slate-400">
+              Page {grammarPage} of {totalGrammarPages} ({levelGrammarList.length} total)
+            </span>
+            <div className="flex items-center gap-2">
+              <button
+                type="button"
+                disabled={grammarPage <= 1}
+                onClick={() => {
+                  setGrammarPage((p) => Math.max(1, p - 1));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                Previous
+              </button>
+              <button
+                type="button"
+                disabled={grammarPage >= totalGrammarPages}
+                onClick={() => {
+                  setGrammarPage((p) => Math.min(totalGrammarPages, p + 1));
+                  window.scrollTo({ top: 0, behavior: 'smooth' });
+                }}
+                className="px-3 py-1.5 rounded-xl border border-slate-200 dark:border-slate-700 text-xs font-bold hover:bg-slate-100 dark:hover:bg-slate-800 disabled:opacity-40 disabled:pointer-events-none transition-colors cursor-pointer"
+              >
+                Next
+              </button>
+            </div>
+          </div>
+        )}
       </div>
     </div>
   );

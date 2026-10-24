@@ -35,7 +35,7 @@ import { ActiveLearningSessionModal } from './components/activeLearning/ActiveLe
 import { JapaneseVirtualKeyboard } from './components/keyboard/JapaneseVirtualKeyboard';
 
 export const App: React.FC = () => {
-  const { activeView } = useApp();
+  const { activeView, isDistractionFree } = useApp();
 
   const renderActiveView = () => {
     switch (activeView) {
@@ -85,23 +85,25 @@ export const App: React.FC = () => {
 
   return (
     <div className="min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-900 dark:text-slate-100 flex flex-col font-sans transition-colors duration-200">
-      {/* Top Fixed Header (Hidden when in dedicated Admin Console) */}
-      {activeView !== 'admin' && <Navbar />}
+      {/* Top Fixed Header (Hidden when in dedicated Admin Console or Distraction-Free Lesson Mode) */}
+      {!isDistractionFree && activeView !== 'admin' && <Navbar />}
 
       {/* Main Body with Sidebar and Active View */}
       <div
         className={`flex-1 flex w-full mx-auto ${
-          activeView === 'admin'
+          isDistractionFree || activeView === 'admin'
             ? 'max-w-none p-0'
             : 'max-w-7xl pb-[max(4.5rem,calc(4rem+env(safe-area-inset-bottom)))] lg:pb-0'
         }`}
       >
-        {activeView !== 'admin' && <Sidebar />}
-        <main className="flex-1 min-w-0 overflow-x-hidden">{renderActiveView()}</main>
+        {!isDistractionFree && activeView !== 'admin' && <Sidebar />}
+        <main className={`flex-1 min-w-0 overflow-x-hidden ${isDistractionFree ? 'w-full' : ''}`}>
+          {renderActiveView()}
+        </main>
       </div>
 
-      {/* Mobile Bottom Navigation (Hidden when in dedicated Admin Console) */}
-      {activeView !== 'admin' && <BottomNav />}
+      {/* Mobile Bottom Navigation (Hidden when in dedicated Admin Console or Distraction-Free Lesson Mode) */}
+      {!isDistractionFree && activeView !== 'admin' && <BottomNav />}
 
       {/* Global Modals & Drawers */}
       <GlobalSearch />

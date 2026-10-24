@@ -40,7 +40,7 @@ import { ExamSimulatorService } from '../services/examSimulatorService';
 import { getMockTestsByLevel, getMockTestById, ALL_MOCK_TESTS } from '../data/mockTests';
 
 export const MockTestView: React.FC = () => {
-  const { activeLevel } = useApp();
+  const { activeLevel, isExamSimulating, setIsExamSimulating } = useApp();
   const { addXP } = useUser();
   const { rateItem } = useSRS();
   const { t } = useI18n();
@@ -291,10 +291,20 @@ export const MockTestView: React.FC = () => {
     setSrsQueued(true);
   };
 
+  // Synchronize Distraction-Free Lesson Mode during active examination simulation
+  useEffect(() => {
+    const isRunning = Boolean(sessionState && !sessionState.isCompleted);
+    setIsExamSimulating(isRunning);
+    return () => {
+      setIsExamSimulating(false);
+    };
+  }, [sessionState, setIsExamSimulating]);
+
   const handleReturnToHub = () => {
     ExamSimulatorService.clearActiveSession();
     setSessionState(null);
     setCompletedAttempt(null);
+    setIsExamSimulating(false);
   };
 
   // Helper values

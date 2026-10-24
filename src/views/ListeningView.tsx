@@ -21,13 +21,14 @@ import { ListeningLesson } from '../types';
 import { SupportedLanguage } from '../types/i18n';
 import { SessionPersistenceService } from '../session/persistence/SessionPersistenceService';
 import { TranslationToggleButton } from '../components/common/TranslationToggleButton';
+import { LessonLayout } from '../components/layout/LessonLayout';
 import {
   getLocalizedListeningLine,
   getLocalizedListeningSituation,
 } from '../data/translations/mediaContentI18n';
 
 export const ListeningView: React.FC = () => {
-  const { activeLevel } = useApp();
+  const { activeLevel, selectedListeningId, setSelectedListeningId } = useApp();
   const { logActivity, addXP, profile } = useUser();
   const { t, language } = useI18n();
   const activeLang = ((profile.translationLanguage || language || 'en') as SupportedLanguage);
@@ -36,6 +37,19 @@ export const ListeningView: React.FC = () => {
   const [selectedLesson, setSelectedLesson] = useState<ListeningLesson>(
     levelListeningList[0] || ContentService.listening.getListeningByLevel('N5')[0]
   );
+
+  // Synchronize selectedLesson when selectedListeningId changes
+  React.useEffect(() => {
+    if (selectedListeningId) {
+      const match = levelListeningList.find((l) => l.id === selectedListeningId);
+      if (match) {
+        setSelectedLesson(match);
+        setSelectedOption(null);
+        setIsAnswered(false);
+        setShowTranscript(false);
+      }
+    }
+  }, [selectedListeningId, levelListeningList]);
 
   const [isPlaying, setIsPlaying] = useState(false);
   const [playbackSpeed, setPlaybackSpeed] = useState(1.0);
@@ -118,42 +132,52 @@ export const ListeningView: React.FC = () => {
     setShowTranscript(false);
   };
 
-  return (
-    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6 animate-fade-in">
-      {/* Header */}
-      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
-        <div>
-          <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
-            {t('listening.badge')}
-          </span>
-          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
-            {activeLevel} {t('listening.title')}
-          </h1>
-          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
-            {t('listening.subtitle')}
-          </p>
-        </div>
 
-        {/* Lesson Selector Pills */}
-        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
-          {levelListeningList.map((l) => (
-            <button
-              key={l.id}
-              onClick={() => handleNextLesson(l)}
-              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
-                selectedLesson.id === l.id
-                  ? 'bg-purple-600 text-white shadow-sm'
-                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
-              }`}
-            >
-              {l.title}
-            </button>
-          ))}
-        </div>
-      </div>
+  // DISTRACTION-FREE INDIVIDUAL LISTENING LESSON MODE
+  if (selectedListeningId && selectedLesson) {
+    const currentIndex = levelListeningList.findIndex((l) => l.id === selectedLesson.id);
+    const hasPrev = currentIndex > 0;
+    const hasNext = currentIndex >= 0 && currentIndex < levelListeningList.length - 1;
 
-      {/* Audio Player Studio Card */}
-      <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
+    const handlePrevLesson = () => {
+      if (hasPrev) {
+        const prev = levelListeningList[currentIndex - 1];
+        handleNextLesson(prev);
+        setSelectedListeningId(prev.id);
+      }
+    };
+
+    const handleNextDrill = () => {
+      if (hasNext) {
+        const next = levelListeningList[currentIndex + 1];
+        handleNextLesson(next);
+        setSelectedListeningId(next.id);
+      }
+    };
+
+    return (
+      <LessonLayout
+        moduleTitle="Listening Drills"
+        lessonTitle={`【${selectedLesson.level}】 ${selectedLesson.title}`}
+        levelBadge={selectedLesson.level}
+        onBack={() => {
+          speechService.stop();
+          setIsPlaying(false);
+          setSelectedListeningId(null);
+        }}
+        onPrev={handlePrevLesson}
+        onNext={handleNextDrill}
+        hasPrev={hasPrev}
+        hasNext={hasNext}
+        progressPercent={Math.round(((currentIndex + 1) / (levelListeningList.length || 1)) * 100)}
+        maxWidthClass="max-w-4xl"
+        rightActions={
+          <div className="flex items-center gap-2">
+            <TranslationToggleButton size="sm" />
+          </div>
+        }
+      >
+              <div className="bg-white dark:bg-slate-900 rounded-3xl p-6 sm:p-8 border border-slate-200 dark:border-slate-800 shadow-sm space-y-6">
         {/* Situation Header */}
         <div className="flex items-center justify-between pb-4 border-b border-slate-100 dark:border-slate-800">
           <div>
@@ -390,6 +414,90 @@ export const ListeningView: React.FC = () => {
             </div>
           )}
         </div>
+      </div>
+      </LessonLayout>
+    );
+  }
+
+  return (
+    <div className="p-4 sm:p-6 lg:p-8 max-w-5xl mx-auto space-y-6 animate-fade-in">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-4">
+        <div>
+          <span className="text-xs font-bold text-purple-600 dark:text-purple-400 uppercase tracking-wider">
+            {t('listening.badge')}
+          </span>
+          <h1 className="text-2xl sm:text-3xl font-black text-slate-900 dark:text-white">
+            {activeLevel} {t('listening.title')}
+          </h1>
+          <p className="text-xs sm:text-sm text-slate-500 dark:text-slate-400 mt-1">
+            {t('listening.subtitle')}
+          </p>
+        </div>
+
+        {/* Lesson Selector Pills */}
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 sm:pb-0">
+          {levelListeningList.map((l) => (
+            <button
+              key={l.id}
+              onClick={() => handleNextLesson(l)}
+              className={`px-3.5 py-1.5 rounded-xl text-xs font-bold transition-all shrink-0 ${
+                selectedLesson.id === l.id
+                  ? 'bg-purple-600 text-white shadow-sm'
+                  : 'bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-800 text-slate-600 dark:text-slate-300'
+              }`}
+            >
+              {l.title}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Full-width Grid of Listening Drills */}
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4 pt-2">
+        {levelListeningList.map((l, idx) => {
+          const isSelected = selectedLesson.id === l.id;
+          return (
+            <div
+              key={l.id}
+              onClick={() => {
+                handleNextLesson(l);
+                setSelectedListeningId(l.id);
+              }}
+              className="group bg-white dark:bg-slate-900 rounded-2xl p-5 border border-slate-200 dark:border-slate-800 hover:border-purple-500 dark:hover:border-purple-400 shadow-xs hover:shadow-md transition-all cursor-pointer flex flex-col justify-between hover:-translate-y-0.5"
+            >
+              <div>
+                <div className="flex items-center justify-between gap-2 mb-2">
+                  <span className="px-2 py-0.5 rounded-lg bg-purple-50 dark:bg-purple-950/60 text-purple-700 dark:text-purple-300 text-[11px] font-bold flex items-center gap-1">
+                    <Headphones size={12} />
+                    <span>Drill #{idx + 1}</span>
+                  </span>
+                  <span className="text-[10px] uppercase font-mono px-2 py-0.5 rounded bg-slate-100 dark:bg-slate-800 text-slate-500">
+                    {l.questionType.replace('_', ' ')}
+                  </span>
+                </div>
+
+                <h3 className="text-lg font-bold text-slate-900 dark:text-white group-hover:text-purple-600 dark:group-hover:text-purple-400 transition-colors">
+                  {l.title}
+                </h3>
+
+                <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                  {getLocalizedListeningSituation(l.id, activeLang, l.situation)}
+                </p>
+              </div>
+
+              <div className="pt-3 border-t border-slate-100 dark:border-slate-800 mt-4 flex items-center justify-between text-xs">
+                <span className="text-slate-400 font-mono text-[11px]">
+                  {l.dialogue.length} dialogue lines
+                </span>
+                <div className="flex items-center gap-1 text-purple-600 dark:text-purple-400 font-bold group-hover:translate-x-0.5 transition-transform">
+                  <span>Start Drill</span>
+                  <ChevronRight size={14} />
+                </div>
+              </div>
+            </div>
+          );
+        })}
       </div>
     </div>
   );
